@@ -1,0 +1,17 @@
+{
+  "name": "cybersecuritygame",
+  "version": "1.0.0",
+  "description": "Educational cybersecurity architecture drag-and-drop game",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}
