@@ -1,40 +1,112 @@
 import { exportArchitectureState, importArchitectureState } from "./architectureState.js";
 import { initializeDragAndDrop } from "./dragdrop.js";
+import { applyPageTranslations, getLanguage, initializeLanguage, setLanguage, subscribeToLanguage, t, translateMessage } from "./i18n.js";
 import { initializeImageManager } from "./imageManager.js";
 import { analyzeArchitecture, renderArchitectureResult } from "./resultPlaceholder.js";
 import { configureStateDialog, renderAll, showError } from "./renderer.js";
 import { resetState, subscribe } from "./state.js";
 const byId = (id) => document.getElementById(id);
 function initialize() {
-    renderAll();
-    subscribe(renderAll);
-    initializeImageManager(renderAll);
-    initializeDragAndDrop(showError, renderAll);
-    configureStateDialog();
+    initializeLanguage();
+    let lastResult = null;
+    let dialogMode = null;
+    const renderInterface = () => {
+        renderAll();
+        applyPageTranslations();
+    };
+    const dialog = byId("state-dialog");
+    const textarea = byId("state-json");
+    const help = byId("dialog-help");
+    const copy = byId("copy-json-button");
+    const apply = byId("apply-import-button");
+    const error = byId("dialog-error");
+    const languageSelect = byId("language-select");
+    const updateDialogHelp = () => {
+        if (!help)
+            return;
+        if (dialogMode === "export") {
+            help.textContent = t("Copy the current architecture JSON.");
+        }
+        else if (dialogMode === "import") {
+            help.textContent = t("Paste architecture-state JSON, then choose Import JSON.");
+        }
+    };
+    renderInterface();
     renderArchitectureResult(null);
-    byId("reset-button")?.addEventListener("click", () => { resetState(); showError(""); renderArchitectureResult(null); const textarea = byId("state-json"); if (textarea)
-        textarea.value = ""; });
-    byId("analyze-button")?.addEventListener("click", () => { const result = analyzeArchitecture(); renderArchitectureResult(result); });
-    const dialog = byId("state-dialog"), textarea = byId("state-json"), help = byId("dialog-help"), copy = byId("copy-json-button"), apply = byId("apply-import-button"), error = byId("dialog-error");
-    byId("export-button")?.addEventListener("click", () => { if (!dialog || !textarea || !help || !copy || !apply)
-        return; textarea.value = exportArchitectureState(); help.textContent = "Copy the current architecture JSON."; copy.hidden = false; apply.hidden = true; dialog.showModal(); });
-    byId("import-button")?.addEventListener("click", () => { if (!dialog || !textarea || !help || !copy || !apply)
-        return; textarea.value = ""; help.textContent = "Paste architecture-state JSON, then choose Import JSON."; copy.hidden = true; apply.hidden = false; dialog.showModal(); textarea.focus(); });
-    copy?.addEventListener("click", async () => { if (!textarea)
-        return; try {
-        await navigator.clipboard.writeText(textarea.value);
-        if (help)
-            help.textContent = "JSON copied.";
+    configureStateDialog();
+    subscribe(renderInterface);
+    initializeImageManager(renderInterface);
+    initializeDragAndDrop(showError, renderInterface);
+    if (languageSelect) {
+        languageSelect.value = getLanguage();
+        languageSelect.addEventListener("change", () => {
+            setLanguage(languageSelect.value === "tr" ? "tr" : "en");
+        });
     }
-    catch {
-        textarea.select();
-        document.execCommand("copy");
-    } });
-    apply?.addEventListener("click", () => { if (!textarea || !error || !dialog)
-        return; const result = importArchitectureState(textarea.value); error.textContent = result.errors.join(" "); if (result.valid) {
-        dialog.close();
+    subscribeToLanguage(() => {
+        renderInterface();
+        renderArchitectureResult(lastResult);
+        updateDialogHelp();
+    });
+    byId("reset-button")?.addEventListener("click", () => {
+        resetState();
+        lastResult = null;
         showError("");
-    } });
+        renderArchitectureResult(null);
+        if (textarea)
+            textarea.value = "";
+    });
+    byId("analyze-button")?.addEventListener("click", () => {
+        lastResult = analyzeArchitecture();
+        renderArchitectureResult(lastResult);
+    });
+    byId("export-button")?.addEventListener("click", () => {
+        if (!dialog || !textarea || !copy || !apply)
+            return;
+        dialogMode = "export";
+        textarea.value = exportArchitectureState();
+        updateDialogHelp();
+        copy.hidden = false;
+        apply.hidden = true;
+        dialog.showModal();
+    });
+    byId("import-button")?.addEventListener("click", () => {
+        if (!dialog || !textarea || !copy || !apply)
+            return;
+        dialogMode = "import";
+        textarea.value = "";
+        updateDialogHelp();
+        copy.hidden = true;
+        apply.hidden = false;
+        dialog.showModal();
+        textarea.focus();
+    });
+    copy?.addEventListener("click", async () => {
+        if (!textarea)
+            return;
+        try {
+            await navigator.clipboard.writeText(textarea.value);
+            if (help)
+                help.textContent = t("JSON copied.");
+        }
+        catch {
+            textarea.select();
+            document.execCommand("copy");
+        }
+    });
+    apply?.addEventListener("click", () => {
+        if (!textarea || !error || !dialog)
+            return;
+        const result = importArchitectureState(textarea.value);
+        error.dataset.sourceMessages = JSON.stringify(result.errors);
+        error.textContent = result.errors
+            .map(message => translateMessage(message))
+            .join(" ");
+        if (result.valid) {
+            dialog.close();
+            showError("");
+        }
+    });
 }
 initialize();
 //# sourceMappingURL=main.js.map

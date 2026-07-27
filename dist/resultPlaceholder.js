@@ -1,28 +1,148 @@
 import { getArchitectureState } from "./architectureState.js";
-import { getComponentById } from "./components.js";
-const p = (client, authentication, internet, thirdParty, transition, target) => ({ "client-component": client, "authentication-component": authentication, "internet-component": internet, "third-party-component": thirdParty, "transition-component": transition, "target-network-type": target });
+import { t } from "./i18n.js";
+const placement = (client, authentication, internet, thirdParty, transition, target) => ({
+    "client-component": client,
+    "authentication-component": authentication,
+    "internet-component": internet,
+    "third-party-component": thirdParty,
+    "transition-component": transition,
+    "target-network-type": target
+});
 export const scenarios = [
-    { id: "scenario-1", name: "Public Network Access", placements: p("password", "authentication", "network-connection", "external-api", "dns", "public-network") },
-    { id: "scenario-2", name: "Local Network Access", placements: p("password", "authentication", "network-connection", "vpn-provider", "firewall", "local-network") },
-    { id: "scenario-3", name: "Secure Corporate Access", placements: p("password", "authentication", "connection-encryption", "cloud-service", "firewall", "private-corporate-network") },
-    { id: "scenario-4", name: "MFA Corporate Access", placements: p("mfa", "authentication", "connection-encryption", "identity-provider", "firewall", "private-corporate-network") },
-    { id: "scenario-5", name: "Biometric VPN Access", placements: p("biometric", "biometric", "connection-encryption", "vpn-provider", "firewall", "private-virtual-network") },
-    { id: "scenario-6", name: "Certificate-Based Access", placements: p("pki-certificate", "certificate-authority", "connection-encryption", "identity-provider", "firewall", "private-corporate-network") },
-    { id: "scenario-7", name: "Cloud Application Access", placements: p("application-connection", "authentication", "application-connection", "cloud-service", "firewall", "private-corporate-network") },
-    { id: "scenario-8", name: "Controlled Zero Trust Access", placements: p("mfa", "authentication", "controlled-access", "identity-provider", "policy-engine", "private-corporate-network") },
-    { id: "scenario-9", name: "Certificate Zero Trust", placements: p("pki-certificate", "certificate-authority", "controlled-access", "identity-provider", "policy-engine", "private-virtual-network") },
-    { id: "scenario-10", name: "Relay Protected Access", placements: p("mfa", "authentication", "connection-encryption", "vpn-provider", "relay-node", "private-virtual-network") },
-    { id: "scenario-11", name: "RAM Encryption Architecture", placements: p("pki-certificate", "certificate-authority", "ram-encryption", "cloud-service", "relay-node", "private-virtual-network") },
-    { id: "scenario-12", name: "Advanced Zero Trust", placements: p("biometric", "pki-certificate", "controlled-access", "identity-provider", "policy-engine", "private-virtual-network") }
+    placement("password", "authentication", "network-connection", "external-api", "dns", "public-network"),
+    placement("password", "authentication", "network-connection", "cloud-service", "firewall", "local-network"),
+    placement("password", "authentication", "application-connection", "external-api", "firewall", "public-network"),
+    placement("password", "authentication", "connection-encryption", "cloud-service", "firewall", "private-corporate-network"),
+    placement("mfa", "authentication", "connection-encryption", "identity-provider", "firewall", "private-corporate-network"),
+    placement("biometric", "authentication", "connection-encryption", "vpn-provider", "firewall", "private-virtual-network"),
+    placement("pki-certificate", "authentication", "connection-encryption", "identity-provider", "certificate-authority", "private-corporate-network"),
+    placement("mfa", "authentication", "application-connection", "cloud-service", "firewall", "private-corporate-network"),
+    placement("mfa", "authentication", "controlled-access", "identity-provider", "policy-engine", "private-corporate-network"),
+    placement("pki-certificate", "authentication", "controlled-access", "identity-provider", "policy-engine", "private-virtual-network"),
+    placement("biometric", "authentication", "controlled-access", "identity-provider", "policy-engine", "private-virtual-network"),
+    placement("mfa", "authentication", "connection-encryption", "vpn-provider", "relay-node", "private-virtual-network"),
+    placement("pki-certificate", "authentication", "ram-encryption", "cloud-service", "relay-node", "private-virtual-network"),
+    placement("pki-certificate", "authentication", "controlled-access", "identity-provider", "policy-engine", "private-corporate-network"),
+    placement("mfa", "authentication", "controlled-access", "identity-provider", "policy-engine", "public-network"),
+    placement("password", "authentication", "connection-encryption", "cloud-service", "certificate-authority", "private-corporate-network"),
+    placement("password", "authentication", "network-connection", "identity-provider", "policy-engine", "private-corporate-network"),
+    placement("password", "authentication", "network-connection", "vpn-provider", "firewall", "private-virtual-network")
 ];
-const slotOrder = ["client-component", "authentication-component", "internet-component", "third-party-component", "transition-component", "target-network-type"];
-export function analyzeArchitecture() { const current = getArchitectureState().slots; const scenario = scenarios.find(item => slotOrder.every(id => current[id] === item.placements[id])); if (!scenario)
-    return null; return { architectureId: scenario.id, architectureName: `Scenario ${Number(scenario.id.split("-")[1])} – ${scenario.name}`, description: "The current architecture exactly matches this scenario.", enabledFeatures: slotOrder.map(id => getComponentById(current[id] ?? "")?.label ?? ""), remainingRisks: [], recommendation: "" }; }
-export function renderArchitectureResult(result) { const initial = document.getElementById("result-initial-message"), description = document.getElementById("result-description"), features = document.getElementById("result-enabled-features"), risks = document.getElementById("result-risks"), recommendation = document.getElementById("result-recommendation"); if (!initial || !description || !features || !risks || !recommendation)
-    return; initial.textContent = result ? result.architectureName : "No matching scenario. Complete all six areas with one component each."; description.hidden = !result; features.hidden = !result; risks.hidden = true; recommendation.hidden = true; if (result) {
-    description.textContent = result.description;
-    features.textContent = `Components: ${result.enabledFeatures.join(" → ")}`;
-    risks.textContent = "";
-    recommendation.textContent = "";
-} }
+const slotOrder = [
+    "client-component",
+    "authentication-component",
+    "internet-component",
+    "third-party-component",
+    "transition-component",
+    "target-network-type"
+];
+const componentWeights = {
+    "password": 5,
+    "mfa": 14,
+    "biometric": 16,
+    "pki-certificate": 20,
+    "authentication": 8,
+    "network-connection": 2,
+    "application-connection": 8,
+    "connection-encryption": 15,
+    "controlled-access": 22,
+    "ram-encryption": 25,
+    "external-api": 2,
+    "cloud-service": 7,
+    "vpn-provider": 10,
+    "identity-provider": 15,
+    "dns": 2,
+    "firewall": 7,
+    "certificate-authority": 10,
+    "relay-node": 12,
+    "policy-engine": 15,
+    "public-network": 1,
+    "local-network": 4,
+    "private-corporate-network": 7,
+    "private-virtual-network": 10
+};
+export function getSecurityLevel(score) {
+    if (score <= 29)
+        return "Very Low Security";
+    if (score <= 49)
+        return "Low Security";
+    if (score <= 64)
+        return "Medium Security";
+    if (score <= 79)
+        return "Good Security";
+    if (score <= 89)
+        return "High Security";
+    return "Advanced Security";
+}
+export function calculateSecurityScore(current) {
+    const selected = slotOrder
+        .map(id => current[id])
+        .filter((id) => Boolean(id));
+    let score = selected.reduce((total, id) => total + (componentWeights[id] ?? 0), 0);
+    const client = current["client-component"];
+    const internet = current["internet-component"];
+    const third = current["third-party-component"];
+    const transition = current["transition-component"];
+    if (internet === "controlled-access" &&
+        third === "identity-provider" &&
+        transition === "policy-engine")
+        score += 6;
+    if (internet === "ram-encryption" &&
+        transition === "relay-node")
+        score += 16;
+    if (internet === "connection-encryption" &&
+        third === "vpn-provider" &&
+        transition === "firewall")
+        score += 4;
+    if (client === "pki-certificate" &&
+        transition === "certificate-authority")
+        score += 4;
+    if (transition === "policy-engine" &&
+        internet !== "controlled-access")
+        score -= 7;
+    if (third === "vpn-provider" &&
+        internet !== "connection-encryption")
+        score -= 5;
+    if ((client === "pki-certificate") !==
+        (transition === "certificate-authority"))
+        score -= 5;
+    return Math.max(0, Math.min(100, Math.round(score)));
+}
+export function analyzeArchitecture() {
+    const current = getArchitectureState().slots;
+    const incomplete = slotOrder.some(id => !current[id]);
+    if (incomplete) {
+        return {
+            score: null,
+            scoreLabel: "Not Available",
+            securityLevel: "Not Available",
+            status: "incomplete"
+        };
+    }
+    const score = calculateSecurityScore(current);
+    const matched = scenarios.some(scenario => slotOrder.every(id => current[id] === scenario[id]));
+    return {
+        score,
+        scoreLabel: `${score}/100`,
+        securityLevel: getSecurityLevel(score),
+        status: matched ? "matched" : "unknown"
+    };
+}
+export function renderArchitectureResult(result) {
+    const panel = document.getElementById("result-panel");
+    const summary = panel?.querySelector(".result-summary");
+    const circle = panel?.querySelector(".score-circle");
+    const score = document.getElementById("result-score");
+    const level = document.getElementById("result-security-level");
+    if (!panel || !summary || !circle || !score || !level)
+        return;
+    circle.style.setProperty("--score-progress", String(result?.score ?? 0));
+    summary.hidden = !result;
+    if (!result)
+        return;
+    score.textContent = result.score === null ? "--" : `${result.score}%`;
+    level.textContent = result.score === null
+        ? t(result.scoreLabel)
+        : t(result.securityLevel);
+}
 //# sourceMappingURL=resultPlaceholder.js.map
