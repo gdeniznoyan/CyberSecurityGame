@@ -2,7 +2,7 @@ import{
   exportArchitectureState,
   importArchitectureState
 }from"./architectureState.js";
-import{initializeDragAndDrop}from"./dragdrop.js";
+import{initializeDragAndDrop}from"./dragDrop.js";
 import{
   applyPageTranslations,
   getLanguage,
@@ -14,14 +14,14 @@ import{
 }from"./i18n.js";
 import{initializeImageManager}from"./imageManager.js";
 import{
-  analyzeArchitecture,
-  renderArchitectureResult
-}from"./resultPlaceholder.js";
-import{
   configureStateDialog,
   renderAll,
   showError
 }from"./renderer.js";
+import{
+  analyzeArchitecture,
+  renderArchitectureResult
+}from"./scenarioMatcher.js";
 import{resetState,subscribe}from"./state.js";
 import type{ArchitectureAnalysisResult}from"./types.js";
 
@@ -46,6 +46,7 @@ function initialize():void{
   const apply=byId<HTMLButtonElement>("apply-import-button");
   const error=byId<HTMLElement>("dialog-error");
   const languageSelect=byId<HTMLSelectElement>("language-select");
+  const scenariosDialog=byId<HTMLDialogElement>("scenarios-dialog");
 
   const updateDialogHelp=():void=>{
     if(!help)return;
@@ -61,7 +62,13 @@ function initialize():void{
   renderInterface();
   renderArchitectureResult(null);
   configureStateDialog();
-  subscribe(renderInterface);
+  subscribe(change=>{
+    if(change==="architecture"){
+      lastResult=null;
+      renderArchitectureResult(null);
+    }
+    renderInterface();
+  });
   initializeImageManager(renderInterface);
   initializeDragAndDrop(showError,renderInterface);
 
@@ -86,10 +93,24 @@ function initialize():void{
     if(textarea)textarea.value="";
   });
 
-  byId<HTMLButtonElement>("analyze-button")?.addEventListener("click",()=>{
-    lastResult=analyzeArchitecture();
-    renderArchitectureResult(lastResult);
+  const analyzeButton=byId<HTMLButtonElement>("analyze-button");
+  if(analyzeButton){
+    analyzeButton.disabled=false;
+    analyzeButton.removeAttribute("title");
+    analyzeButton.addEventListener("click",()=>{
+      lastResult=analyzeArchitecture();
+      renderArchitectureResult(lastResult);
+    });
+  }
+
+  byId<HTMLButtonElement>("scenarios-button")?.addEventListener("click",()=>{
+    scenariosDialog?.showModal();
   });
+
+  byId<HTMLButtonElement>("close-scenarios-button")?.addEventListener(
+    "click",
+    ()=>scenariosDialog?.close()
+  );
 
   byId<HTMLButtonElement>("export-button")?.addEventListener("click",()=>{
     if(!dialog||!textarea||!copy||!apply)return;

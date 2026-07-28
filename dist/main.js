@@ -1,9 +1,9 @@
 import { exportArchitectureState, importArchitectureState } from "./architectureState.js";
-import { initializeDragAndDrop } from "./dragdrop.js";
+import { initializeDragAndDrop } from "./dragDrop.js";
 import { applyPageTranslations, getLanguage, initializeLanguage, setLanguage, subscribeToLanguage, t, translateMessage } from "./i18n.js";
 import { initializeImageManager } from "./imageManager.js";
-import { analyzeArchitecture, renderArchitectureResult } from "./resultPlaceholder.js";
 import { configureStateDialog, renderAll, showError } from "./renderer.js";
+import { analyzeArchitecture, renderArchitectureResult } from "./scenarioMatcher.js";
 import { resetState, subscribe } from "./state.js";
 const byId = (id) => document.getElementById(id);
 function initialize() {
@@ -21,6 +21,7 @@ function initialize() {
     const apply = byId("apply-import-button");
     const error = byId("dialog-error");
     const languageSelect = byId("language-select");
+    const scenariosDialog = byId("scenarios-dialog");
     const updateDialogHelp = () => {
         if (!help)
             return;
@@ -34,7 +35,13 @@ function initialize() {
     renderInterface();
     renderArchitectureResult(null);
     configureStateDialog();
-    subscribe(renderInterface);
+    subscribe(change => {
+        if (change === "architecture") {
+            lastResult = null;
+            renderArchitectureResult(null);
+        }
+        renderInterface();
+    });
     initializeImageManager(renderInterface);
     initializeDragAndDrop(showError, renderInterface);
     if (languageSelect) {
@@ -56,10 +63,19 @@ function initialize() {
         if (textarea)
             textarea.value = "";
     });
-    byId("analyze-button")?.addEventListener("click", () => {
-        lastResult = analyzeArchitecture();
-        renderArchitectureResult(lastResult);
+    const analyzeButton = byId("analyze-button");
+    if (analyzeButton) {
+        analyzeButton.disabled = false;
+        analyzeButton.removeAttribute("title");
+        analyzeButton.addEventListener("click", () => {
+            lastResult = analyzeArchitecture();
+            renderArchitectureResult(lastResult);
+        });
+    }
+    byId("scenarios-button")?.addEventListener("click", () => {
+        scenariosDialog?.showModal();
     });
+    byId("close-scenarios-button")?.addEventListener("click", () => scenariosDialog?.close());
     byId("export-button")?.addEventListener("click", () => {
         if (!dialog || !textarea || !copy || !apply)
             return;

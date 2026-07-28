@@ -37,7 +37,7 @@
             >
             <span data-i18n="Builder">Builder</span>
           </button>
-          <button class="nav-item" type="button">
+          <button id="scenarios-button" class="nav-item" type="button">
             <img
               class="nav-image-placeholder"
               src="./assets/sidebar/scenarios.png"
@@ -180,38 +180,33 @@
             aria-labelledby="result-title"
             aria-live="polite"
           >
-            <section class="security-score-section">
-              <h2 id="result-title" data-i18n="Security Score">
-                Security Score
+            <section class="architecture-result-section">
+              <h2 id="result-title" data-i18n="Architecture Result">
+                Architecture Result
               </h2>
-              <div class="score-circle">
-                <div class="result-summary" hidden>
-                  <div id="result-score"></div>
-                  <div id="result-security-level"></div>
+              <div id="result-scenario" class="result-scenario">—</div>
+              <dl class="result-details">
+                <div>
+                  <dt data-i18n="Security Level">Security Level</dt>
+                  <dd id="result-level">—</dd>
                 </div>
-                <span class="score-placeholder">--</span>
+                <div>
+                  <dt data-i18n="Score">Score</dt>
+                  <dd id="result-score">—</dd>
+                </div>
+              </dl>
+              <div class="result-description-block">
+                <h3 data-i18n="Description">Description</h3>
+                <p id="result-description">—</p>
               </div>
               <p
-                class="score-caption"
-                data-i18n="Score will appear after analysis."
+                id="result-hint"
+                class="result-hint"
+                data-i18n="Analyze the architecture to identify it."
               >
-                Score will appear after analysis.
+                Analyze the architecture to identify it.
               </p>
             </section>
-
-            <div
-              class="score-scale"
-              aria-label="Security score levels"
-              data-i18n-aria-label="Security score levels"
-            >
-              <h2 data-i18n="Score Levels">Score Levels</h2>
-              <div><span>0–29</span><span data-i18n="Very Low">Very Low</span></div>
-              <div><span>30–49</span><span data-i18n="Low">Low</span></div>
-              <div><span>50–64</span><span data-i18n="Medium">Medium</span></div>
-              <div><span>65–79</span><span data-i18n="Good">Good</span></div>
-              <div><span>80–89</span><span data-i18n="High">High</span></div>
-              <div><span>90–100</span><span data-i18n="Advanced">Advanced</span></div>
-            </div>
           </aside>
         </main>
 
@@ -271,6 +266,63 @@
           </button>
         </div>
       </form>
+    </dialog>
+
+    <dialog id="scenarios-dialog" class="scenarios-dialog">
+      <div class="scenarios-dialog-card">
+        <div class="dialog-heading">
+          <h2>Predefined Architectures</h2>
+          <button
+            id="close-scenarios-button"
+            type="button"
+            aria-label="Close dialog"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="scenario-list">
+          <article class="scenario-card">
+            <h3>1. Unprotected System</h3>
+            <p><strong>Client Computer:</strong> Password</p>
+            <p><strong>Authentication:</strong> Authentication Service</p>
+            <p><strong>Wild Internet:</strong> Network Connection</p>
+            <p><strong>Third Party:</strong> None</p>
+            <p><strong>Security Transition:</strong> None</p>
+            <p><strong>Target Network:</strong> Public Network</p>
+          </article>
+
+          <article class="scenario-card">
+            <h3>2. VPN-Based System</h3>
+            <p><strong>Client Computer:</strong> Password, MFA</p>
+            <p><strong>Authentication:</strong> Authentication Service</p>
+            <p><strong>Wild Internet:</strong> Network Connection, VPN Tunnel, Connection Encryption</p>
+            <p><strong>Third Party:</strong> VPN Provider</p>
+            <p><strong>Security Transition:</strong> Firewall</p>
+            <p><strong>Target Network:</strong> Private Corporate Network</p>
+          </article>
+
+          <article class="scenario-card">
+            <h3>3. Zero Trust Architecture</h3>
+            <p><strong>Client Computer:</strong> Password, MFA, Endpoint Protection</p>
+            <p><strong>Authentication:</strong> Authentication Service, Identity Provider</p>
+            <p><strong>Wild Internet:</strong> Application Connection, Connection Encryption</p>
+            <p><strong>Third Party:</strong> Cloud Service</p>
+            <p><strong>Security Transition:</strong> Firewall, Policy Engine</p>
+            <p><strong>Target Network:</strong> Cloud Resource</p>
+          </article>
+
+          <article class="scenario-card">
+            <h3>4. Post-Zero Trust Architecture</h3>
+            <p><strong>Client Computer:</strong> Password, MFA, Biometric Authentication, PKI Certificate, Endpoint Protection</p>
+            <p><strong>Authentication:</strong> Authentication Service, Identity Provider</p>
+            <p><strong>Wild Internet:</strong> Application Connection, Connection Encryption</p>
+            <p><strong>Third Party:</strong> Cloud Service, External API</p>
+            <p><strong>Security Transition:</strong> Firewall, Policy Engine, Relay Node</p>
+            <p><strong>Target Network:</strong> Cloud Resource</p>
+          </article>
+        </div>
+      </div>
     </dialog>
 
     <script type="module" src="./dist/main.js"></script>

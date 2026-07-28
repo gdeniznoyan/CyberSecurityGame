@@ -3,7 +3,8 @@ import { t, translateMessage } from "./i18n.js";
 import { sectionDefinitions, getSlotsBySection } from "./slots.js";
 import { getSelectedComponent, getSlotComponent, isComponentDisabled } from "./state.js";
 const categoryLabels = {
-    authentication: "Client Components",
+    "client-components": "Client Components",
+    "authentication-services": "Authentication Components",
     "connection-security": "Connection Components",
     "third-party": "Third Party",
     "network-components": "Network Components",

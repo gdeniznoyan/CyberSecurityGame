@@ -297,7 +297,7 @@ button {
     minmax(145px, 1fr) 18px
     minmax(145px, 1fr) 18px
     minmax(145px, 1fr);
-  align-items: center;
+  align-items: stretch;
   min-width: 800px;
   min-height: 265px;
 }
@@ -342,6 +342,7 @@ button {
 .flow-arrow {
   position: relative;
   z-index: 2;
+  align-self: center;
   color: #111820;
   background: #ffffff;
   font-size: 1.15rem;
@@ -480,7 +481,7 @@ button {
 
 .toolbox-groups {
   display: grid;
-  grid-template-columns: 0.95fr 1.1fr 0.95fr 1.1fr 1.2fr;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -588,95 +589,77 @@ button {
   font-size: 0.78rem;
 }
 
-.score-circle {
-  --score-progress: 0;
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 90px;
-  height: 90px;
-  margin: 4px auto 14px;
-  background: conic-gradient(
-    #d50914 calc(var(--score-progress) * 1%),
-    #e1e5e9 0
-  );
-  border-radius: 50%;
-}
-
-.score-circle::before {
-  content: "";
-  position: absolute;
-  inset: 7px;
-  background: #ffffff;
-  border-radius: 50%;
-}
-
-.result-summary {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  gap: 2px;
-  padding: 4px;
-  text-align: center;
-}
-
-#result-score {
-  font-size: 0.65rem;
-  font-weight: 800;
-}
-
-#result-security-level {
-  color: #111820;
-  font-size: 0.55rem;
-  line-height: 1.15;
-}
-
-.score-circle:has(.result-summary:not([hidden])) .score-placeholder {
-  display: none;
-}
-
-.score-placeholder {
-  position: relative;
-  z-index: 1;
-  color: #111820;
-  font-weight: 800;
-}
-
-.score-caption,
-.score-scale > div,
 .site-footer {
   color: #29313a;
 }
 
-.score-caption {
-  margin: 0;
-  font-size: 0.63rem;
+.result-scenario {
+  padding: 18px 12px;
+  color: #111820;
+  background: #f9fafa;
+  border: 1px solid #dce2e8;
+  border-radius: 7px;
+  font-size: 0.9rem;
+  font-weight: 750;
+  line-height: 1.35;
   text-align: center;
 }
 
-.score-scale {
-  margin-top: 12px;
-  padding: 14px 4px 0;
+.result-scenario.custom {
+  color: #d50914;
 }
 
-.score-scale h2 {
-  margin-bottom: 7px;
-}
-
-.score-scale > div {
-  display: flex;
-  justify-content: space-between;
+.result-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
-  padding: 3px 0;
-  font-size: 0.59rem;
+  margin: 10px 0;
 }
 
-.score-scale > div span:first-child {
-  font-weight: 700;
+.result-details > div {
+  padding: 10px 8px;
+  background: #f9fafa;
+  border: 1px solid #dce2e8;
+  border-radius: 7px;
+  text-align: center;
 }
 
-.result-panel [hidden] {
-  display: none;
+.result-details dt {
+  color: #5f6875;
+  font-size: 0.6rem;
+}
+
+.result-details dd {
+  margin: 3px 0 0;
+  color: #111820;
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+.result-description-block {
+  padding: 11px;
+  border: 1px solid #dce2e8;
+  border-radius: 7px;
+}
+
+.result-description-block h3 {
+  margin: 0 0 5px;
+  color: #111820;
+  font-size: 0.65rem;
+}
+
+.result-description-block p {
+  margin: 0;
+  color: #5f6875;
+  font-size: 0.66rem;
+  line-height: 1.45;
+}
+
+.result-hint {
+  margin: 12px 2px 0;
+  color: #5f6875;
+  font-size: 0.68rem;
+  line-height: 1.45;
 }
 
 .site-footer {
@@ -701,6 +684,42 @@ dialog {
 
 dialog::backdrop {
   background: rgba(0, 0, 0, 0.55);
+}
+
+.scenarios-dialog {
+  width: min(900px, 94vw);
+  max-height: 88vh;
+  overflow: auto;
+}
+
+.scenarios-dialog-card {
+  padding: 20px;
+}
+
+.scenario-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.scenario-card {
+  padding: 15px;
+  border: 1px solid #dce2e8;
+  border-radius: 8px;
+}
+
+.scenario-card h3 {
+  margin: 0 0 12px;
+  color: #d50914;
+  font-size: 0.9rem;
+}
+
+.scenario-card p {
+  margin: 6px 0;
+  color: #29313a;
+  font-size: 0.72rem;
+  line-height: 1.45;
 }
 
 .dialog-card {
@@ -846,9 +865,6 @@ textarea:focus-visible {
     gap: 0 16px;
   }
 
-  .score-scale {
-    grid-column: 1 / -1;
-  }
 }
 
 @media (max-width: 580px) {
@@ -858,6 +874,10 @@ textarea:focus-visible {
 
   .header-actions {
     justify-content: flex-start;
+  }
+
+  .scenario-list {
+    grid-template-columns: 1fr;
   }
 
   .header-actions button {

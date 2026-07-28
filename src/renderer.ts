@@ -13,7 +13,8 @@ import type{
 }from"./types.js";
 
 const categoryLabels:Record<ComponentCategory,string>={
-  authentication:"Client Components",
+  "client-components":"Client Components",
+  "authentication-services":"Authentication Components",
   "connection-security":"Connection Components",
   "third-party":"Third Party",
   "network-components":"Network Components",
