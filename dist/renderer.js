@@ -1,75 +1,170 @@
 import { securityComponents, getComponentById } from "./components.js";
+import { t, translateMessage } from "./i18n.js";
 import { sectionDefinitions, getSlotsBySection } from "./slots.js";
 import { getSelectedComponent, getSlotComponent, isComponentDisabled } from "./state.js";
-const categoryLabels = { authentication: "Client Components", "connection-security": "Connection Components", "third-party": "Third Party", "network-components": "Network Components", "network-types": "Network Areas" };
-const make = (tag, className, text) => { const el = document.createElement(tag); if (className)
-    el.className = className; if (text)
-    el.textContent = text; return el; };
-function componentVisual(component) { const fragment = document.createDocumentFragment(), imageBox = make("div", "component-image"); if (component.futureImageUrl) {
-    const img = document.createElement("img");
-    img.alt = "";
-    img.src = component.futureImageUrl;
-    img.addEventListener("error", () => imageBox.remove());
-    imageBox.append(img);
-} fragment.append(imageBox, make("span", "component-label", component.label)); return fragment; }
-function renderSlot(slot) { const el = make("div", "drop-slot"); el.dataset.slotId = slot.id; el.dataset.slotType = slot.slotType; el.tabIndex = slot.enabled ? 0 : -1; el.setAttribute("role", "button"); el.setAttribute("aria-label", `${slot.label}. ${slot.placeholderText}`); if (!slot.enabled)
-    el.classList.add("disabled"); const heading = make("div", "slot-label", slot.label + (slot.required ? " *" : "")); el.append(heading); const id = getSlotComponent(slot.id); if (id) {
-    el.classList.add("occupied");
-    const component = getComponentById(id);
-    if (component) {
-        const content = make("div", "slot-content");
-        content.append(componentVisual(component));
-        const remove = document.createElement("button");
-        remove.type = "button";
-        remove.className = "remove-button";
-        remove.dataset.removeSlot = slot.id;
-        remove.textContent = "Remove";
-        remove.setAttribute("aria-label", `Remove ${component.label} from ${slot.label}`);
-        content.append(remove);
-        el.append(content);
+const categoryLabels = {
+    "client-components": "Client Components",
+    "authentication-services": "Authentication Components",
+    "connection-security": "Connection Components",
+    "third-party": "Third Party",
+    "network-components": "Network Components",
+    "network-types": "Network Areas"
+};
+const make = (tag, className, text) => {
+    const element = document.createElement(tag);
+    if (className)
+        element.className = className;
+    if (text)
+        element.textContent = text;
+    return element;
+};
+function componentVisual(component) {
+    const fragment = document.createDocumentFragment();
+    const imageBox = make("div", "component-image");
+    if (component.futureImageUrl) {
+        const image = document.createElement("img");
+        image.alt = "";
+        image.src = component.futureImageUrl;
+        image.addEventListener("error", () => imageBox.remove());
+        imageBox.append(image);
     }
+    fragment.append(imageBox, make("span", "component-label", t(component.label)));
+    return fragment;
 }
-else
-    el.append(make("div", "slot-placeholder", slot.placeholderText)); return el; }
-export function renderArchitecture() { const canvas = document.getElementById("architecture-canvas"); if (!canvas)
-    return; canvas.replaceChildren(); const main = make("div", "main-path"); for (const section of sectionDefinitions) {
-    if (main.childElementCount) {
-        const arrow = make("div", "flow-arrow", "→");
-        arrow.setAttribute("aria-hidden", "true");
-        main.append(arrow);
+function renderSlot(slot) {
+    const element = make("div", "drop-slot");
+    element.dataset.slotId = slot.id;
+    element.dataset.slotType = slot.slotType;
+    element.tabIndex = slot.enabled ? 0 : -1;
+    element.setAttribute("role", "button");
+    element.setAttribute("aria-label", `${t(slot.label)}. ${t(slot.placeholderText)}`);
+    if (!slot.enabled)
+        element.classList.add("disabled");
+    const required = slot.required ? " *" : "";
+    element.append(make("div", "slot-label", `${t(slot.label)}${required}`));
+    const componentId = getSlotComponent(slot.id);
+    if (!componentId) {
+        element.append(make("div", "slot-placeholder", t(slot.placeholderText)));
+        return element;
     }
+    element.classList.add("occupied");
+    const component = getComponentById(componentId);
+    if (!component)
+        return element;
+    const content = make("div", "slot-content");
+    content.append(componentVisual(component));
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = "remove-button";
+    removeButton.dataset.removeSlot = slot.id;
+    removeButton.textContent = t("Remove");
+    removeButton.setAttribute("aria-label", `${t("Remove")}: ${t(component.label)} — ${t(slot.label)}`);
+    content.append(removeButton);
+    element.append(content);
+    return element;
+}
+function renderArchitectureSection(section) {
     const card = make("article", "architecture-section");
     card.dataset.section = section.id;
-    const h = document.createElement("h3");
-    h.textContent = section.title;
-    card.append(h);
-    if (section.subtitle)
-        card.append(make("p", "section-subtitle", section.subtitle));
-    const image = make("div", "image-placeholder");
-    image.dataset.imageRole = section.id;
-    image.dataset.imageSrc = "";
-    image.append(make("span", "", section.imageLabel));
-    card.append(image);
+    const heading = document.createElement("h3");
+    heading.textContent = t(section.title);
+    card.append(heading);
+    if (section.subtitle) {
+        card.append(make("p", "section-subtitle", t(section.subtitle)));
+    }
+    const imageBox = make("div", "image-placeholder");
+    imageBox.dataset.imageRole = section.id;
+    imageBox.dataset.imageSrc =
+        `./assets/sections-centered/${section.id}.png`;
+    const image = document.createElement("img");
+    image.src = imageBox.dataset.imageSrc;
+    image.alt = `${t(section.title)} ${t("illustration")}`;
+    image.addEventListener("error", () => image.remove());
+    imageBox.append(image, make("span", "", t(section.imageLabel)));
+    card.append(imageBox);
     const slots = make("div", "section-slots");
-    getSlotsBySection(section.id).forEach(x => slots.append(renderSlot(x)));
+    getSlotsBySection(section.id).forEach(slot => slots.append(renderSlot(slot)));
     card.append(slots);
-    main.append(card);
-} canvas.append(main); }
-export function renderToolbox() { const box = document.getElementById("component-toolbox"); if (!box)
-    return; box.replaceChildren(); for (const category of Object.keys(categoryLabels)) {
-    const group = make("section", "toolbox-group"), h = document.createElement("h3");
-    h.textContent = categoryLabels[category];
-    group.append(h);
-    const cards = make("div", "component-list");
-    securityComponents.filter(x => x.category === category).forEach(component => { const card = document.createElement("button"); card.type = "button"; card.className = "component-card"; card.draggable = !isComponentDisabled(component.id); card.dataset.componentId = component.id; card.dataset.category = component.category; card.title = component.description; const disabled = isComponentDisabled(component.id); card.ariaDisabled = String(disabled); card.classList.toggle("disabled", disabled); card.classList.toggle("selected", getSelectedComponent() === component.id); card.append(componentVisual(component)); cards.append(card); });
-    group.append(cards);
-    box.append(group);
-} }
-export function renderAll() { renderArchitecture(); renderToolbox(); }
-export function showError(message, slotId) { const error = document.getElementById("error-message"); if (error)
-    error.textContent = message; if (slotId)
-    document.querySelector(`[data-slot-id="${slotId}"]`)?.classList.toggle("invalid", Boolean(message)); }
-export function configureStateDialog() { const dialog = document.getElementById("state-dialog"); if (!dialog)
-    return; dialog.addEventListener("close", () => { const error = document.getElementById("dialog-error"); if (error)
-    error.textContent = ""; }); }
+    return card;
+}
+export function renderArchitecture() {
+    const canvas = document.getElementById("architecture-canvas");
+    if (!canvas)
+        return;
+    canvas.replaceChildren();
+    const thirdParty = sectionDefinitions.find(section => section.id === "third-party");
+    if (thirdParty) {
+        const sideLane = make("div", "third-party-lane");
+        sideLane.append(renderArchitectureSection(thirdParty));
+        canvas.append(sideLane);
+    }
+    const main = make("div", "main-path");
+    for (const section of sectionDefinitions.filter(item => item.id !== "third-party")) {
+        if (main.childElementCount) {
+            const arrow = make("div", "flow-arrow", "→");
+            arrow.setAttribute("aria-hidden", "true");
+            main.append(arrow);
+        }
+        main.append(renderArchitectureSection(section));
+    }
+    canvas.append(main);
+}
+export function renderToolbox() {
+    const toolbox = document.getElementById("component-toolbox");
+    if (!toolbox)
+        return;
+    toolbox.replaceChildren();
+    for (const category of Object.keys(categoryLabels)) {
+        const group = make("section", "toolbox-group");
+        const heading = document.createElement("h3");
+        heading.textContent = t(categoryLabels[category]);
+        group.append(heading);
+        const cards = make("div", "component-list");
+        securityComponents
+            .filter(component => component.category === category)
+            .forEach(component => {
+            const card = document.createElement("button");
+            const disabled = isComponentDisabled(component.id);
+            card.type = "button";
+            card.className = "component-card";
+            card.draggable = !disabled;
+            card.dataset.componentId = component.id;
+            card.dataset.category = component.category;
+            card.title = t(component.description);
+            card.ariaDisabled = String(disabled);
+            card.classList.toggle("disabled", disabled);
+            card.classList.toggle("selected", getSelectedComponent() === component.id);
+            card.append(componentVisual(component));
+            cards.append(card);
+        });
+        group.append(cards);
+        toolbox.append(group);
+    }
+}
+export function renderAll() {
+    renderArchitecture();
+    renderToolbox();
+}
+export function showError(message, slotId) {
+    const error = document.getElementById("error-message");
+    if (error) {
+        error.dataset.sourceMessage = message;
+        error.textContent = translateMessage(message);
+    }
+    if (slotId) {
+        document
+            .querySelector(`[data-slot-id="${slotId}"]`)
+            ?.classList.toggle("invalid", Boolean(message));
+    }
+}
+export function configureStateDialog() {
+    const dialog = document.getElementById("state-dialog");
+    if (!dialog)
+        return;
+    dialog.addEventListener("close", () => {
+        const error = document.getElementById("dialog-error");
+        if (error)
+            error.textContent = "";
+    });
+}
 //# sourceMappingURL=renderer.js.map

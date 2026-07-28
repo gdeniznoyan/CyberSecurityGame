@@ -1,7 +1,330 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cybersecurity Architecture Builder</title><link rel="stylesheet" href="./css/style.css"></head><body>
-<header class="site-header"><h1>Cybersecurity Architecture Builder</h1><p>Drag the components from the toolbox into the compatible architecture slots.</p></header><main class="app-shell">
-<section class="workspace" aria-labelledby="architecture-title"><h2 id="architecture-title">Architecture Canvas</h2><div id="architecture-canvas" class="architecture-canvas"></div><p id="error-message" class="error-message" role="alert" aria-live="assertive"></p></section>
-<section class="toolbox" aria-labelledby="toolbox-title"><h2 id="toolbox-title">Components</h2><div id="component-toolbox" class="toolbox-groups"></div></section>
-<section class="actions" aria-label="Architecture actions"><button id="analyze-button">Analyze Architecture</button><button id="export-button">Export Current State</button><button id="import-button">Import State</button><button id="reset-button" class="secondary">Reset Architecture</button></section>
-<section id="result-panel" class="result-panel" aria-labelledby="result-title" aria-live="polite"><h2 id="result-title">Future Result</h2><p id="result-initial-message">Architecture analysis will be added later.</p><div id="result-description" hidden></div><div id="result-enabled-features" hidden></div><div id="result-risks" hidden></div><div id="result-recommendation" hidden></div></section></main>
-<dialog id="state-dialog"><form method="dialog" class="dialog-card"><div class="dialog-heading"><h2 id="dialog-title">Architecture State</h2><button value="cancel" aria-label="Close dialog">×</button></div><p id="dialog-help"></p><textarea id="state-json" rows="16" spellcheck="false" aria-label="Architecture state JSON"></textarea><p id="dialog-error" class="error-message" role="alert" aria-live="assertive"></p><div class="dialog-actions"><button id="copy-json-button" type="button">Copy JSON</button><button id="apply-import-button" type="button">Import JSON</button><button value="cancel">Close</button></div></form></dialog><script type="module" src="./dist/main.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cybersecurity Architecture Builder</title>
+    <link rel="stylesheet" href="./css/style.css">
+  </head>
+
+  <body>
+    <div class="page-layout">
+      <aside class="sidebar">
+        <div class="brand">
+          <img
+            class="brand-image-placeholder"
+            src="./assets/sidebar/logo.png"
+            alt=""
+          >
+          <div
+            class="brand-name"
+            data-i18n="Cybersecurity Architecture Builder"
+          >
+            Cybersecurity Architecture Builder
+          </div>
+        </div>
+
+        <nav
+          class="sidebar-nav"
+          aria-label="Primary navigation"
+          data-i18n-aria-label="Primary navigation"
+        >
+          <button class="nav-item active" type="button">
+            <img
+              class="nav-image-placeholder"
+              src="./assets/sidebar/builder.png"
+              alt=""
+            >
+            <span data-i18n="Builder">Builder</span>
+          </button>
+          <button id="scenarios-button" class="nav-item" type="button">
+            <img
+              class="nav-image-placeholder"
+              src="./assets/sidebar/scenarios.png"
+              alt=""
+            >
+            <span data-i18n="Scenarios">Scenarios</span>
+          </button>
+          <button class="nav-item" type="button">
+            <img
+              class="nav-image-placeholder"
+              src="./assets/sidebar/learn.png"
+              alt=""
+            >
+            <span data-i18n="Learn">Learn</span>
+          </button>
+          <button class="nav-item" type="button">
+            <img
+              class="nav-image-placeholder"
+              src="./assets/sidebar/about.png"
+              alt=""
+            >
+            <span data-i18n="About">About</span>
+          </button>
+        </nav>
+
+        <section class="how-to-play" aria-labelledby="how-to-play-title">
+          <h2 id="how-to-play-title">
+            <img src="./assets/sidebar/how-title.png" alt="">
+            <span data-i18n="How to Play">How to Play</span>
+          </h2>
+          <ol>
+            <li>
+              <img src="./assets/sidebar/how-drag.png" alt="">
+              <span data-i18n="1. Drag components from the toolbox.">
+                1. Drag components from the toolbox.
+              </span>
+            </li>
+            <li>
+              <img src="./assets/sidebar/how-drop.png" alt="">
+              <span data-i18n="2. Drop one into each architecture slot.">
+                2. Drop one into each architecture slot.
+              </span>
+            </li>
+            <li>
+              <img src="./assets/sidebar/how-analyze.png" alt="">
+              <span data-i18n="3. Analyze your architecture.">
+                3. Analyze your architecture.
+              </span>
+            </li>
+            <li>
+              <img src="./assets/sidebar/how-improve.png" alt="">
+              <span data-i18n="4. Improve and build securely.">
+                4. Improve and build securely.
+              </span>
+            </li>
+          </ol>
+        </section>
+      </aside>
+
+      <div class="page-content">
+        <header class="site-header">
+          <div class="header-copy">
+            <h1 data-i18n="Cybersecurity Architecture Builder">
+              Cybersecurity Architecture Builder
+            </h1>
+            <p data-i18n="Build secure architectures by placing the right security components in the correct locations.">
+              Build secure architectures by placing the right security
+              components in the correct locations.
+            </p>
+          </div>
+
+          <div class="header-actions">
+            <button
+              class="help-button"
+              type="button"
+              aria-label="Show help"
+              title="Help"
+              data-i18n-aria-label="Show help"
+              data-i18n-title="Help"
+            >
+              ?
+            </button>
+            <button id="reset-button" class="reset-button" type="button">
+              <span data-i18n="Reset">Reset</span>
+            </button>
+            <label class="header-language" for="language-select">
+              <span id="language-title" data-i18n="Languages">Languages</span>
+              <select id="language-select">
+                <option value="en">English</option>
+                <option value="tr">Türkçe</option>
+              </select>
+            </label>
+            <button id="analyze-button" class="analyze-button" type="button">
+              <span data-i18n="Analyze Architecture">
+                Analyze Architecture
+              </span>
+            </button>
+          </div>
+        </header>
+
+        <main class="app-shell">
+          <section class="workspace" aria-labelledby="architecture-title">
+            <h2 id="architecture-title" data-i18n="Architecture Canvas">
+              Architecture Canvas
+            </h2>
+            <div id="architecture-canvas" class="architecture-canvas"></div>
+            <p
+              id="error-message"
+              class="error-message"
+              role="alert"
+              aria-live="assertive"
+            ></p>
+          </section>
+
+          <section class="toolbox" aria-labelledby="toolbox-title">
+            <h2 id="toolbox-title" data-i18n="Component Toolbox">
+              Component Toolbox
+            </h2>
+            <div id="component-toolbox" class="toolbox-groups"></div>
+          </section>
+
+          <section
+            class="actions"
+            aria-label="Architecture data actions"
+            data-i18n-aria-label="Architecture data actions"
+          >
+            <button id="export-button" type="button">
+              <span data-i18n="Export Current State">
+                Export Current State
+              </span>
+            </button>
+            <button id="import-button" type="button">
+              <span data-i18n="Import State">Import State</span>
+            </button>
+          </section>
+
+          <aside
+            id="result-panel"
+            class="result-panel"
+            aria-labelledby="result-title"
+            aria-live="polite"
+          >
+            <section class="architecture-result-section">
+              <h2 id="result-title" data-i18n="Architecture Result">
+                Architecture Result
+              </h2>
+              <div id="result-scenario" class="result-scenario">—</div>
+              <dl class="result-details">
+                <div>
+                  <dt data-i18n="Security Level">Security Level</dt>
+                  <dd id="result-level">—</dd>
+                </div>
+                <div>
+                  <dt data-i18n="Score">Score</dt>
+                  <dd id="result-score">—</dd>
+                </div>
+              </dl>
+              <div class="result-description-block">
+                <h3 data-i18n="Description">Description</h3>
+                <p id="result-description">—</p>
+              </div>
+              <p
+                id="result-hint"
+                class="result-hint"
+                data-i18n="Analyze the architecture to identify it."
+              >
+                Analyze the architecture to identify it.
+              </p>
+            </section>
+          </aside>
+        </main>
+
+        <footer class="site-footer">
+          <span data-i18n="Cybersecurity Architecture Builder">
+            Cybersecurity Architecture Builder
+          </span>
+          <span data-i18n="Learn">Learn</span>
+          <span data-i18n="Build">Build</span>
+          <span data-i18n="Protect">Protect</span>
+          <span class="version">v1.0.0</span>
+        </footer>
+      </div>
+    </div>
+
+    <dialog id="state-dialog">
+      <form method="dialog" class="dialog-card">
+        <div class="dialog-heading">
+          <h2 id="dialog-title" data-i18n="Architecture State">
+            Architecture State
+          </h2>
+          <button
+            value="cancel"
+            aria-label="Close dialog"
+            data-i18n-aria-label="Close dialog"
+          >
+            ×
+          </button>
+        </div>
+
+        <p id="dialog-help"></p>
+
+        <textarea
+          id="state-json"
+          rows="16"
+          spellcheck="false"
+          aria-label="Architecture state JSON"
+          data-i18n-aria-label="Architecture state JSON"
+        ></textarea>
+
+        <p
+          id="dialog-error"
+          class="error-message"
+          role="alert"
+          aria-live="assertive"
+        ></p>
+
+        <div class="dialog-actions">
+          <button id="copy-json-button" type="button">
+            <span data-i18n="Copy JSON">Copy JSON</span>
+          </button>
+          <button id="apply-import-button" type="button">
+            <span data-i18n="Import JSON">Import JSON</span>
+          </button>
+          <button value="cancel">
+            <span data-i18n="Close">Close</span>
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="scenarios-dialog" class="scenarios-dialog">
+      <div class="scenarios-dialog-card">
+        <div class="dialog-heading">
+          <h2>Predefined Architectures</h2>
+          <button
+            id="close-scenarios-button"
+            type="button"
+            aria-label="Close dialog"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="scenario-list">
+          <article class="scenario-card">
+            <h3>1. Unprotected System</h3>
+            <p><strong>Client Computer:</strong> Password</p>
+            <p><strong>Authentication:</strong> Authentication Service</p>
+            <p><strong>Wild Internet:</strong> Network Connection</p>
+            <p><strong>Third Party:</strong> None</p>
+            <p><strong>Security Transition:</strong> None</p>
+            <p><strong>Target Network:</strong> Public Network</p>
+          </article>
+
+          <article class="scenario-card">
+            <h3>2. VPN-Based System</h3>
+            <p><strong>Client Computer:</strong> Password, MFA</p>
+            <p><strong>Authentication:</strong> Authentication Service</p>
+            <p><strong>Wild Internet:</strong> Network Connection, VPN Tunnel, Connection Encryption</p>
+            <p><strong>Third Party:</strong> VPN Provider</p>
+            <p><strong>Security Transition:</strong> Firewall</p>
+            <p><strong>Target Network:</strong> Private Corporate Network</p>
+          </article>
+
+          <article class="scenario-card">
+            <h3>3. Zero Trust Architecture</h3>
+            <p><strong>Client Computer:</strong> Password, MFA, Endpoint Protection</p>
+            <p><strong>Authentication:</strong> Authentication Service, Identity Provider</p>
+            <p><strong>Wild Internet:</strong> Application Connection, Connection Encryption</p>
+            <p><strong>Third Party:</strong> Cloud Service</p>
+            <p><strong>Security Transition:</strong> Firewall, Policy Engine</p>
+            <p><strong>Target Network:</strong> Cloud Resource</p>
+          </article>
+
+          <article class="scenario-card">
+            <h3>4. Post-Zero Trust Architecture</h3>
+            <p><strong>Client Computer:</strong> Password, MFA, Biometric Authentication, PKI Certificate, Endpoint Protection</p>
+            <p><strong>Authentication:</strong> Authentication Service, Identity Provider</p>
+            <p><strong>Wild Internet:</strong> Application Connection, Connection Encryption</p>
+            <p><strong>Third Party:</strong> Cloud Service, External API</p>
+            <p><strong>Security Transition:</strong> Firewall, Policy Engine, Relay Node</p>
+            <p><strong>Target Network:</strong> Cloud Resource</p>
+          </article>
+        </div>
+      </div>
+    </dialog>
+
+    <script type="module" src="./dist/main.js"></script>
+  </body>
+</html>
