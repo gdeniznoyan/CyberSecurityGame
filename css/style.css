@@ -227,7 +227,7 @@ button {
 
 .app-shell {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 228px;
+  grid-template-columns: minmax(0, 1fr) 280px;
   grid-template-areas:
     "workspace result"
     "toolbox result"
@@ -249,6 +249,95 @@ button {
   grid-area: workspace;
   min-width: 0;
   padding: 14px;
+}
+
+.result-panel {
+  grid-area: result;
+  align-self: stretch;
+  min-width: 0;
+  padding: 16px;
+}
+
+.result-panel > h2 {
+  margin: 0 0 14px;
+  color: #111820;
+  font-size: 0.86rem;
+}
+
+.security-score {
+  display: grid;
+  justify-items: center;
+  padding: 14px 0 18px;
+  border-bottom: 1px solid #dce2e8;
+}
+
+.security-score h3 {
+  justify-self: start;
+  margin: 0 0 14px;
+  color: #111820;
+  font-size: 0.72rem;
+}
+
+.security-score-chart {
+  --score-progress: 0;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  background: conic-gradient(
+    #d50914 calc(var(--score-progress) * 1%),
+    #e1e5e9 0
+  );
+  border-radius: 50%;
+}
+
+.security-score-chart::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  background: #ffffff;
+  border-radius: 50%;
+}
+
+.security-score-chart span {
+  position: relative;
+  z-index: 1;
+  color: #111820;
+  font-size: 0.85rem;
+  font-weight: 750;
+}
+
+.result-insights {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 8px 0 0;
+  list-style: none;
+}
+
+.insight-item {
+  position: relative;
+  padding: 11px 2px 11px 24px;
+  color: #29313a;
+  border-bottom: 1px solid #e1e5e9;
+  font-size: 0.67rem;
+  line-height: 1.55;
+}
+
+.insight-item:last-child {
+  border-bottom: 0;
+}
+
+.insight-item::before {
+  content: "";
+  position: absolute;
+  top: 17px;
+  left: 5px;
+  width: 7px;
+  height: 7px;
+  background: #d50914;
+  border-radius: 50%;
 }
 
 .workspace > h2,
@@ -572,94 +661,8 @@ button {
   font-size: 0.7rem;
 }
 
-.result-panel {
-  grid-area: result;
-  align-self: stretch;
-  min-width: 0;
-  padding: 0 14px 14px;
-}
-
-.result-panel section {
-  padding: 18px 4px;
-}
-
-.result-panel h2 {
-  margin: 0 0 14px;
-  color: #111820;
-  font-size: 0.78rem;
-}
-
 .site-footer {
   color: #29313a;
-}
-
-.result-scenario {
-  padding: 18px 12px;
-  color: #111820;
-  background: #f9fafa;
-  border: 1px solid #dce2e8;
-  border-radius: 7px;
-  font-size: 0.9rem;
-  font-weight: 750;
-  line-height: 1.35;
-  text-align: center;
-}
-
-.result-scenario.custom {
-  color: #d50914;
-}
-
-.result-details {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin: 10px 0;
-}
-
-.result-details > div {
-  padding: 10px 8px;
-  background: #f9fafa;
-  border: 1px solid #dce2e8;
-  border-radius: 7px;
-  text-align: center;
-}
-
-.result-details dt {
-  color: #5f6875;
-  font-size: 0.6rem;
-}
-
-.result-details dd {
-  margin: 3px 0 0;
-  color: #111820;
-  font-size: 0.75rem;
-  font-weight: 750;
-}
-
-.result-description-block {
-  padding: 11px;
-  border: 1px solid #dce2e8;
-  border-radius: 7px;
-}
-
-.result-description-block h3 {
-  margin: 0 0 5px;
-  color: #111820;
-  font-size: 0.65rem;
-}
-
-.result-description-block p {
-  margin: 0;
-  color: #5f6875;
-  font-size: 0.66rem;
-  line-height: 1.45;
-}
-
-.result-hint {
-  margin: 12px 2px 0;
-  color: #5f6875;
-  font-size: 0.68rem;
-  line-height: 1.45;
 }
 
 .site-footer {
@@ -684,42 +687,6 @@ dialog {
 
 dialog::backdrop {
   background: rgba(0, 0, 0, 0.55);
-}
-
-.scenarios-dialog {
-  width: min(900px, 94vw);
-  max-height: 88vh;
-  overflow: auto;
-}
-
-.scenarios-dialog-card {
-  padding: 20px;
-}
-
-.scenario-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 18px;
-}
-
-.scenario-card {
-  padding: 15px;
-  border: 1px solid #dce2e8;
-  border-radius: 8px;
-}
-
-.scenario-card h3 {
-  margin: 0 0 12px;
-  color: #d50914;
-  font-size: 0.9rem;
-}
-
-.scenario-card p {
-  margin: 6px 0;
-  color: #29313a;
-  font-size: 0.72rem;
-  line-height: 1.45;
 }
 
 .dialog-card {
@@ -859,12 +826,6 @@ textarea:focus-visible {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .result-panel {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0 16px;
-  }
-
 }
 
 @media (max-width: 580px) {
@@ -874,10 +835,6 @@ textarea:focus-visible {
 
   .header-actions {
     justify-content: flex-start;
-  }
-
-  .scenario-list {
-    grid-template-columns: 1fr;
   }
 
   .header-actions button {
@@ -920,8 +877,7 @@ textarea:focus-visible {
     transform: rotate(90deg);
   }
 
-  .toolbox-groups,
-  .result-panel {
+  .toolbox-groups {
     grid-template-columns: 1fr;
   }
 

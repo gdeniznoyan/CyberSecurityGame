@@ -4,7 +4,7 @@ const s=(id:SlotId,label:string,section:SectionId,slotType:SlotType,ids:Componen
 const clientComponents:ComponentId[]=["password","mfa","biometric-authentication","pki-certificate","endpoint-protection"];
 const authenticationComponents:ComponentId[]=["authentication-service","identity-provider"];
 const internetComponents:ComponentId[]=["network-connection","application-connection","connection-encryption","vpn-tunnel"];
-const thirdPartyComponents:ComponentId[]=["cloud-service","external-api","vpn-provider"];
+const thirdPartyComponents:ComponentId[]=["external-authentication-service","external-cloud-storage","external-payment-service","external-monitoring-service"];
 const transitionComponents:ComponentId[]=["firewall","policy-engine","relay-node"];
 const targetNetworks:ComponentId[]=["private-corporate-network","local-network","cloud-resource","public-network"];
 export const slotDefinitions:SlotDefinition[]=[
@@ -22,6 +22,7 @@ s("internet-component-4","Internet Connection","wild-internet","internet-compone
 s("third-party-component-1","Third-Party Service","third-party","third-party-component",thirdPartyComponents,"Drop a third-party service"),
 s("third-party-component-2","Third-Party Service","third-party","third-party-component",thirdPartyComponents,"Drop a third-party service"),
 s("third-party-component-3","Third-Party Service","third-party","third-party-component",thirdPartyComponents,"Drop a third-party service"),
+s("third-party-component-4","Third-Party Service","third-party","third-party-component",thirdPartyComponents,"Drop a third-party service"),
 s("transition-component-1","Security Control","gateway","transition-component",transitionComponents,"Drop a security control"),
 s("transition-component-2","Security Control","gateway","transition-component",transitionComponents,"Drop a security control"),
 s("transition-component-3","Security Control","gateway","transition-component",transitionComponents,"Drop a security control"),

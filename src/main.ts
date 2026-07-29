@@ -18,12 +18,8 @@ import{
   renderAll,
   showError
 }from"./renderer.js";
-import{
-  analyzeArchitecture,
-  renderArchitectureResult
-}from"./scenarioMatcher.js";
+import{renderArchitectureInsights}from"./resultInsights.js";
 import{resetState,subscribe}from"./state.js";
-import type{ArchitectureAnalysisResult}from"./types.js";
 
 const byId=<T extends HTMLElement>(id:string):T|null=>
   document.getElementById(id)as T|null;
@@ -31,7 +27,6 @@ const byId=<T extends HTMLElement>(id:string):T|null=>
 function initialize():void{
   initializeLanguage();
 
-  let lastResult:ArchitectureAnalysisResult|null=null;
   let dialogMode:"export"|"import"|null=null;
 
   const renderInterface=():void=>{
@@ -46,7 +41,6 @@ function initialize():void{
   const apply=byId<HTMLButtonElement>("apply-import-button");
   const error=byId<HTMLElement>("dialog-error");
   const languageSelect=byId<HTMLSelectElement>("language-select");
-  const scenariosDialog=byId<HTMLDialogElement>("scenarios-dialog");
 
   const updateDialogHelp=():void=>{
     if(!help)return;
@@ -60,14 +54,11 @@ function initialize():void{
   };
 
   renderInterface();
-  renderArchitectureResult(null);
+  renderArchitectureInsights();
   configureStateDialog();
-  subscribe(change=>{
-    if(change==="architecture"){
-      lastResult=null;
-      renderArchitectureResult(null);
-    }
+  subscribe(()=>{
     renderInterface();
+    renderArchitectureInsights();
   });
   initializeImageManager(renderInterface);
   initializeDragAndDrop(showError,renderInterface);
@@ -81,36 +72,19 @@ function initialize():void{
 
   subscribeToLanguage(()=>{
     renderInterface();
-    renderArchitectureResult(lastResult);
+    renderArchitectureInsights();
     updateDialogHelp();
   });
 
   byId<HTMLButtonElement>("reset-button")?.addEventListener("click",()=>{
     resetState();
-    lastResult=null;
     showError("");
-    renderArchitectureResult(null);
     if(textarea)textarea.value="";
   });
 
-  const analyzeButton=byId<HTMLButtonElement>("analyze-button");
-  if(analyzeButton){
-    analyzeButton.disabled=false;
-    analyzeButton.removeAttribute("title");
-    analyzeButton.addEventListener("click",()=>{
-      lastResult=analyzeArchitecture();
-      renderArchitectureResult(lastResult);
-    });
-  }
-
-  byId<HTMLButtonElement>("scenarios-button")?.addEventListener("click",()=>{
-    scenariosDialog?.showModal();
+  byId<HTMLButtonElement>("analyze-button")?.addEventListener("click",()=>{
+    renderArchitectureInsights();
   });
-
-  byId<HTMLButtonElement>("close-scenarios-button")?.addEventListener(
-    "click",
-    ()=>scenariosDialog?.close()
-  );
 
   byId<HTMLButtonElement>("export-button")?.addEventListener("click",()=>{
     if(!dialog||!textarea||!copy||!apply)return;

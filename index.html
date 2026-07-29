@@ -37,14 +37,6 @@
             >
             <span data-i18n="Builder">Builder</span>
           </button>
-          <button id="scenarios-button" class="nav-item" type="button">
-            <img
-              class="nav-image-placeholder"
-              src="./assets/sidebar/scenarios.png"
-              alt=""
-            >
-            <span data-i18n="Scenarios">Scenarios</span>
-          </button>
           <button class="nav-item" type="button">
             <img
               class="nav-image-placeholder"
@@ -83,14 +75,14 @@
             </li>
             <li>
               <img src="./assets/sidebar/how-analyze.png" alt="">
-              <span data-i18n="3. Analyze your architecture.">
-                3. Analyze your architecture.
+              <span data-i18n="3. Combine compatible components.">
+                3. Combine compatible components.
               </span>
             </li>
             <li>
               <img src="./assets/sidebar/how-improve.png" alt="">
-              <span data-i18n="4. Improve and build securely.">
-                4. Improve and build securely.
+              <span data-i18n="4. Export your architecture when ready.">
+                4. Export your architecture when ready.
               </span>
             </li>
           </ol>
@@ -175,39 +167,20 @@
           </section>
 
           <aside
-            id="result-panel"
             class="result-panel"
-            aria-labelledby="result-title"
+            aria-label="Architecture feedback"
             aria-live="polite"
           >
-            <section class="architecture-result-section">
-              <h2 id="result-title" data-i18n="Architecture Result">
-                Architecture Result
-              </h2>
-              <div id="result-scenario" class="result-scenario">—</div>
-              <dl class="result-details">
-                <div>
-                  <dt data-i18n="Security Level">Security Level</dt>
-                  <dd id="result-level">—</dd>
-                </div>
-                <div>
-                  <dt data-i18n="Score">Score</dt>
-                  <dd id="result-score">—</dd>
-                </div>
-              </dl>
-              <div class="result-description-block">
-                <h3 data-i18n="Description">Description</h3>
-                <p id="result-description">—</p>
+            <h2 data-i18n="Result">Result</h2>
+            <section class="security-score" aria-label="Security Score">
+              <h3 data-i18n="Security Score">Security Score</h3>
+              <div class="security-score-chart">
+                <span id="security-score-value">--</span>
               </div>
-              <p
-                id="result-hint"
-                class="result-hint"
-                data-i18n="Analyze the architecture to identify it."
-              >
-                Analyze the architecture to identify it.
-              </p>
             </section>
+            <ul id="result-insights" class="result-insights"></ul>
           </aside>
+
         </main>
 
         <footer class="site-footer">
@@ -266,63 +239,6 @@
           </button>
         </div>
       </form>
-    </dialog>
-
-    <dialog id="scenarios-dialog" class="scenarios-dialog">
-      <div class="scenarios-dialog-card">
-        <div class="dialog-heading">
-          <h2>Predefined Architectures</h2>
-          <button
-            id="close-scenarios-button"
-            type="button"
-            aria-label="Close dialog"
-          >
-            ×
-          </button>
-        </div>
-
-        <div class="scenario-list">
-          <article class="scenario-card">
-            <h3>1. Unprotected System</h3>
-            <p><strong>Client Computer:</strong> Password</p>
-            <p><strong>Authentication:</strong> Authentication Service</p>
-            <p><strong>Wild Internet:</strong> Network Connection</p>
-            <p><strong>Third Party:</strong> None</p>
-            <p><strong>Security Transition:</strong> None</p>
-            <p><strong>Target Network:</strong> Public Network</p>
-          </article>
-
-          <article class="scenario-card">
-            <h3>2. VPN-Based System</h3>
-            <p><strong>Client Computer:</strong> Password, MFA</p>
-            <p><strong>Authentication:</strong> Authentication Service</p>
-            <p><strong>Wild Internet:</strong> Network Connection, VPN Tunnel, Connection Encryption</p>
-            <p><strong>Third Party:</strong> VPN Provider</p>
-            <p><strong>Security Transition:</strong> Firewall</p>
-            <p><strong>Target Network:</strong> Private Corporate Network</p>
-          </article>
-
-          <article class="scenario-card">
-            <h3>3. Zero Trust Architecture</h3>
-            <p><strong>Client Computer:</strong> Password, MFA, Endpoint Protection</p>
-            <p><strong>Authentication:</strong> Authentication Service, Identity Provider</p>
-            <p><strong>Wild Internet:</strong> Application Connection, Connection Encryption</p>
-            <p><strong>Third Party:</strong> Cloud Service</p>
-            <p><strong>Security Transition:</strong> Firewall, Policy Engine</p>
-            <p><strong>Target Network:</strong> Cloud Resource</p>
-          </article>
-
-          <article class="scenario-card">
-            <h3>4. Post-Zero Trust Architecture</h3>
-            <p><strong>Client Computer:</strong> Password, MFA, Biometric Authentication, PKI Certificate, Endpoint Protection</p>
-            <p><strong>Authentication:</strong> Authentication Service, Identity Provider</p>
-            <p><strong>Wild Internet:</strong> Application Connection, Connection Encryption</p>
-            <p><strong>Third Party:</strong> Cloud Service, External API</p>
-            <p><strong>Security Transition:</strong> Firewall, Policy Engine, Relay Node</p>
-            <p><strong>Target Network:</strong> Cloud Resource</p>
-          </article>
-        </div>
-      </div>
     </dialog>
 
     <script type="module" src="./dist/main.js"></script>
