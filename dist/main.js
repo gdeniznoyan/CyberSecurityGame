@@ -3,12 +3,11 @@ import { initializeDragAndDrop } from "./dragDrop.js";
 import { applyPageTranslations, getLanguage, initializeLanguage, setLanguage, subscribeToLanguage, t, translateMessage } from "./i18n.js";
 import { initializeImageManager } from "./imageManager.js";
 import { configureStateDialog, renderAll, showError } from "./renderer.js";
-import { analyzeArchitecture, renderArchitectureResult } from "./scenarioMatcher.js";
+import { renderArchitectureInsights } from "./resultInsights.js";
 import { resetState, subscribe } from "./state.js";
 const byId = (id) => document.getElementById(id);
 function initialize() {
     initializeLanguage();
-    let lastResult = null;
     let dialogMode = null;
     const renderInterface = () => {
         renderAll();
@@ -21,7 +20,6 @@ function initialize() {
     const apply = byId("apply-import-button");
     const error = byId("dialog-error");
     const languageSelect = byId("language-select");
-    const scenariosDialog = byId("scenarios-dialog");
     const updateDialogHelp = () => {
         if (!help)
             return;
@@ -33,14 +31,11 @@ function initialize() {
         }
     };
     renderInterface();
-    renderArchitectureResult(null);
+    renderArchitectureInsights();
     configureStateDialog();
-    subscribe(change => {
-        if (change === "architecture") {
-            lastResult = null;
-            renderArchitectureResult(null);
-        }
+    subscribe(() => {
         renderInterface();
+        renderArchitectureInsights();
     });
     initializeImageManager(renderInterface);
     initializeDragAndDrop(showError, renderInterface);
@@ -52,30 +47,18 @@ function initialize() {
     }
     subscribeToLanguage(() => {
         renderInterface();
-        renderArchitectureResult(lastResult);
+        renderArchitectureInsights();
         updateDialogHelp();
     });
     byId("reset-button")?.addEventListener("click", () => {
         resetState();
-        lastResult = null;
         showError("");
-        renderArchitectureResult(null);
         if (textarea)
             textarea.value = "";
     });
-    const analyzeButton = byId("analyze-button");
-    if (analyzeButton) {
-        analyzeButton.disabled = false;
-        analyzeButton.removeAttribute("title");
-        analyzeButton.addEventListener("click", () => {
-            lastResult = analyzeArchitecture();
-            renderArchitectureResult(lastResult);
-        });
-    }
-    byId("scenarios-button")?.addEventListener("click", () => {
-        scenariosDialog?.showModal();
+    byId("analyze-button")?.addEventListener("click", () => {
+        renderArchitectureInsights();
     });
-    byId("close-scenarios-button")?.addEventListener("click", () => scenariosDialog?.close());
     byId("export-button")?.addEventListener("click", () => {
         if (!dialog || !textarea || !copy || !apply)
             return;

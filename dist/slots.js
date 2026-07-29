@@ -3,7 +3,7 @@ const s = (id, label, section, slotType, ids, text, required = false) => ({ id, 
 const clientComponents = ["password", "mfa", "biometric-authentication", "pki-certificate", "endpoint-protection"];
 const authenticationComponents = ["authentication-service", "identity-provider"];
 const internetComponents = ["network-connection", "application-connection", "connection-encryption", "vpn-tunnel"];
-const thirdPartyComponents = ["cloud-service", "external-api", "vpn-provider"];
+const thirdPartyComponents = ["external-authentication-service", "external-cloud-storage", "external-payment-service", "external-monitoring-service"];
 const transitionComponents = ["firewall", "policy-engine", "relay-node"];
 const targetNetworks = ["private-corporate-network", "local-network", "cloud-resource", "public-network"];
 export const slotDefinitions = [
@@ -21,6 +21,7 @@ export const slotDefinitions = [
     s("third-party-component-1", "Third-Party Service", "third-party", "third-party-component", thirdPartyComponents, "Drop a third-party service"),
     s("third-party-component-2", "Third-Party Service", "third-party", "third-party-component", thirdPartyComponents, "Drop a third-party service"),
     s("third-party-component-3", "Third-Party Service", "third-party", "third-party-component", thirdPartyComponents, "Drop a third-party service"),
+    s("third-party-component-4", "Third-Party Service", "third-party", "third-party-component", thirdPartyComponents, "Drop a third-party service"),
     s("transition-component-1", "Security Control", "gateway", "transition-component", transitionComponents, "Drop a security control"),
     s("transition-component-2", "Security Control", "gateway", "transition-component", transitionComponents, "Drop a security control"),
     s("transition-component-3", "Security Control", "gateway", "transition-component", transitionComponents, "Drop a security control"),
