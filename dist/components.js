@@ -1,29 +1,154 @@
-const c = (id, label, category, description, allowedSlotTypes) => ({ id, label, category, description, allowedSlotTypes, reusable: false, futureImageUrl: `./assets/components/${id}.png`, futureMetadata: {} });
-export const securityComponents = [
-    c("password", "Password", "client-components", "Password-based client credential.", ["client-component"]),
-    c("mfa", "MFA", "client-components", "Multi-factor client authentication.", ["client-component"]),
-    c("biometric-authentication", "Biometric Authentication", "client-components", "Biometric client authentication.", ["client-component"]),
-    c("pki-certificate", "PKI Certificate", "client-components", "Certificate-based client credential.", ["client-component"]),
-    c("endpoint-protection", "Endpoint Protection", "client-components", "Security protection for the client endpoint.", ["client-component"]),
-    c("authentication-service", "Authentication Service", "authentication-services", "Primary authentication service.", ["authentication-component"]),
-    c("identity-provider", "Identity Provider", "authentication-services", "Centralized identity service.", ["authentication-component"]),
-    c("network-connection", "Network Connection", "connection-security", "Network-level connection.", ["internet-component"]),
-    c("application-connection", "Application Connection", "connection-security", "Application-level connection.", ["internet-component"]),
-    c("connection-encryption", "Connection Encryption", "connection-security", "Encryption layered over a network or application connection.", ["internet-component"]),
-    c("vpn-tunnel", "VPN Tunnel", "connection-security", "Encrypted VPN communication tunnel.", ["internet-component"]),
-    c("external-authentication-service", "External Authentication Service", "third-party", "External service for identity authentication.", ["third-party-component"]),
-    c("external-cloud-storage", "External Cloud Storage", "third-party", "External service for cloud data storage.", ["third-party-component"]),
-    c("external-payment-service", "External Payment Service", "third-party", "External service for payment processing.", ["third-party-component"]),
-    c("external-monitoring-service", "External Monitoring Service", "third-party", "External service for system monitoring.", ["third-party-component"]),
-    c("firewall", "Firewall", "network-components", "Network traffic filtering.", ["transition-component"]),
-    c("policy-engine", "Policy Engine", "network-components", "Policy evaluation.", ["transition-component"]),
-    c("relay-node", "Relay Node", "network-components", "Connection relay.", ["transition-component"]),
-    c("private-corporate-network", "Private Corporate Network", "network-types", "Private corporate target.", ["network-type"]),
-    c("local-network", "Local Network", "network-types", "Local network target.", ["network-type"]),
-    c("cloud-resource", "Cloud Resource", "network-types", "Cloud-hosted target resource.", ["network-type"]),
-    c("public-network", "Public Network", "network-types", "Public network target.", ["network-type"])
+export const passwordComponent = {
+    id: "password", name: "Password", toolboxArea: "access-device",
+    icon: "./assets/components/password.png",
+    allowedAreaIds: ["access-device"], outputByArea: { "access-device": "" }, scoreByArea: { "access-device": 3 }
+};
+export const biometricAuthenticationComponent = {
+    id: "biometric-authentication", name: "Biometric Authentication", toolboxArea: "access-device",
+    icon: "./assets/components/biometric-authentication.png",
+    allowedAreaIds: ["access-device"], outputByArea: { "access-device": "" }, scoreByArea: { "access-device": 7 }
+};
+export const hardwareSecurityTokenComponent = {
+    id: "hardware-security-token", name: "Hardware Security Token", toolboxArea: "access-device",
+    icon: "./assets/components/mfa.png",
+    allowedAreaIds: ["access-device"], outputByArea: { "access-device": "" }, scoreByArea: { "access-device": 10 }
+};
+export const zeroFootprintClientComponent = {
+    id: "zero-footprint-client", name: "Zero-Footprint Client", toolboxArea: "access-device",
+    icon: "./assets/components/endpoint-protection.png",
+    allowedAreaIds: ["access-device"], outputByArea: { "access-device": "" }, scoreByArea: { "access-device": 10 }
+};
+export const privateCaComponent = {
+    id: "private-ca", name: "Private CA", toolboxArea: "trust-identity-services",
+    icon: "./assets/components/certificate-authority.png",
+    allowedAreaIds: ["trust-identity-services"], outputByArea: { "trust-identity-services": "" }, scoreByArea: { "trust-identity-services": 10 }
+};
+export const x509CertificateComponent = {
+    id: "x509-certificate", name: "X.509 Certificate", toolboxArea: "trust-identity-services",
+    icon: "./assets/components/pki-certificate.png",
+    allowedAreaIds: ["trust-identity-services"], outputByArea: { "trust-identity-services": "" }, scoreByArea: { "trust-identity-services": 9 }
+};
+export const certificateRevocationCheckComponent = {
+    id: "certificate-revocation-check", name: "Certificate Revocation Check", toolboxArea: "trust-identity-services",
+    icon: "./assets/components/policy-engine.png",
+    allowedAreaIds: ["trust-identity-services"], outputByArea: { "trust-identity-services": "" }, scoreByArea: { "trust-identity-services": 8 }
+};
+export const otpComponent = {
+    id: "otp", name: "OTP", toolboxArea: "trust-identity-services",
+    icon: "./assets/components/mfa.png",
+    allowedAreaIds: ["trust-identity-services"], outputByArea: { "trust-identity-services": "" }, scoreByArea: { "trust-identity-services": 7 }
+};
+export const mutualTlsComponent = {
+    id: "mutual-tls", name: "Mutual TLS", toolboxArea: "secure-session",
+    icon: "./assets/components/connection-encryption.png",
+    allowedAreaIds: ["secure-session"], outputByArea: { "secure-session": "" }, scoreByArea: { "secure-session": 10 }
+};
+export const ramTunnelingComponent = {
+    id: "ram-tunneling", name: "RAM Tunneling", toolboxArea: "secure-session",
+    icon: "./assets/components/ram-encryption.png",
+    allowedAreaIds: ["secure-session"], outputByArea: { "secure-session": "" }, scoreByArea: { "secure-session": 10 }
+};
+export const aes256EncryptionComponent = {
+    id: "aes-256-encryption", name: "AES-256 Encryption", toolboxArea: "secure-session",
+    icon: "./assets/components/connection-encryption.png",
+    allowedAreaIds: ["secure-session"], outputByArea: { "secure-session": "" }, scoreByArea: { "secure-session": 9 }
+};
+export const perfectForwardSecrecyComponent = {
+    id: "perfect-forward-secrecy", name: "Perfect Forward Secrecy", toolboxArea: "secure-session",
+    icon: "./assets/components/vpn-tunnel.png",
+    allowedAreaIds: ["secure-session"], outputByArea: { "secure-session": "" }, scoreByArea: { "secure-session": 8 }
+};
+export const externalAuthenticationServiceComponent = {
+    id: "external-authentication-service", name: "External Authentication Service", toolboxArea: "third-party-services",
+    icon: "./assets/components/external-authentication-service.png",
+    allowedAreaIds: ["third-party-services"], outputByArea: { "third-party-services": "" }, scoreByArea: { "third-party-services": -10 }
+};
+export const externalCloudStorageComponent = {
+    id: "external-cloud-storage", name: "External Cloud Storage", toolboxArea: "third-party-services",
+    icon: "./assets/components/external-cloud-storage.png",
+    allowedAreaIds: ["third-party-services"], outputByArea: { "third-party-services": "" }, scoreByArea: { "third-party-services": -8 }
+};
+export const externalMonitoringServiceComponent = {
+    id: "external-monitoring-service", name: "External Monitoring Service", toolboxArea: "third-party-services",
+    icon: "./assets/components/external-monitoring-service.png",
+    allowedAreaIds: ["third-party-services"], outputByArea: { "third-party-services": "" }, scoreByArea: { "third-party-services": -6 }
+};
+export const externalPaymentServiceComponent = {
+    id: "external-payment-service", name: "External Payment Service", toolboxArea: "third-party-services",
+    icon: "./assets/components/external-payment-service.png",
+    allowedAreaIds: ["third-party-services"], outputByArea: { "third-party-services": "" }, scoreByArea: { "third-party-services": -6 }
+};
+export const portCloakingComponent = {
+    id: "port-cloaking", name: "Port Cloaking", toolboxArea: "invisible-network-protection",
+    icon: "./assets/components/firewall.png",
+    allowedAreaIds: ["invisible-network-protection"], outputByArea: { "invisible-network-protection": "" }, scoreByArea: { "invisible-network-protection": 9 }
+};
+export const hiddenIpPathComponent = {
+    id: "hidden-ip-path", name: "Hidden IP Path", toolboxArea: "invisible-network-protection",
+    icon: "./assets/components/relay-node.png",
+    allowedAreaIds: ["invisible-network-protection"], outputByArea: { "invisible-network-protection": "" }, scoreByArea: { "invisible-network-protection": 9 }
+};
+export const noVirtualNetworkInterfaceComponent = {
+    id: "no-virtual-network-interface", name: "No Virtual Network Interface", toolboxArea: "invisible-network-protection",
+    icon: "./assets/components/vpn-tunnel.png",
+    allowedAreaIds: ["invisible-network-protection"], outputByArea: { "invisible-network-protection": "" }, scoreByArea: { "invisible-network-protection": 10 }
+};
+export const noNetworkParticipationComponent = {
+    id: "no-network-participation", name: "No Network Participation", toolboxArea: "invisible-network-protection",
+    icon: "./assets/components/network-connection.png",
+    allowedAreaIds: ["invisible-network-protection"], outputByArea: { "invisible-network-protection": "" }, scoreByArea: { "invisible-network-protection": 10 }
+};
+export const policyEngineComponent = {
+    id: "policy-engine", name: "Policy Engine", toolboxArea: "policy-access-control",
+    icon: "./assets/components/policy-engine.png",
+    allowedAreaIds: ["policy-access-control"], outputByArea: { "policy-access-control": "" }, scoreByArea: { "policy-access-control": 10 }
+};
+export const leastPrivilegeAccessComponent = {
+    id: "least-privilege-access", name: "Least-Privilege Access", toolboxArea: "policy-access-control",
+    icon: "./assets/components/controlled-access.png",
+    allowedAreaIds: ["policy-access-control"], outputByArea: { "policy-access-control": "" }, scoreByArea: { "policy-access-control": 10 }
+};
+export const applicationAllowListComponent = {
+    id: "application-allow-list", name: "Application Allow List", toolboxArea: "policy-access-control",
+    icon: "./assets/components/application-connection.png",
+    allowedAreaIds: ["policy-access-control"], outputByArea: { "policy-access-control": "" }, scoreByArea: { "policy-access-control": 9 }
+};
+export const pamLikeControlComponent = {
+    id: "pam-like-control", name: "PAM-Like Control", toolboxArea: "policy-access-control",
+    icon: "./assets/components/identity-provider.png",
+    allowedAreaIds: ["policy-access-control"], outputByArea: { "policy-access-control": "" }, scoreByArea: { "policy-access-control": 8 }
+};
+export const internalWebApplicationComponent = {
+    id: "internal-web-application", name: "Internal Web Application", toolboxArea: "protected-application",
+    icon: "./assets/components/application-connection.png",
+    allowedAreaIds: ["protected-application"], outputByArea: { "protected-application": "" }, scoreByArea: { "protected-application": 0 }
+};
+export const administrativeApplicationComponent = {
+    id: "administrative-application", name: "Administrative Application", toolboxArea: "protected-application",
+    icon: "./assets/components/identity-provider.png",
+    allowedAreaIds: ["protected-application"], outputByArea: { "protected-application": "" }, scoreByArea: { "protected-application": 0 }
+};
+export const partnerApplicationComponent = {
+    id: "partner-application", name: "Partner Application", toolboxArea: "protected-application",
+    icon: "./assets/components/external-api.png",
+    allowedAreaIds: ["protected-application"], outputByArea: { "protected-application": "" }, scoreByArea: { "protected-application": 0 }
+};
+export const virtualMachineComponent = {
+    id: "virtual-machine", name: "Virtual Machine", toolboxArea: "protected-application",
+    icon: "./assets/components/private-corporate-network.png",
+    allowedAreaIds: ["protected-application"], outputByArea: { "protected-application": "" }, scoreByArea: { "protected-application": 0 }
+};
+export const componentList = [
+    passwordComponent, biometricAuthenticationComponent, hardwareSecurityTokenComponent, zeroFootprintClientComponent,
+    privateCaComponent, x509CertificateComponent, certificateRevocationCheckComponent, otpComponent,
+    mutualTlsComponent, ramTunnelingComponent, aes256EncryptionComponent, perfectForwardSecrecyComponent,
+    externalAuthenticationServiceComponent, externalCloudStorageComponent, externalMonitoringServiceComponent, externalPaymentServiceComponent,
+    portCloakingComponent, hiddenIpPathComponent, noVirtualNetworkInterfaceComponent, noNetworkParticipationComponent,
+    policyEngineComponent, leastPrivilegeAccessComponent, applicationAllowListComponent, pamLikeControlComponent,
+    internalWebApplicationComponent, administrativeApplicationComponent, partnerApplicationComponent, virtualMachineComponent
 ];
-export function getComponentById(id) { return securityComponents.find(x => x.id === id); }
-export function updateComponentImageUrl(id, url) { const x = getComponentById(id); if (x)
-    x.futureImageUrl = url; }
+const componentIndex = new Map(componentList.map(component => [component.id, component]));
+export function getComponentById(id) {
+    return componentIndex.get(id);
+}
 //# sourceMappingURL=components.js.map

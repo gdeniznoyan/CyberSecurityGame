@@ -1,221 +1,94 @@
 import{getComponentById}from"./components.js";
-import{getSlotById}from"./slots.js";
-import{
-  getSelectedComponent,
-  getSlotComponent,
-  getSlotStates,
-  isComponentDisabled,
-  setSelectedComponent,
-  setSlotComponent
-}from"./state.js";
-import type{ComponentId,SlotDefinition,SlotId}from"./types.js";
+import{addPlacement,hasPlacement,removePlacement}from"./state.js";
+import type{AreaId,ComponentId}from"./types.js";
 
-let dragged:ComponentId|null=null;
-let reportError:(message:string,slotId?:SlotId)=>void=()=>undefined;
-let refresh:()=>void=()=>undefined;
+let draggedComponentId:ComponentId|null=null;
+let selectedComponentId:ComponentId|null=null;
 
-const connectionTypes:ComponentId[]=[
-  "network-connection",
-  "application-connection"
-];
-
-export function slotAcceptsComponent(
-  slot:SlotDefinition,
-  id:ComponentId
-):boolean{
-  const component=getComponentById(id);
-  return Boolean(
-    slot.enabled&&
-    component&&
-    component.allowedSlotTypes.includes(slot.slotType)&&
-    (
-      slot.allowedComponentIds?.includes(id)??
-      slot.allowedCategories?.includes(component.category)??
-      false
-    )
-  );
+function showError(message:string):void{
+  const error=document.getElementById("error-message");
+  if(error)error.textContent=message;
 }
 
-function hasConnection(excludedSlot?:SlotId):boolean{
-  return getSlotStates().some(state=>
-    state.slotId!==excludedSlot&&
-    connectionTypes.includes(state.componentId as ComponentId)
-  );
+function canPlace(componentId:ComponentId,areaId:AreaId):boolean{
+  const component=getComponentById(componentId);
+  return Boolean(component?.allowedAreaIds.includes(areaId)&&!hasPlacement(componentId,areaId));
 }
 
-function canPlaceComponent(
-  slot:SlotDefinition,
-  id:ComponentId
-):boolean{
-  return slotAcceptsComponent(slot,id)&&
-    (id!=="connection-encryption"||hasConnection());
-}
-
-export function placeComponent(
-  slotId:SlotId,
-  id:ComponentId
-):boolean{
-  const slot=getSlotById(slotId);
-  const component=getComponentById(id);
-  if(!slot||!component)return false;
-
-  if(!slotAcceptsComponent(slot,id)){
-    const accepted=(slot.allowedComponentIds??[])
-      .map(componentId=>getComponentById(componentId)?.label??componentId)
-      .join(", ")||"no components";
-    reportError(
-      `${slot.label} does not accept ${component.label}. Accepted: ${accepted}.`,
-      slotId
-    );
-    return false;
+function place(componentId:ComponentId,areaId:AreaId):void{
+  const component=getComponentById(componentId);
+  if(!component?.allowedAreaIds.includes(areaId)){
+    showError(`${component?.name??componentId} cannot be placed in this area.`);
+    return;
   }
-
-  if(id==="connection-encryption"&&!hasConnection()){
-    reportError(
-      "Connection Encryption requires Network Connection or Application Connection first.",
-      slotId
-    );
-    return false;
+  if(hasPlacement(componentId,areaId)){
+    showError(`${component.name} is already placed in this area.`);
+    return;
   }
-
-  if(isComponentDisabled(id)&&getSlotComponent(slotId)!==id){
-    reportError(
-      `${component.label} is already in use and is not reusable.`,
-      slotId
-    );
-    return false;
-  }
-
-  setSlotComponent(slotId,id);
-  setSelectedComponent(null);
-  reportError("",slotId);
-  return true;
+  addPlacement(componentId,areaId);
+  selectedComponentId=null;
+  showError("");
 }
 
-function removeComponent(slotId:SlotId):boolean{
-  const current=getSlotComponent(slotId);
-  const encryptionIsPresent=getSlotStates().some(
-    state=>state.componentId==="connection-encryption"
-  );
-
-  if(
-    current&&
-    connectionTypes.includes(current)&&
-    encryptionIsPresent&&
-    !hasConnection(slotId)
-  ){
-    reportError(
-      "Remove Connection Encryption before removing the last connection type.",
-      slotId
-    );
-    return false;
-  }
-
-  setSlotComponent(slotId,null);
-  reportError("",slotId);
-  return true;
+function updateHighlights(componentId:ComponentId|null):void{
+  document.querySelectorAll<HTMLElement>(".area-drop-zone").forEach(zone=>{
+    const areaId=zone.dataset.areaId as AreaId;
+    zone.classList.toggle("compatible",Boolean(componentId&&canPlace(componentId,areaId)));
+  });
 }
 
-export function initializeDragAndDrop(
-  onError:(message:string,slotId?:SlotId)=>void,
-  onRefresh:()=>void
-):void{
-  reportError=onError;
-  refresh=onRefresh;
+export function initializeDragAndDrop():void{
   const toolbox=document.getElementById("component-toolbox");
   const canvas=document.getElementById("architecture-canvas");
   if(!toolbox||!canvas)return;
 
-  toolbox.addEventListener("click",event=>{
-    const card=(event.target as HTMLElement)
-      .closest<HTMLElement>(".component-card");
-    if(!card||card.ariaDisabled==="true")return;
-    event.stopPropagation();
-    setSelectedComponent(card.dataset.componentId as ComponentId);
-    highlight();
-  });
-
   toolbox.addEventListener("dragstart",event=>{
-    const card=(event.target as HTMLElement)
-      .closest<HTMLElement>(".component-card");
-    if(!card||card.ariaDisabled==="true"){
-      event.preventDefault();
-      return;
-    }
-    dragged=card.dataset.componentId as ComponentId;
-    event.dataTransfer?.setData("text/plain",dragged);
-    highlight();
+    const card=(event.target as HTMLElement).closest<HTMLElement>(".component-card");
+    if(!card)return;
+    draggedComponentId=card.dataset.componentId??null;
+    if(draggedComponentId)event.dataTransfer?.setData("text/plain",draggedComponentId);
+    updateHighlights(draggedComponentId);
   });
 
   toolbox.addEventListener("dragend",()=>{
-    dragged=null;
-    clearHighlights();
+    draggedComponentId=null;
+    updateHighlights(null);
+  });
+
+  toolbox.addEventListener("click",event=>{
+    const card=(event.target as HTMLElement).closest<HTMLElement>(".component-card");
+    if(!card)return;
+    selectedComponentId=card.dataset.componentId??null;
+    document.querySelectorAll(".component-card").forEach(item=>item.classList.remove("selected"));
+    card.classList.add("selected");
+    updateHighlights(selectedComponentId);
   });
 
   canvas.addEventListener("dragover",event=>{
-    const slot=(event.target as HTMLElement)
-      .closest<HTMLElement>(".drop-slot");
-    if(slot){
-      event.preventDefault();
-      slot.classList.add("drag-over");
-    }
+    const zone=(event.target as HTMLElement).closest<HTMLElement>(".area-drop-zone");
+    if(!zone||!draggedComponentId)return;
+    const areaId=zone.dataset.areaId as AreaId;
+    if(canPlace(draggedComponentId,areaId))event.preventDefault();
   });
-
-  canvas.addEventListener("dragleave",event=>
-    (event.target as HTMLElement)
-      .closest<HTMLElement>(".drop-slot")
-      ?.classList.remove("drag-over")
-  );
 
   canvas.addEventListener("drop",event=>{
     event.preventDefault();
-    const slot=(event.target as HTMLElement)
-      .closest<HTMLElement>(".drop-slot");
-    const id=(
-      event.dataTransfer?.getData("text/plain")||dragged
-    )as ComponentId;
-    if(slot&&id)placeComponent(slot.dataset.slotId??"",id);
-    dragged=null;
-    clearHighlights();
-    refresh();
+    const zone=(event.target as HTMLElement).closest<HTMLElement>(".area-drop-zone");
+    const componentId=event.dataTransfer?.getData("text/plain")||draggedComponentId;
+    if(zone&&componentId)place(componentId,zone.dataset.areaId as AreaId);
+    draggedComponentId=null;
+    updateHighlights(null);
   });
 
   canvas.addEventListener("click",event=>{
     const target=event.target as HTMLElement;
-    const remove=target.closest<HTMLButtonElement>("[data-remove-slot]");
+    const remove=target.closest<HTMLButtonElement>("[data-remove-component]");
     if(remove){
-      removeComponent(remove.dataset.removeSlot??"");
+      removePlacement(remove.dataset.removeComponent??"",remove.dataset.areaId as AreaId);
+      showError("");
       return;
     }
-    const slot=target.closest<HTMLElement>(".drop-slot");
-    const id=getSelectedComponent();
-    if(slot&&id){
-      placeComponent(slot.dataset.slotId??"",id);
-      refresh();
-    }
+    const zone=target.closest<HTMLElement>(".area-drop-zone");
+    if(zone&&selectedComponentId)place(selectedComponentId,zone.dataset.areaId as AreaId);
   });
-
-  document.addEventListener("click",event=>{
-    if(!(event.target as HTMLElement).closest(".component-card,.drop-slot")){
-      setSelectedComponent(null);
-      clearHighlights();
-    }
-  });
-}
-
-function highlight():void{
-  const id=dragged??getSelectedComponent();
-  document.querySelectorAll<HTMLElement>(".drop-slot").forEach(element=>{
-    const slot=getSlotById(element.dataset.slotId??"");
-    element.classList.toggle(
-      "compatible",
-      Boolean(id&&slot&&canPlaceComponent(slot,id))
-    );
-  });
-}
-
-function clearHighlights():void{
-  document.querySelectorAll(".drop-slot").forEach(element=>
-    element.classList.remove("compatible","drag-over")
-  );
 }

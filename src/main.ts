@@ -1,133 +1,68 @@
-import{
-  exportArchitectureState,
-  importArchitectureState
-}from"./architectureState.js";
 import{initializeDragAndDrop}from"./dragDrop.js";
-import{
-  applyPageTranslations,
-  getLanguage,
-  initializeLanguage,
-  setLanguage,
-  subscribeToLanguage,
-  t,
-  translateMessage
-}from"./i18n.js";
-import{initializeImageManager}from"./imageManager.js";
-import{
-  configureStateDialog,
-  renderAll,
-  showError
-}from"./renderer.js";
-import{renderArchitectureInsights}from"./resultInsights.js";
-import{resetState,subscribe}from"./state.js";
+import{renderAll,renderEvaluation}from"./renderer.js";
+import{getArchitectureState,replaceArchitecture,resetArchitecture,subscribe}from"./state.js";
+import type{ArchitectureState}from"./types.js";
 
-const byId=<T extends HTMLElement>(id:string):T|null=>
-  document.getElementById(id)as T|null;
+const byId=<T extends HTMLElement>(id:string):T|null=>document.getElementById(id)as T|null;
 
 function initialize():void{
-  initializeLanguage();
-
-  let dialogMode:"export"|"import"|null=null;
-
-  const renderInterface=():void=>{
-    renderAll();
-    applyPageTranslations();
-  };
-
   const dialog=byId<HTMLDialogElement>("state-dialog");
   const textarea=byId<HTMLTextAreaElement>("state-json");
-  const help=byId<HTMLElement>("dialog-help");
-  const copy=byId<HTMLButtonElement>("copy-json-button");
-  const apply=byId<HTMLButtonElement>("apply-import-button");
-  const error=byId<HTMLElement>("dialog-error");
-  const languageSelect=byId<HTMLSelectElement>("language-select");
+  const dialogTitle=byId<HTMLElement>("dialog-title");
+  const dialogHelp=byId<HTMLElement>("dialog-help");
+  const dialogError=byId<HTMLElement>("dialog-error");
+  const copyButton=byId<HTMLButtonElement>("copy-json-button");
+  const importButton=byId<HTMLButtonElement>("apply-import-button");
 
-  const updateDialogHelp=():void=>{
-    if(!help)return;
-    if(dialogMode==="export"){
-      help.textContent=t("Copy the current architecture JSON.");
-    }else if(dialogMode==="import"){
-      help.textContent=t(
-        "Paste architecture-state JSON, then choose Import JSON."
-      );
-    }
-  };
-
-  renderInterface();
-  renderArchitectureInsights();
-  configureStateDialog();
-  subscribe(()=>{
-    renderInterface();
-    renderArchitectureInsights();
-  });
-  initializeImageManager(renderInterface);
-  initializeDragAndDrop(showError,renderInterface);
-
-  if(languageSelect){
-    languageSelect.value=getLanguage();
-    languageSelect.addEventListener("change",()=>{
-      setLanguage(languageSelect.value==="tr"?"tr":"en");
-    });
-  }
-
-  subscribeToLanguage(()=>{
-    renderInterface();
-    renderArchitectureInsights();
-    updateDialogHelp();
-  });
+  renderAll();
+  subscribe(renderAll);
+  initializeDragAndDrop();
 
   byId<HTMLButtonElement>("reset-button")?.addEventListener("click",()=>{
-    resetState();
-    showError("");
-    if(textarea)textarea.value="";
+    resetArchitecture();
+    const error=byId<HTMLElement>("error-message");
+    if(error)error.textContent="";
   });
 
-  byId<HTMLButtonElement>("analyze-button")?.addEventListener("click",()=>{
-    renderArchitectureInsights();
-  });
+  byId<HTMLButtonElement>("analyze-button")?.addEventListener("click",renderEvaluation);
 
   byId<HTMLButtonElement>("export-button")?.addEventListener("click",()=>{
-    if(!dialog||!textarea||!copy||!apply)return;
-    dialogMode="export";
-    textarea.value=exportArchitectureState();
-    updateDialogHelp();
-    copy.hidden=false;
-    apply.hidden=true;
+    if(!dialog||!textarea)return;
+    textarea.value=JSON.stringify(getArchitectureState(),null,2);
+    if(dialogTitle)dialogTitle.textContent="Export Architecture";
+    if(dialogHelp)dialogHelp.textContent="Copy the current architecture JSON.";
+    if(dialogError)dialogError.textContent="";
+    if(copyButton)copyButton.hidden=false;
+    if(importButton)importButton.hidden=true;
     dialog.showModal();
   });
 
   byId<HTMLButtonElement>("import-button")?.addEventListener("click",()=>{
-    if(!dialog||!textarea||!copy||!apply)return;
-    dialogMode="import";
+    if(!dialog||!textarea)return;
     textarea.value="";
-    updateDialogHelp();
-    copy.hidden=true;
-    apply.hidden=false;
+    if(dialogTitle)dialogTitle.textContent="Import Architecture";
+    if(dialogHelp)dialogHelp.textContent="Paste an exported architecture JSON document.";
+    if(dialogError)dialogError.textContent="";
+    if(copyButton)copyButton.hidden=true;
+    if(importButton)importButton.hidden=false;
     dialog.showModal();
-    textarea.focus();
   });
 
-  copy?.addEventListener("click",async()=>{
+  copyButton?.addEventListener("click",async()=>{
     if(!textarea)return;
-    try{
-      await navigator.clipboard.writeText(textarea.value);
-      if(help)help.textContent=t("JSON copied.");
-    }catch{
-      textarea.select();
-      document.execCommand("copy");
-    }
+    await navigator.clipboard.writeText(textarea.value);
+    if(dialogHelp)dialogHelp.textContent="JSON copied.";
   });
 
-  apply?.addEventListener("click",()=>{
-    if(!textarea||!error||!dialog)return;
-    const result=importArchitectureState(textarea.value);
-    error.dataset.sourceMessages=JSON.stringify(result.errors);
-    error.textContent=result.errors
-      .map(message=>translateMessage(message))
-      .join(" ");
-    if(result.valid){
+  importButton?.addEventListener("click",()=>{
+    if(!textarea||!dialog)return;
+    try{
+      const parsed=JSON.parse(textarea.value)as ArchitectureState;
+      if(!replaceArchitecture(parsed))throw new Error("Invalid architecture state.");
+      if(dialogError)dialogError.textContent="";
       dialog.close();
-      showError("");
+    }catch(error){
+      if(dialogError)dialogError.textContent=error instanceof Error?error.message:"Invalid JSON.";
     }
   });
 }

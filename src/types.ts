@@ -1,6 +1,41 @@
-export type ComponentId="password"|"mfa"|"biometric-authentication"|"pki-certificate"|"endpoint-protection"|"authentication-service"|"identity-provider"|"network-connection"|"application-connection"|"connection-encryption"|"vpn-tunnel"|"external-authentication-service"|"external-cloud-storage"|"external-payment-service"|"external-monitoring-service"|"firewall"|"policy-engine"|"relay-node"|"private-corporate-network"|"local-network"|"cloud-resource"|"public-network";
-export type ComponentCategory="client-components"|"authentication-services"|"connection-security"|"third-party"|"network-components"|"network-types"; export type SectionId="client-computer"|"authentication"|"wild-internet"|"third-party"|"gateway"|"target-network"; export type ImageRole=SectionId; export type SlotId=string;
-export type SlotType="client-component"|"authentication-component"|"internet-component"|"third-party-component"|"transition-component"|"network-type";
-export interface SecurityComponent{id:ComponentId;label:string;category:ComponentCategory;description:string;allowedSlotTypes:SlotType[];reusable:boolean;futureImageUrl:string;futureMetadata:Record<string,unknown>}
-export interface SlotDefinition{id:SlotId;label:string;section:SectionId;slotType:SlotType;allowedComponentIds?:ComponentId[];allowedCategories?:ComponentCategory[];required:boolean;enabled:boolean;placeholderText:string} export interface SectionDefinition{id:SectionId;title:string;subtitle?:string;imageLabel:string}
-export interface SlotState{slotId:SlotId;componentId:ComponentId|null} export interface ArchitectureState{slots:Record<SlotId,ComponentId|null>} export interface DragState{draggedComponentId:ComponentId|null;selectedComponentId:ComponentId|null} export interface ImportValidationResult{valid:boolean;errors:string[];state:ArchitectureState|null}
+export type AreaId=
+  |"access-device"
+  |"trust-identity-services"
+  |"secure-session"
+  |"third-party-services"
+  |"invisible-network-protection"
+  |"policy-access-control"
+  |"protected-application";
+
+export type ComponentId=string;
+
+export interface ArchitectureArea{
+  id:AreaId;
+  name:string;
+}
+
+export interface ComponentDefinition{
+  id:ComponentId;
+  name:string;
+  toolboxArea:AreaId;
+  icon:string;
+  allowedAreaIds:AreaId[];
+  outputByArea:Partial<Record<AreaId,string>>;
+  scoreByArea:Partial<Record<AreaId,number>>;
+}
+
+export interface Placement{
+  componentId:ComponentId;
+  areaId:AreaId;
+}
+
+export interface ComponentEvaluation{
+  componentId:ComponentId;
+  areaId:AreaId;
+  output:string;
+  score:number;
+}
+
+export interface ArchitectureState{
+  placements:Placement[];
+}

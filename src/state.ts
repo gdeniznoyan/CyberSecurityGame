@@ -1,76 +1,54 @@
 import{getComponentById}from"./components.js";
-import{slotDefinitions}from"./slots.js";
-import type{ComponentId,SlotId,SlotState}from"./types.js";
+import type{ArchitectureState,AreaId,ComponentId,Placement}from"./types.js";
 
-export type StateChange="architecture"|"selection";
-type Listener=(change:StateChange)=>void;
-
-const slots=new Map<SlotId,ComponentId|null>(
-  slotDefinitions.map(slot=>[slot.id,null])
-);
-let selected:ComponentId|null=null;
+type Listener=()=>void;
+let placements:Placement[]=[];
 const listeners=new Set<Listener>();
 
-const emit=(change:StateChange):void=>
-  listeners.forEach(listener=>listener(change));
+function emit():void{listeners.forEach(listener=>listener())}
 
-export function getSlotStates():SlotState[]{
-  return slotDefinitions.map(slot=>({
-    slotId:slot.id,
-    componentId:slots.get(slot.id)??null
-  }));
+export function getPlacements():Placement[]{return placements.map(item=>({...item}))}
+
+export function hasPlacement(componentId:ComponentId,areaId:AreaId):boolean{
+  return placements.some(item=>item.componentId===componentId&&item.areaId===areaId);
 }
 
-export function getSlotComponent(id:SlotId):ComponentId|null{
-  return slots.get(id)??null;
+export function addPlacement(componentId:ComponentId,areaId:AreaId):boolean{
+  const component=getComponentById(componentId);
+  if(!component||!component.allowedAreaIds.includes(areaId)||hasPlacement(componentId,areaId))return false;
+  placements=[...placements,{componentId,areaId}];
+  emit();
+  return true;
 }
 
-export function setSlotComponent(
-  id:SlotId,
-  value:ComponentId|null
-):void{
-  if((slots.get(id)??null)===value)return;
-  slots.set(id,value);
-  emit("architecture");
+export function removePlacement(componentId:ComponentId,areaId:AreaId):void{
+  const next=placements.filter(item=>!(item.componentId===componentId&&item.areaId===areaId));
+  if(next.length===placements.length)return;
+  placements=next;
+  emit();
 }
 
-export function setAllSlots(
-  values:Record<SlotId,ComponentId|null>
-):void{
-  slotDefinitions.forEach(slot=>
-    slots.set(slot.id,values[slot.id]??null)
-  );
-  selected=null;
-  emit("architecture");
+export function resetArchitecture():void{
+  placements=[];
+  emit();
 }
 
-export function getSelectedComponent():ComponentId|null{
-  return selected;
-}
+export function getArchitectureState():ArchitectureState{return{placements:getPlacements()}}
 
-export function setSelectedComponent(id:ComponentId|null):void{
-  if(selected===id)return;
-  selected=id;
-  emit("selection");
-}
-
-export function getComponentUsage(id:ComponentId):number{
-  return[...slots.values()].filter(value=>value===id).length;
-}
-
-export function isComponentDisabled(id:ComponentId):boolean{
-  const component=getComponentById(id);
-  return Boolean(
-    component&&
-    !component.reusable&&
-    getComponentUsage(id)>0
-  );
-}
-
-export function resetState():void{
-  slots.forEach((_value,key)=>slots.set(key,null));
-  selected=null;
-  emit("architecture");
+export function replaceArchitecture(state:ArchitectureState):boolean{
+  if(!Array.isArray(state.placements))return false;
+  const unique=new Set<string>();
+  const validated:Placement[]=[];
+  for(const item of state.placements){
+    const component=getComponentById(item.componentId);
+    const key=`${item.areaId}:${item.componentId}`;
+    if(!component||!component.allowedAreaIds.includes(item.areaId)||unique.has(key))return false;
+    unique.add(key);
+    validated.push({componentId:item.componentId,areaId:item.areaId});
+  }
+  placements=validated;
+  emit();
+  return true;
 }
 
 export function subscribe(listener:Listener):()=>void{

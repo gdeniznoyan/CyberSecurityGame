@@ -1,109 +1,78 @@
-import { exportArchitectureState, importArchitectureState } from "./architectureState.js";
 import { initializeDragAndDrop } from "./dragDrop.js";
-import { applyPageTranslations, getLanguage, initializeLanguage, setLanguage, subscribeToLanguage, t, translateMessage } from "./i18n.js";
-import { initializeImageManager } from "./imageManager.js";
-import { configureStateDialog, renderAll, showError } from "./renderer.js";
-import { renderArchitectureInsights } from "./resultInsights.js";
-import { resetState, subscribe } from "./state.js";
+import { renderAll, renderEvaluation } from "./renderer.js";
+import { getArchitectureState, replaceArchitecture, resetArchitecture, subscribe } from "./state.js";
 const byId = (id) => document.getElementById(id);
 function initialize() {
-    initializeLanguage();
-    let dialogMode = null;
-    const renderInterface = () => {
-        renderAll();
-        applyPageTranslations();
-    };
     const dialog = byId("state-dialog");
     const textarea = byId("state-json");
-    const help = byId("dialog-help");
-    const copy = byId("copy-json-button");
-    const apply = byId("apply-import-button");
-    const error = byId("dialog-error");
-    const languageSelect = byId("language-select");
-    const updateDialogHelp = () => {
-        if (!help)
-            return;
-        if (dialogMode === "export") {
-            help.textContent = t("Copy the current architecture JSON.");
-        }
-        else if (dialogMode === "import") {
-            help.textContent = t("Paste architecture-state JSON, then choose Import JSON.");
-        }
-    };
-    renderInterface();
-    renderArchitectureInsights();
-    configureStateDialog();
-    subscribe(() => {
-        renderInterface();
-        renderArchitectureInsights();
-    });
-    initializeImageManager(renderInterface);
-    initializeDragAndDrop(showError, renderInterface);
-    if (languageSelect) {
-        languageSelect.value = getLanguage();
-        languageSelect.addEventListener("change", () => {
-            setLanguage(languageSelect.value === "tr" ? "tr" : "en");
-        });
-    }
-    subscribeToLanguage(() => {
-        renderInterface();
-        renderArchitectureInsights();
-        updateDialogHelp();
-    });
+    const dialogTitle = byId("dialog-title");
+    const dialogHelp = byId("dialog-help");
+    const dialogError = byId("dialog-error");
+    const copyButton = byId("copy-json-button");
+    const importButton = byId("apply-import-button");
+    renderAll();
+    subscribe(renderAll);
+    initializeDragAndDrop();
     byId("reset-button")?.addEventListener("click", () => {
-        resetState();
-        showError("");
-        if (textarea)
-            textarea.value = "";
+        resetArchitecture();
+        const error = byId("error-message");
+        if (error)
+            error.textContent = "";
     });
-    byId("analyze-button")?.addEventListener("click", () => {
-        renderArchitectureInsights();
-    });
+    byId("analyze-button")?.addEventListener("click", renderEvaluation);
     byId("export-button")?.addEventListener("click", () => {
-        if (!dialog || !textarea || !copy || !apply)
+        if (!dialog || !textarea)
             return;
-        dialogMode = "export";
-        textarea.value = exportArchitectureState();
-        updateDialogHelp();
-        copy.hidden = false;
-        apply.hidden = true;
+        textarea.value = JSON.stringify(getArchitectureState(), null, 2);
+        if (dialogTitle)
+            dialogTitle.textContent = "Export Architecture";
+        if (dialogHelp)
+            dialogHelp.textContent = "Copy the current architecture JSON.";
+        if (dialogError)
+            dialogError.textContent = "";
+        if (copyButton)
+            copyButton.hidden = false;
+        if (importButton)
+            importButton.hidden = true;
         dialog.showModal();
     });
     byId("import-button")?.addEventListener("click", () => {
-        if (!dialog || !textarea || !copy || !apply)
+        if (!dialog || !textarea)
             return;
-        dialogMode = "import";
         textarea.value = "";
-        updateDialogHelp();
-        copy.hidden = true;
-        apply.hidden = false;
+        if (dialogTitle)
+            dialogTitle.textContent = "Import Architecture";
+        if (dialogHelp)
+            dialogHelp.textContent = "Paste an exported architecture JSON document.";
+        if (dialogError)
+            dialogError.textContent = "";
+        if (copyButton)
+            copyButton.hidden = true;
+        if (importButton)
+            importButton.hidden = false;
         dialog.showModal();
-        textarea.focus();
     });
-    copy?.addEventListener("click", async () => {
+    copyButton?.addEventListener("click", async () => {
         if (!textarea)
             return;
-        try {
-            await navigator.clipboard.writeText(textarea.value);
-            if (help)
-                help.textContent = t("JSON copied.");
-        }
-        catch {
-            textarea.select();
-            document.execCommand("copy");
-        }
+        await navigator.clipboard.writeText(textarea.value);
+        if (dialogHelp)
+            dialogHelp.textContent = "JSON copied.";
     });
-    apply?.addEventListener("click", () => {
-        if (!textarea || !error || !dialog)
+    importButton?.addEventListener("click", () => {
+        if (!textarea || !dialog)
             return;
-        const result = importArchitectureState(textarea.value);
-        error.dataset.sourceMessages = JSON.stringify(result.errors);
-        error.textContent = result.errors
-            .map(message => translateMessage(message))
-            .join(" ");
-        if (result.valid) {
+        try {
+            const parsed = JSON.parse(textarea.value);
+            if (!replaceArchitecture(parsed))
+                throw new Error("Invalid architecture state.");
+            if (dialogError)
+                dialogError.textContent = "";
             dialog.close();
-            showError("");
+        }
+        catch (error) {
+            if (dialogError)
+                dialogError.textContent = error instanceof Error ? error.message : "Invalid JSON.";
         }
     });
 }

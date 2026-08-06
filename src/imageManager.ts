@@ -1,5 +1,0 @@
-import{updateComponentImageUrl}from"./components.js";import type{ComponentId,ImageRole}from"./types.js";
-let rerender:()=>void=()=>undefined;export function initializeImageManager(callback:()=>void):void{rerender=callback}
-export function setSectionImage(role:ImageRole,imageUrl:string):void{const box=document.querySelector<HTMLElement>(`[data-image-role="${role}"]`);if(!box)return;box.querySelector("img")?.remove();box.classList.remove("image-loaded","image-error","image-hidden");box.dataset.imageSrc=imageUrl;const text=box.querySelector<HTMLElement>("span");if(text)text.hidden=Boolean(imageUrl);if(!imageUrl)return;const img=document.createElement("img");img.alt="";img.addEventListener("load",()=>box.classList.add("image-loaded"));img.addEventListener("error",()=>{img.remove();box.classList.add("image-error");if(text)text.hidden=false});img.src=imageUrl;box.prepend(img)}
-export function clearSectionImage(role:ImageRole):void{setSectionImage(role,"")}
-export function updateComponentImage(id:ComponentId,imageUrl:string):void{updateComponentImageUrl(id,imageUrl);rerender()}

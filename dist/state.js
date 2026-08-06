@@ -1,51 +1,47 @@
 import { getComponentById } from "./components.js";
-import { slotDefinitions } from "./slots.js";
-const slots = new Map(slotDefinitions.map(slot => [slot.id, null]));
-let selected = null;
+let placements = [];
 const listeners = new Set();
-const emit = (change) => listeners.forEach(listener => listener(change));
-export function getSlotStates() {
-    return slotDefinitions.map(slot => ({
-        slotId: slot.id,
-        componentId: slots.get(slot.id) ?? null
-    }));
+function emit() { listeners.forEach(listener => listener()); }
+export function getPlacements() { return placements.map(item => ({ ...item })); }
+export function hasPlacement(componentId, areaId) {
+    return placements.some(item => item.componentId === componentId && item.areaId === areaId);
 }
-export function getSlotComponent(id) {
-    return slots.get(id) ?? null;
+export function addPlacement(componentId, areaId) {
+    const component = getComponentById(componentId);
+    if (!component || !component.allowedAreaIds.includes(areaId) || hasPlacement(componentId, areaId))
+        return false;
+    placements = [...placements, { componentId, areaId }];
+    emit();
+    return true;
 }
-export function setSlotComponent(id, value) {
-    if ((slots.get(id) ?? null) === value)
+export function removePlacement(componentId, areaId) {
+    const next = placements.filter(item => !(item.componentId === componentId && item.areaId === areaId));
+    if (next.length === placements.length)
         return;
-    slots.set(id, value);
-    emit("architecture");
+    placements = next;
+    emit();
 }
-export function setAllSlots(values) {
-    slotDefinitions.forEach(slot => slots.set(slot.id, values[slot.id] ?? null));
-    selected = null;
-    emit("architecture");
+export function resetArchitecture() {
+    placements = [];
+    emit();
 }
-export function getSelectedComponent() {
-    return selected;
-}
-export function setSelectedComponent(id) {
-    if (selected === id)
-        return;
-    selected = id;
-    emit("selection");
-}
-export function getComponentUsage(id) {
-    return [...slots.values()].filter(value => value === id).length;
-}
-export function isComponentDisabled(id) {
-    const component = getComponentById(id);
-    return Boolean(component &&
-        !component.reusable &&
-        getComponentUsage(id) > 0);
-}
-export function resetState() {
-    slots.forEach((_value, key) => slots.set(key, null));
-    selected = null;
-    emit("architecture");
+export function getArchitectureState() { return { placements: getPlacements() }; }
+export function replaceArchitecture(state) {
+    if (!Array.isArray(state.placements))
+        return false;
+    const unique = new Set();
+    const validated = [];
+    for (const item of state.placements) {
+        const component = getComponentById(item.componentId);
+        const key = `${item.areaId}:${item.componentId}`;
+        if (!component || !component.allowedAreaIds.includes(item.areaId) || unique.has(key))
+            return false;
+        unique.add(key);
+        validated.push({ componentId: item.componentId, areaId: item.areaId });
+    }
+    placements = validated;
+    emit();
+    return true;
 }
 export function subscribe(listener) {
     listeners.add(listener);

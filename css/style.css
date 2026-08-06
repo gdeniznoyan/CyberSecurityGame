@@ -391,6 +391,17 @@ button {
   min-height: 265px;
 }
 
+.six-stage-path {
+  grid-template-columns:
+    minmax(150px, 1fr) 18px
+    minmax(150px, 1fr) 18px
+    minmax(150px, 1fr) 18px
+    minmax(150px, 1fr) 18px
+    minmax(150px, 1fr) 18px
+    minmax(150px, 1fr);
+  min-width: 990px;
+}
+
 .main-path::before {
   content: "";
   position: absolute;
@@ -523,6 +534,36 @@ button {
   border-color: #d50914;
 }
 
+.area-drop-zone {
+  min-height: 118px;
+  justify-content: flex-start;
+}
+
+.placed-components {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+}
+
+.placed-component {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  padding: 5px 6px;
+  color: #111820;
+  background: #f9fafa;
+  border: 1px solid #dce2e8;
+  border-radius: 5px;
+  font-size: 0.58rem;
+  line-height: 1.2;
+  text-align: left;
+}
+
+.placed-component .remove-button {
+  flex: 0 0 auto;
+}
+
 .slot-label {
   color: #111820;
   font-size: 0.65rem;
@@ -570,7 +611,7 @@ button {
 
 .toolbox-groups {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 8px;
 }
 
