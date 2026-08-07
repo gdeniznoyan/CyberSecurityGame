@@ -1,153 +1,342 @@
 export const passwordComponent = {
-    id: "password", name: "Password", toolboxArea: "access-device",
+    id: "password",
+    name: "Password",
+    area: "access-device",
+    importance: "optional",
+    selectedOutput: "Basic password authentication is enabled to verify the user's identity.",
+    missingOutput: "",
+    score: 3,
     icon: "./assets/components/password.png",
-    allowedAreaIds: ["access-device"], outputByArea: { "access-device": "" }, scoreByArea: { "access-device": 3 }
+    allowedAreaIds: ["access-device"],
 };
 export const biometricAuthenticationComponent = {
-    id: "biometric-authentication", name: "Biometric Authentication", toolboxArea: "access-device",
+    id: "biometric-authentication",
+    name: "Biometric Authentication",
+    area: "access-device",
+    importance: "important",
+    selectedOutput: "Biometric verification adds an additional identity factor that is difficult to share or steal.",
+    missingOutput: "Biometric verification is missing, reducing the strength of user identity verification.",
+    score: 7,
     icon: "./assets/components/biometric-authentication.png",
-    allowedAreaIds: ["access-device"], outputByArea: { "access-device": "" }, scoreByArea: { "access-device": 7 }
+    allowedAreaIds: ["access-device"],
 };
 export const hardwareSecurityTokenComponent = {
-    id: "hardware-security-token", name: "Hardware Security Token", toolboxArea: "access-device",
+    id: "hardware-security-token",
+    name: "Hardware Security Token",
+    area: "access-device",
+    importance: "critical",
+    selectedOutput: "Sensitive authentication and cryptographic operations are protected by a dedicated hardware security token.",
+    missingOutput: "No hardware security token is used, leaving sensitive authentication operations more dependent on the client device.",
+    score: 10,
     icon: "./assets/components/mfa.png",
-    allowedAreaIds: ["access-device"], outputByArea: { "access-device": "" }, scoreByArea: { "access-device": 10 }
+    allowedAreaIds: ["access-device"],
 };
 export const zeroFootprintClientComponent = {
-    id: "zero-footprint-client", name: "Zero-Footprint Client", toolboxArea: "access-device",
+    id: "zero-footprint-client",
+    name: "Zero-Footprint Client",
+    area: "access-device",
+    importance: "critical",
+    selectedOutput: "The session is designed to leave no useful access or network traces on the client after it ends.",
+    missingOutput: "The client may retain useful session or network artifacts after access ends, increasing exposure if the device is compromised.",
+    score: 10,
     icon: "./assets/components/endpoint-protection.png",
-    allowedAreaIds: ["access-device"], outputByArea: { "access-device": "" }, scoreByArea: { "access-device": 10 }
+    allowedAreaIds: ["access-device"],
 };
-export const privateCaComponent = {
-    id: "private-ca", name: "Private CA", toolboxArea: "trust-identity-services",
+export const privateCertificateAuthorityComponent = {
+    id: "private-certificate-authority",
+    name: "Private Certificate Authority",
+    area: "trust-identity-services",
+    importance: "critical",
+    selectedOutput: "Trust is managed internally through a private certificate authority instead of relying on an external identity dependency.",
+    missingOutput: "No private certificate authority is present, weakening the organization's control over certificate-based trust.",
+    score: 10,
     icon: "./assets/components/certificate-authority.png",
-    allowedAreaIds: ["trust-identity-services"], outputByArea: { "trust-identity-services": "" }, scoreByArea: { "trust-identity-services": 10 }
+    allowedAreaIds: ["trust-identity-services"],
 };
 export const x509CertificateComponent = {
-    id: "x509-certificate", name: "X.509 Certificate", toolboxArea: "trust-identity-services",
+    id: "x509-certificate",
+    name: "X.509 Certificate",
+    area: "trust-identity-services",
+    importance: "critical",
+    selectedOutput: "X.509 certificates provide cryptographically verifiable identities for trusted users, devices or services.",
+    missingOutput: "Certificate-based identity verification is missing, weakening cryptographic trust between system components.",
+    score: 9,
     icon: "./assets/components/pki-certificate.png",
-    allowedAreaIds: ["trust-identity-services"], outputByArea: { "trust-identity-services": "" }, scoreByArea: { "trust-identity-services": 9 }
+    allowedAreaIds: ["trust-identity-services"],
 };
 export const certificateRevocationCheckComponent = {
-    id: "certificate-revocation-check", name: "Certificate Revocation Check", toolboxArea: "trust-identity-services",
+    id: "certificate-revocation-check",
+    name: "Certificate Revocation Check",
+    area: "trust-identity-services",
+    importance: "important",
+    selectedOutput: "Certificate status is checked so revoked or compromised certificates cannot continue to be trusted.",
+    missingOutput: "Revoked or compromised certificates may remain usable if their status is not checked.",
+    score: 8,
     icon: "./assets/components/policy-engine.png",
-    allowedAreaIds: ["trust-identity-services"], outputByArea: { "trust-identity-services": "" }, scoreByArea: { "trust-identity-services": 8 }
+    allowedAreaIds: ["trust-identity-services"],
 };
 export const otpComponent = {
-    id: "otp", name: "OTP", toolboxArea: "trust-identity-services",
+    id: "otp",
+    name: "One-Time Password",
+    area: "trust-identity-services",
+    importance: "optional",
+    selectedOutput: "A one-time password adds an additional authentication factor for user verification.",
+    missingOutput: "",
+    score: 7,
     icon: "./assets/components/mfa.png",
-    allowedAreaIds: ["trust-identity-services"], outputByArea: { "trust-identity-services": "" }, scoreByArea: { "trust-identity-services": 7 }
+    allowedAreaIds: ["trust-identity-services"],
 };
-export const mutualTlsComponent = {
-    id: "mutual-tls", name: "Mutual TLS", toolboxArea: "secure-session",
+export const mutualTransportLayerSecurityComponent = {
+    id: "mutual-transport-layer-security",
+    name: "Mutual Transport Layer Security",
+    area: "secure-session",
+    importance: "important",
+    selectedOutput: "Mutual Transport Layer Security verifies both sides of the connection before establishing the secure session.",
+    missingOutput: "The client and server are not mutually authenticated, weakening trust between both ends of the connection.",
+    score: 10,
     icon: "./assets/components/connection-encryption.png",
-    allowedAreaIds: ["secure-session"], outputByArea: { "secure-session": "" }, scoreByArea: { "secure-session": 10 }
+    allowedAreaIds: ["secure-session"],
 };
 export const ramTunnelingComponent = {
-    id: "ram-tunneling", name: "RAM Tunneling", toolboxArea: "secure-session",
+    id: "ram-tunneling",
+    name: "RAM Tunneling",
+    area: "secure-session",
+    importance: "critical",
+    selectedOutput: "The secure session operates in temporary memory, reducing persistent traces on the client device.",
+    missingOutput: "Session information may leave persistent traces on the client, weakening the zero-trace security model.",
+    score: 10,
     icon: "./assets/components/ram-encryption.png",
-    allowedAreaIds: ["secure-session"], outputByArea: { "secure-session": "" }, scoreByArea: { "secure-session": 10 }
+    allowedAreaIds: ["secure-session"],
 };
 export const aes256EncryptionComponent = {
-    id: "aes-256-encryption", name: "AES-256 Encryption", toolboxArea: "secure-session",
+    id: "aes-256-encryption",
+    name: "AES-256 Encryption",
+    area: "secure-session",
+    importance: "critical",
+    selectedOutput: "Session data is protected with strong AES-256 encryption against unauthorized reading.",
+    missingOutput: "Session data lacks the intended strong encryption protection and may be more exposed if intercepted.",
+    score: 9,
     icon: "./assets/components/connection-encryption.png",
-    allowedAreaIds: ["secure-session"], outputByArea: { "secure-session": "" }, scoreByArea: { "secure-session": 9 }
+    allowedAreaIds: ["secure-session"],
 };
 export const perfectForwardSecrecyComponent = {
-    id: "perfect-forward-secrecy", name: "Perfect Forward Secrecy", toolboxArea: "secure-session",
+    id: "perfect-forward-secrecy",
+    name: "Perfect Forward Secrecy",
+    area: "secure-session",
+    importance: "important",
+    selectedOutput: "Independent session keys help protect previous sessions even if a future key is compromised.",
+    missingOutput: "Compromise of long-term cryptographic material may have a greater impact on previously protected sessions.",
+    score: 8,
     icon: "./assets/components/vpn-tunnel.png",
-    allowedAreaIds: ["secure-session"], outputByArea: { "secure-session": "" }, scoreByArea: { "secure-session": 8 }
+    allowedAreaIds: ["secure-session"],
 };
 export const externalAuthenticationServiceComponent = {
-    id: "external-authentication-service", name: "External Authentication Service", toolboxArea: "third-party-services",
+    id: "external-authentication-service",
+    name: "External Authentication Service",
+    area: "third-party-services",
+    importance: "special",
+    selectedOutput: "Authentication depends on an external provider, introducing a third-party trust and availability dependency.",
+    missingOutput: "",
+    score: -10,
     icon: "./assets/components/external-authentication-service.png",
-    allowedAreaIds: ["third-party-services"], outputByArea: { "third-party-services": "" }, scoreByArea: { "third-party-services": -10 }
+    allowedAreaIds: ["third-party-services"],
 };
 export const externalCloudStorageComponent = {
-    id: "external-cloud-storage", name: "External Cloud Storage", toolboxArea: "third-party-services",
+    id: "external-cloud-storage",
+    name: "External Cloud Storage",
+    area: "third-party-services",
+    importance: "special",
+    selectedOutput: "Sensitive data is stored outside the organization, introducing dependency on an external provider's security controls.",
+    missingOutput: "",
+    score: -8,
     icon: "./assets/components/external-cloud-storage.png",
-    allowedAreaIds: ["third-party-services"], outputByArea: { "third-party-services": "" }, scoreByArea: { "third-party-services": -8 }
+    allowedAreaIds: ["third-party-services"],
 };
 export const externalMonitoringServiceComponent = {
-    id: "external-monitoring-service", name: "External Monitoring Service", toolboxArea: "third-party-services",
+    id: "external-monitoring-service",
+    name: "External Monitoring Service",
+    area: "third-party-services",
+    importance: "special",
+    selectedOutput: "Security logs and operational information are shared with an external monitoring provider.",
+    missingOutput: "",
+    score: -6,
     icon: "./assets/components/external-monitoring-service.png",
-    allowedAreaIds: ["third-party-services"], outputByArea: { "third-party-services": "" }, scoreByArea: { "third-party-services": -6 }
+    allowedAreaIds: ["third-party-services"],
 };
 export const externalPaymentServiceComponent = {
-    id: "external-payment-service", name: "External Payment Service", toolboxArea: "third-party-services",
+    id: "external-payment-service",
+    name: "External Payment Service",
+    area: "third-party-services",
+    importance: "special",
+    selectedOutput: "Payment operations depend on an external service, introducing an additional third-party trust relationship.",
+    missingOutput: "",
+    score: -6,
     icon: "./assets/components/external-payment-service.png",
-    allowedAreaIds: ["third-party-services"], outputByArea: { "third-party-services": "" }, scoreByArea: { "third-party-services": -6 }
+    allowedAreaIds: ["third-party-services"],
 };
 export const portCloakingComponent = {
-    id: "port-cloaking", name: "Port Cloaking", toolboxArea: "invisible-network-protection",
+    id: "port-cloaking",
+    name: "Port Cloaking",
+    area: "invisible-network-protection",
+    importance: "important",
+    selectedOutput: "Protected service ports are hidden from unauthorized discovery, reducing the visible attack surface.",
+    missingOutput: "Network services may be easier to discover, increasing the visible attack surface.",
+    score: 9,
     icon: "./assets/components/firewall.png",
-    allowedAreaIds: ["invisible-network-protection"], outputByArea: { "invisible-network-protection": "" }, scoreByArea: { "invisible-network-protection": 9 }
+    allowedAreaIds: ["invisible-network-protection"],
 };
 export const hiddenIpPathComponent = {
-    id: "hidden-ip-path", name: "Hidden IP Path", toolboxArea: "invisible-network-protection",
+    id: "hidden-ip-path",
+    name: "Hidden IP Path",
+    area: "invisible-network-protection",
+    importance: "critical",
+    selectedOutput: "Backend IP addresses and routing information remain hidden from the client device.",
+    missingOutput: "Backend addresses or network paths may become visible, making internal infrastructure easier to discover.",
+    score: 9,
     icon: "./assets/components/relay-node.png",
-    allowedAreaIds: ["invisible-network-protection"], outputByArea: { "invisible-network-protection": "" }, scoreByArea: { "invisible-network-protection": 9 }
+    allowedAreaIds: ["invisible-network-protection"],
 };
 export const noVirtualNetworkInterfaceComponent = {
-    id: "no-virtual-network-interface", name: "No Virtual Network Interface", toolboxArea: "invisible-network-protection",
+    id: "no-virtual-network-interface",
+    name: "No Virtual Network Interface",
+    area: "invisible-network-protection",
+    importance: "critical",
+    selectedOutput: "No corporate virtual network interface is created on the client device.",
+    missingOutput: "A virtual network interface may expose additional corporate network information to the client device.",
+    score: 10,
     icon: "./assets/components/vpn-tunnel.png",
-    allowedAreaIds: ["invisible-network-protection"], outputByArea: { "invisible-network-protection": "" }, scoreByArea: { "invisible-network-protection": 10 }
+    allowedAreaIds: ["invisible-network-protection"],
 };
 export const noNetworkParticipationComponent = {
-    id: "no-network-participation", name: "No Network Participation", toolboxArea: "invisible-network-protection",
+    id: "no-network-participation",
+    name: "No Network Participation",
+    area: "invisible-network-protection",
+    importance: "critical",
+    selectedOutput: "The client accesses approved applications without becoming a member of the protected network.",
+    missingOutput: "The client may gain unnecessary network participation or visibility, increasing the risk of network discovery and lateral movement.",
+    score: 10,
     icon: "./assets/components/network-connection.png",
-    allowedAreaIds: ["invisible-network-protection"], outputByArea: { "invisible-network-protection": "" }, scoreByArea: { "invisible-network-protection": 10 }
+    allowedAreaIds: ["invisible-network-protection"],
 };
 export const policyEngineComponent = {
-    id: "policy-engine", name: "Policy Engine", toolboxArea: "policy-access-control",
+    id: "policy-engine",
+    name: "Policy Engine",
+    area: "policy-access-control",
+    importance: "critical",
+    selectedOutput: "Access requests are evaluated against security policies before access is granted.",
+    missingOutput: "Access requests cannot be centrally evaluated against security policies, weakening dynamic access control.",
+    score: 10,
     icon: "./assets/components/policy-engine.png",
-    allowedAreaIds: ["policy-access-control"], outputByArea: { "policy-access-control": "" }, scoreByArea: { "policy-access-control": 10 }
+    allowedAreaIds: ["policy-access-control"],
 };
 export const leastPrivilegeAccessComponent = {
-    id: "least-privilege-access", name: "Least-Privilege Access", toolboxArea: "policy-access-control",
+    id: "least-privilege-access",
+    name: "Least-Privilege Access",
+    area: "policy-access-control",
+    importance: "critical",
+    selectedOutput: "The user receives only the minimum permissions required to access approved resources.",
+    missingOutput: "Users may receive broader permissions than necessary, increasing the impact of a compromised account.",
+    score: 10,
     icon: "./assets/components/controlled-access.png",
-    allowedAreaIds: ["policy-access-control"], outputByArea: { "policy-access-control": "" }, scoreByArea: { "policy-access-control": 10 }
+    allowedAreaIds: ["policy-access-control"],
 };
 export const applicationAllowListComponent = {
-    id: "application-allow-list", name: "Application Allow List", toolboxArea: "policy-access-control",
+    id: "application-allow-list",
+    name: "Application Allow List",
+    area: "policy-access-control",
+    importance: "important",
+    selectedOutput: "Access is restricted to explicitly approved applications.",
+    missingOutput: "Application access is not restricted by an allow list, increasing the possibility of access to unnecessary resources.",
+    score: 9,
     icon: "./assets/components/application-connection.png",
-    allowedAreaIds: ["policy-access-control"], outputByArea: { "policy-access-control": "" }, scoreByArea: { "policy-access-control": 9 }
+    allowedAreaIds: ["policy-access-control"],
 };
-export const pamLikeControlComponent = {
-    id: "pam-like-control", name: "PAM-Like Control", toolboxArea: "policy-access-control",
+export const privilegedAccessManagementComponent = {
+    id: "privileged-access-management",
+    name: "Privileged Access Management",
+    area: "policy-access-control",
+    importance: "optional",
+    selectedOutput: "Privileged and administrative access receives additional security control and restriction.",
+    missingOutput: "",
+    score: 8,
     icon: "./assets/components/identity-provider.png",
-    allowedAreaIds: ["policy-access-control"], outputByArea: { "policy-access-control": "" }, scoreByArea: { "policy-access-control": 8 }
+    allowedAreaIds: ["policy-access-control"],
 };
 export const internalWebApplicationComponent = {
-    id: "internal-web-application", name: "Internal Web Application", toolboxArea: "protected-application",
+    id: "internal-web-application",
+    name: "Internal Web Application",
+    area: "protected-application",
+    importance: "special",
+    selectedOutput: "Access is limited to an approved internal web application instead of the entire corporate network.",
+    missingOutput: "",
+    score: 0,
     icon: "./assets/components/application-connection.png",
-    allowedAreaIds: ["protected-application"], outputByArea: { "protected-application": "" }, scoreByArea: { "protected-application": 0 }
+    allowedAreaIds: ["protected-application"],
 };
 export const administrativeApplicationComponent = {
-    id: "administrative-application", name: "Administrative Application", toolboxArea: "protected-application",
+    id: "administrative-application",
+    name: "Administrative Application",
+    area: "protected-application",
+    importance: "special",
+    selectedOutput: "Access is restricted to an approved administrative application with controlled privileged access.",
+    missingOutput: "",
+    score: 0,
     icon: "./assets/components/identity-provider.png",
-    allowedAreaIds: ["protected-application"], outputByArea: { "protected-application": "" }, scoreByArea: { "protected-application": 0 }
+    allowedAreaIds: ["protected-application"],
 };
 export const partnerApplicationComponent = {
-    id: "partner-application", name: "Partner Application", toolboxArea: "protected-application",
+    id: "partner-application",
+    name: "Partner Application",
+    area: "protected-application",
+    importance: "special",
+    selectedOutput: "The partner receives access only to the approved application without receiving general corporate network access.",
+    missingOutput: "",
+    score: 0,
     icon: "./assets/components/external-api.png",
-    allowedAreaIds: ["protected-application"], outputByArea: { "protected-application": "" }, scoreByArea: { "protected-application": 0 }
+    allowedAreaIds: ["protected-application"],
 };
 export const virtualMachineComponent = {
-    id: "virtual-machine", name: "Virtual Machine", toolboxArea: "protected-application",
+    id: "virtual-machine",
+    name: "Virtual Machine",
+    area: "protected-application",
+    importance: "special",
+    selectedOutput: "Access is limited to the approved virtual machine without exposing the broader protected network.",
+    missingOutput: "",
+    score: 0,
     icon: "./assets/components/private-corporate-network.png",
-    allowedAreaIds: ["protected-application"], outputByArea: { "protected-application": "" }, scoreByArea: { "protected-application": 0 }
+    allowedAreaIds: ["protected-application"],
 };
 export const componentList = [
-    passwordComponent, biometricAuthenticationComponent, hardwareSecurityTokenComponent, zeroFootprintClientComponent,
-    privateCaComponent, x509CertificateComponent, certificateRevocationCheckComponent, otpComponent,
-    mutualTlsComponent, ramTunnelingComponent, aes256EncryptionComponent, perfectForwardSecrecyComponent,
-    externalAuthenticationServiceComponent, externalCloudStorageComponent, externalMonitoringServiceComponent, externalPaymentServiceComponent,
-    portCloakingComponent, hiddenIpPathComponent, noVirtualNetworkInterfaceComponent, noNetworkParticipationComponent,
-    policyEngineComponent, leastPrivilegeAccessComponent, applicationAllowListComponent, pamLikeControlComponent,
-    internalWebApplicationComponent, administrativeApplicationComponent, partnerApplicationComponent, virtualMachineComponent
+    passwordComponent,
+    biometricAuthenticationComponent,
+    hardwareSecurityTokenComponent,
+    zeroFootprintClientComponent,
+    privateCertificateAuthorityComponent,
+    x509CertificateComponent,
+    certificateRevocationCheckComponent,
+    otpComponent,
+    mutualTransportLayerSecurityComponent,
+    ramTunnelingComponent,
+    aes256EncryptionComponent,
+    perfectForwardSecrecyComponent,
+    externalAuthenticationServiceComponent,
+    externalCloudStorageComponent,
+    externalMonitoringServiceComponent,
+    externalPaymentServiceComponent,
+    portCloakingComponent,
+    hiddenIpPathComponent,
+    noVirtualNetworkInterfaceComponent,
+    noNetworkParticipationComponent,
+    policyEngineComponent,
+    leastPrivilegeAccessComponent,
+    applicationAllowListComponent,
+    privilegedAccessManagementComponent,
+    internalWebApplicationComponent,
+    administrativeApplicationComponent,
+    partnerApplicationComponent,
+    virtualMachineComponent,
 ];
-const componentIndex = new Map(componentList.map(component => [component.id, component]));
+const componentIndex = new Map(componentList.map((component) => [component.id, component]));
 export function getComponentById(id) {
     return componentIndex.get(id);
 }

@@ -1,5 +1,5 @@
 import { getComponentById } from "./components.js";
-import { addPlacement, hasPlacement, removePlacement } from "./state.js";
+import { addPlacement, getPlacements, hasPlacement, removePlacement, } from "./state.js";
 let draggedComponentId = null;
 let selectedComponentId = null;
 function showError(message) {
@@ -9,7 +9,14 @@ function showError(message) {
 }
 function canPlace(componentId, areaId) {
     const component = getComponentById(componentId);
-    return Boolean(component?.allowedAreaIds.includes(areaId) && !hasPlacement(componentId, areaId));
+    if (!component ||
+        !component.allowedAreaIds.includes(areaId) ||
+        hasPlacement(componentId, areaId))
+        return false;
+    if (areaId === "protected-application" &&
+        getPlacements().some((item) => item.areaId === areaId))
+        return false;
+    return true;
 }
 function place(componentId, areaId) {
     const component = getComponentById(componentId);
@@ -26,7 +33,7 @@ function place(componentId, areaId) {
     showError("");
 }
 function updateHighlights(componentId) {
-    document.querySelectorAll(".area-drop-zone").forEach(zone => {
+    document.querySelectorAll(".area-drop-zone").forEach((zone) => {
         const areaId = zone.dataset.areaId;
         zone.classList.toggle("compatible", Boolean(componentId && canPlace(componentId, areaId)));
     });
@@ -36,7 +43,7 @@ export function initializeDragAndDrop() {
     const canvas = document.getElementById("architecture-canvas");
     if (!toolbox || !canvas)
         return;
-    toolbox.addEventListener("dragstart", event => {
+    toolbox.addEventListener("dragstart", (event) => {
         const card = event.target.closest(".component-card");
         if (!card)
             return;
@@ -49,16 +56,18 @@ export function initializeDragAndDrop() {
         draggedComponentId = null;
         updateHighlights(null);
     });
-    toolbox.addEventListener("click", event => {
+    toolbox.addEventListener("click", (event) => {
         const card = event.target.closest(".component-card");
         if (!card)
             return;
         selectedComponentId = card.dataset.componentId ?? null;
-        document.querySelectorAll(".component-card").forEach(item => item.classList.remove("selected"));
+        document
+            .querySelectorAll(".component-card")
+            .forEach((item) => item.classList.remove("selected"));
         card.classList.add("selected");
         updateHighlights(selectedComponentId);
     });
-    canvas.addEventListener("dragover", event => {
+    canvas.addEventListener("dragover", (event) => {
         const zone = event.target.closest(".area-drop-zone");
         if (!zone || !draggedComponentId)
             return;
@@ -66,7 +75,7 @@ export function initializeDragAndDrop() {
         if (canPlace(draggedComponentId, areaId))
             event.preventDefault();
     });
-    canvas.addEventListener("drop", event => {
+    canvas.addEventListener("drop", (event) => {
         event.preventDefault();
         const zone = event.target.closest(".area-drop-zone");
         const componentId = event.dataTransfer?.getData("text/plain") || draggedComponentId;
@@ -75,7 +84,7 @@ export function initializeDragAndDrop() {
         draggedComponentId = null;
         updateHighlights(null);
     });
-    canvas.addEventListener("click", event => {
+    canvas.addEventListener("click", (event) => {
         const target = event.target;
         const remove = target.closest("[data-remove-component]");
         if (remove) {

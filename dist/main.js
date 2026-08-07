@@ -1,6 +1,6 @@
 import { initializeDragAndDrop } from "./dragDrop.js";
-import { renderAll, renderEvaluation } from "./renderer.js";
-import { getArchitectureState, replaceArchitecture, resetArchitecture, subscribe } from "./state.js";
+import { clearEvaluation, renderBuilder, renderEvaluation, } from "./renderer.js";
+import { getArchitectureState, replaceArchitecture, resetArchitecture, subscribe, } from "./state.js";
 const byId = (id) => document.getElementById(id);
 function initialize() {
     const dialog = byId("state-dialog");
@@ -10,11 +10,17 @@ function initialize() {
     const dialogError = byId("dialog-error");
     const copyButton = byId("copy-json-button");
     const importButton = byId("apply-import-button");
-    renderAll();
-    subscribe(renderAll);
+    const handleArchitectureChange = () => {
+        renderBuilder();
+        clearEvaluation();
+    };
+    renderBuilder();
+    clearEvaluation();
+    subscribe(handleArchitectureChange);
     initializeDragAndDrop();
     byId("reset-button")?.addEventListener("click", () => {
         resetArchitecture();
+        clearEvaluation();
         const error = byId("error-message");
         if (error)
             error.textContent = "";
@@ -72,7 +78,8 @@ function initialize() {
         }
         catch (error) {
             if (dialogError)
-                dialogError.textContent = error instanceof Error ? error.message : "Invalid JSON.";
+                dialogError.textContent =
+                    error instanceof Error ? error.message : "Invalid JSON.";
         }
     });
 }

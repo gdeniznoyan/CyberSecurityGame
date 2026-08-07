@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\" \"index.html\" \"css/**/*.css\" \"*.md\" \"package.json\" \"tsconfig.json\"",
     "watch": "tsc --watch"
   },
   "devDependencies": {
+    "prettier": "^3.9.6",
     "typescript": "^7.0.2"
   }
 }
