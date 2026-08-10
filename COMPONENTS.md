@@ -1,400 +1,214 @@
-# Security Components
+# Component Reference
 
-## Access Device
+The project contains 38 components. Every component is an individual `ComponentDefinition` object in `src/components.ts` and belongs to one toolbox zone.
 
-### Password
+Each definition contains:
 
-Provides basic user authentication using a secret known by the user.
+- `id`: stable state and connection identifier;
+- `name`: visible label;
+- `area`: owning toolbox zone;
+- `description`: short semantic explanation and card tooltip;
+- `icon`: independent PNG asset path;
+- `allowedAreaIds`: valid drop targets;
+- `configuration`: typed behavioural controls and defaults;
+- `architecturalProperties`: possible architecture outcomes.
 
-Importance:
-Optional
+Components do not contain selected or missing output text. The evaluator generates explanations from the effective connected architecture.
 
-Selected Output:
-Basic password authentication is enabled to verify the user's identity.
+## User and Device
 
----
+### User (`user`)
 
-### Biometric Authentication
+Represents the person initiating access. It is a valid graph starting point and contributes no security property by itself.
 
-Uses physical characteristics such as fingerprint or facial recognition as an authentication factor.
+### Client Device (`client-device`)
 
-Importance:
-Important
+Represents a home PC, BYOD device or untrusted endpoint. Its base model allows persistent connection artifacts.
 
-Selected Output:
-Biometric verification adds an additional identity factor that is difficult to share or steal.
+### Saytec Hardware Security Token (`saytec-hardware-security-token`)
 
-Missing Output:
-Biometric verification is missing, reducing the strength of user identity verification.
+Contributes user authentication and hardware-bound identity when it is on the active path.
 
----
+### Biometric Verification (`biometric-verification`)
 
-### Hardware Security Token
+Contributes a directly controlled user-authentication factor.
 
-Uses dedicated protected hardware for sensitive authentication and cryptographic operations.
+### Client PIN (`client-pin`)
 
-Importance:
-Critical
+Contributes user authentication through a client/token PIN factor.
 
-Selected Output:
-Sensitive authentication and cryptographic operations are protected by a dedicated hardware security token.
+### Zero-Footprint Client (`zero-footprint-client`)
 
-Missing Output:
-No hardware security token is used, leaving sensitive authentication operations more dependent on the client device.
+Models a client intended not to retain useful artifacts. `Persistent Configuration Enabled` defaults to false. Enabling it changes the effective `persistsConnectionArtifacts` outcome to true.
 
----
+## Identity Route
 
-### Zero-Footprint Client
+### Private CA (`private-ca`)
 
-Prevents useful session and network information from remaining on the client after the session ends.
+Potentially contributes organisation-controlled identity. This property is effective only when a User Certificate or X.509 Certificate and complete Certificate Validation are all used on the active path.
 
-Importance:
-Critical
+### User Certificate (`user-certificate`)
 
-Selected Output:
-The session is designed to leave no useful access or network traces on the client after it ends.
+Contributes certificate-based user authentication.
 
-Missing Output:
-The client may retain useful session or network artifacts after access ends, increasing exposure if the device is compromised.
+### X.509 Certificate (`x509-certificate`)
 
----
+Contributes cryptographically verifiable certificate authentication.
 
-# Trust and Identity Services
+### Certificate Validation (`certificate-validation`)
 
-### Private CA
+Provides four boolean settings:
 
-Allows the organization to manage its own certificate trust infrastructure.
+- Certificate Checked, default true;
+- Expiration Checked, default true;
+- Revocation Checked, default false;
+- Complete Validation, default false.
 
-Importance:
-Critical
+`validatesCertificate` is effective only when all four values are true.
 
-Selected Output:
-Trust is managed internally through a private certificate authority instead of relying on an external identity dependency.
+### Certificate Revocation Check (`certificate-revocation-check`)
 
-Missing Output:
-No private certificate authority is present, weakening the organization's control over certificate-based trust.
+Represents explicit rejection of revoked certificates. It contributes certificate validation when connected, but a certificate path using the configurable Certificate Validation component must still have complete validation enabled.
 
----
+### OTP (`otp`)
 
-### X.509 Certificate
+Adds a one-time authentication factor.
 
-Provides a cryptographically verifiable digital identity.
+## Access Decision and Enforcement
 
-Importance:
-Critical
+### Saytec Server (`saytec-server`)
 
-Selected Output:
-X.509 certificates provide cryptographically verifiable identities for trusted users, devices or services.
+Provides both policy evaluation and policy enforcement on the active path.
 
-Missing Output:
-Certificate-based identity verification is missing, weakening cryptographic trust between system components.
+Its configuration includes:
 
----
+- Policy Timing: Before Connection or After Connection;
+- Least Privilege Enabled, default true;
+- Broad Role Permission, default false;
+- Session Revocation Enabled, default true.
 
-### Certificate Revocation Check
+Effective least privilege requires Least Privilege Enabled and no Broad Role Permission. Pre-communication authorization requires Before Connection. Session termination requires revocation to remain enabled.
 
-Checks whether a certificate has been revoked or is no longer trusted.
+### Policy Engine (`policy-engine`)
 
-Importance:
-Important
+Evaluates access policy but does not enforce it alone. Policy Timing may be Before Connection or After Connection.
 
-Selected Output:
-Certificate status is checked so revoked or compromised certificates cannot continue to be trusted.
+### Policy Enforcement (`policy-enforcement`)
 
-Missing Output:
-Revoked or compromised certificates may remain usable if their status is not checked.
+Enforces a decision. It becomes effective policy enforcement only when a Policy Engine is also on the active path. Saytec Server does not require this separate component because it performs both roles.
 
----
+### Least-Privilege Control (`least-privilege-control`)
 
-### OTP
+Contributes `usesLeastPrivilege` on the active path.
 
-Provides a temporary one-time authentication code.
+### Application Authorization (`application-authorization`)
 
-Importance:
-Optional
+Restricts access to explicitly authorised applications.
 
-Selected Output:
-A one-time password adds an additional authentication factor for user verification.
+### Session Revocation (`session-revocation`)
 
----
+Contributes the ability to terminate an active session.
 
-# Secure Session
+## Connection Method
 
-### Mutual TLS
+### VPN Gateway (`vpn-gateway`)
 
-Authenticates both the client and the server using certificates.
+Models configurable remote access.
 
-Importance:
-Important
+Access Scope choices are Full Network Access, Restricted Subnet Access and Application-Specific Route. The first two grant network access and expose network information. Application-Specific Route grants application access instead. Split Tunneling Enabled is stored for architecture state and future rule expansion.
 
-Selected Output:
-Mutual TLS verifies both sides of the connection before establishing the secure session.
+### Network Connection (`network-connection`)
 
-Missing Output:
-The client and server are not mutually authenticated, weakening trust between both ends of the connection.
+Grants network-level access and exposes network information.
 
----
+### Application Connection (`application-connection`)
 
-### RAM Tunneling
+Grants application-level access. Application Allow List Enabled defaults to true. Parallel External Communication Restricted defaults to false.
 
-Keeps session information in temporary memory instead of persistent storage.
+### RAM Application Tunnel (`ram-application-tunnel`)
 
-Importance:
-Critical
+Grants application-level access and exposes the primary Saytec client settings:
 
-Selected Output:
-The secure session operates in temporary memory, reducing persistent traces on the client device.
+- Encrypted RAM Tunneling Enabled, default true;
+- Virtual Network Interface Enabled, default false;
+- Application Allow List Enabled, default true;
+- Parallel External Communication Restricted, default true;
+- Persistent Configuration Enabled, default false.
 
-Missing Output:
-Session information may leave persistent traces on the client, weakening the zero-trace security model.
+Encrypted RAM becomes effective only if Encrypted RAM is also on the path. Enabling the virtual interface creates a protected-network interface and address. Allow-list and parallel-communication settings drive application restriction outcomes.
 
----
+### Encrypted RAM (`encrypted-ram`)
 
-### AES-256 Encryption
+Provides RAM protection only when the actual RAM Application Tunnel path uses it with tunnelling enabled.
 
-Protects session data using strong encryption.
+### Mutual TLS (`mutual-tls`)
 
-Importance:
-Critical
+Contributes mutual authentication and encrypted communication.
 
-Selected Output:
-Session data is protected with strong AES-256 encryption against unauthorized reading.
+### AES-256 Encryption (`aes-256-encryption`)
 
-Missing Output:
-Session data lacks the intended strong encryption protection and may be more exposed if intercepted.
+Contributes strong connection encryption.
 
----
+### Perfect Forward Secrecy (`perfect-forward-secrecy`)
 
-### Perfect Forward Secrecy
+Contributes encrypted-session key isolation.
 
-Uses independent session keys to reduce the impact of future key compromise.
+### Virtual Network Interface (`virtual-network-interface`)
 
-Importance:
-Important
+Creates a client network interface, assigns a protected-network address and exposes network information. This is normal in many Traditional Access designs but conflicts with Saytec Post-Zero Trust isolation.
 
-Selected Output:
-Independent session keys help protect previous sessions even if a future key is compromised.
+## Reachable Resources
 
-Missing Output:
-Compromise of long-term cryptographic material may have a greater impact on previously protected sessions.
+### Corporate Network (`corporate-network`)
 
----
+Represents broad protected-network reachability and visible network information.
 
-# Third-Party Services
+### Restricted Subnet (`restricted-subnet`)
 
-### External Authentication Service
+Represents network-level access restricted to a subnet. It remains network participation rather than application isolation.
 
-Uses an external provider for authentication.
+### Internal Web Application (`internal-web-application`)
 
-Importance:
-Special
+Represents an application-level internal web target.
 
-Selected Output:
-Authentication depends on an external provider, introducing a third-party trust and availability dependency.
+### Administrative Application (`administrative-application`)
 
----
+Represents an application-level privileged target.
 
-### External Cloud Storage
+### Partner Application (`partner-application`)
 
-Stores organizational data using an external cloud provider.
+Represents an application exposed specifically to a partner.
 
-Importance:
-Special
+### Virtual Machine (`virtual-machine`)
 
-Selected Output:
-Sensitive data is stored outside the organization, introducing dependency on an external provider's security controls.
+Represents access limited to a specific virtual machine.
 
----
+### Multiple Internal Applications (`multiple-internal-applications`)
 
-### External Monitoring Service
+Represents broad reachability to several internal resources. It grants network access and exposes network information.
 
-Sends security logs or operational information to an external monitoring provider.
+## Third-Party Systems
 
-Importance:
-Special
+Third-party components live in a side lane. Their presence alone does not create a security penalty or identity dependency.
 
-Selected Output:
-Security logs and operational information are shared with an external monitoring provider.
+### External Identity Provider (`external-identity-provider`)
 
----
+Represents Microsoft IdP, Okta or another provider. Identity Role choices are Primary Authenticator, Secondary Identity Signal, SSO After Authentication and Application-Only Dependency.
 
-### External Payment Service
+Only Primary Authenticator sets `dependsOnExternalIdentityProvider` when this component participates in the active path.
 
-Processes payments using an external provider.
+### External SSO (`external-sso`)
 
-Importance:
-Special
+Uses the same Identity Role choices. It defaults to SSO After Authentication, allowing application convenience without automatically becoming the root of trust.
 
-Selected Output:
-Payment operations depend on an external service, introducing an additional third-party trust relationship.
+### External Monitoring Service (`external-monitoring-service`)
 
----
+Contributes session monitoring when it participates in the active path. Monitoring can satisfy the Zero Trust requirement for session oversight when termination is unavailable.
 
-# Invisible Network Protection
+### External Cloud Service (`external-cloud-service`)
 
-### Port Cloaking
+Represents an externally hosted application or data dependency. It is recognised as a reachable resource when connected from the active path.
 
-Hides protected service ports from unauthorized discovery.
+## Icon Assets
 
-Importance:
-Important
-
-Selected Output:
-Protected service ports are hidden from unauthorized discovery, reducing the visible attack surface.
-
-Missing Output:
-Network services may be easier to discover, increasing the visible attack surface.
-
----
-
-### Hidden IP Path
-
-Hides backend IP addresses and routing information from the client.
-
-Importance:
-Critical
-
-Selected Output:
-Backend IP addresses and routing information remain hidden from the client device.
-
-Missing Output:
-Backend addresses or network paths may become visible, making internal infrastructure easier to discover.
-
----
-
-### No Virtual Network Interface
-
-Prevents a corporate virtual network adapter from being created on the client.
-
-Importance:
-Critical
-
-Selected Output:
-No corporate virtual network interface is created on the client device.
-
-Missing Output:
-A virtual network interface may expose additional corporate network information to the client device.
-
----
-
-### No Network Participation
-
-Prevents the client from becoming a direct member of the protected corporate network.
-
-Importance:
-Critical
-
-Selected Output:
-The client accesses approved applications without becoming a member of the protected network.
-
-Missing Output:
-The client may gain unnecessary network participation or visibility, increasing the risk of network discovery and lateral movement.
-
----
-
-# Policy and Access Control
-
-### Policy Engine
-
-Evaluates access requests according to security policies.
-
-Importance:
-Critical
-
-Selected Output:
-Access requests are evaluated against security policies before access is granted.
-
-Missing Output:
-Access requests cannot be centrally evaluated against security policies, weakening dynamic access control.
-
----
-
-### Least-Privilege Access
-
-Provides only the minimum permissions required for the user's task.
-
-Importance:
-Critical
-
-Selected Output:
-The user receives only the minimum permissions required to access approved resources.
-
-Missing Output:
-Users may receive broader permissions than necessary, increasing the impact of a compromised account.
-
----
-
-### Application Allow List
-
-Allows access only to explicitly approved applications.
-
-Importance:
-Important
-
-Selected Output:
-Access is restricted to explicitly approved applications.
-
-Missing Output:
-Application access is not restricted by an allow list, increasing the possibility of access to unnecessary resources.
-
----
-
-### PAM-Like Control
-
-Adds stronger access controls for privileged or administrative accounts.
-
-Importance:
-Optional
-
-Selected Output:
-Privileged and administrative access receives additional security control and restriction.
-
----
-
-# Protected Application
-
-### Internal Web Application
-
-Represents an approved internal web application.
-
-Importance:
-Special
-
-Selected Output:
-Access is limited to an approved internal web application instead of the entire corporate network.
-
----
-
-### Administrative Application
-
-Represents a privileged administrative application.
-
-Importance:
-Special
-
-Selected Output:
-Access is restricted to an approved administrative application with controlled privileged access.
-
----
-
-### Partner Application
-
-Represents an application made available to approved external partners.
-
-Importance:
-Special
-
-Selected Output:
-The partner receives access only to the approved application without receiving general corporate network access.
-
----
-
-### Virtual Machine
-
-Represents an approved virtual machine that the user may access.
-
-Importance:
-Special
-
-Selected Output:
-Access is limited to the approved virtual machine without exposing the broader protected network.
+Every component uses its own independently generated transparent 256×256 PNG under `assets/components-individual/`. No component icon is cropped from a shared sprite sheet.

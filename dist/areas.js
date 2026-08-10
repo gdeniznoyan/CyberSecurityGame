@@ -1,38 +1,40 @@
-export const accessDeviceArea = {
-    id: "access-device",
-    name: "Access Device",
+export const userDeviceArea = {
+    id: "user-device",
+    name: "User and Device",
+    description: "The user, endpoint and directly controlled identity factors.",
 };
-export const trustIdentityServicesArea = {
-    id: "trust-identity-services",
-    name: "Trust and Identity Services",
+export const identityRouteArea = {
+    id: "identity-route",
+    name: "Identity Route",
+    description: "The trust chain used to establish identity.",
 };
-export const secureSessionArea = {
-    id: "secure-session",
-    name: "Secure Session",
+export const accessDecisionArea = {
+    id: "access-decision-enforcement",
+    name: "Access Decision and Enforcement",
+    description: "Policy evaluation, authorization and enforcement.",
 };
-export const thirdPartyServicesArea = {
-    id: "third-party-services",
-    name: "Third-Party Services",
+export const connectionMethodArea = {
+    id: "connection-method",
+    name: "Connection Method",
+    description: "How the protected communication path is created.",
 };
-export const invisibleNetworkProtectionArea = {
-    id: "invisible-network-protection",
-    name: "Invisible Network Protection",
+export const reachableResourcesArea = {
+    id: "reachable-resources",
+    name: "Reachable Resources",
+    description: "The resources the client can actually reach.",
 };
-export const policyAccessControlArea = {
-    id: "policy-access-control",
-    name: "Policy and Access Control",
-};
-export const protectedApplicationArea = {
-    id: "protected-application",
-    name: "Protected Application",
+export const thirdPartySystemsArea = {
+    id: "third-party-systems",
+    name: "Third-Party Systems",
+    description: "External systems connected to the function they influence.",
+    sideLane: true,
 };
 export const architectureAreas = [
-    accessDeviceArea,
-    trustIdentityServicesArea,
-    secureSessionArea,
-    thirdPartyServicesArea,
-    invisibleNetworkProtectionArea,
-    policyAccessControlArea,
-    protectedApplicationArea,
+    userDeviceArea,
+    identityRouteArea,
+    accessDecisionArea,
+    connectionMethodArea,
+    reachableResourcesArea,
+    thirdPartySystemsArea,
 ];
 //# sourceMappingURL=areas.js.map

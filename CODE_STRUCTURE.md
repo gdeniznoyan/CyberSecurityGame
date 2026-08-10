@@ -1,120 +1,149 @@
 # Code Structure
 
-The project is organized so that architecture data, evaluation logic and user interface logic are separated from each other.
+This document explains how the complete application is organised and how control moves through it at runtime.
 
-## areas.ts
+## Root Files
 
-Contains the Architecture Canvas area definitions.
+### `index.html`
 
-This file stores information such as:
+Defines the static page shell. Important elements are:
 
-- Area ID
-- Area name
-- Area description
+- `reset-button` resets all architecture state.
+- `analyze-button` manually requests analysis, although analysis also updates after state changes.
+- `architecture-canvas` receives the generated canvas zones and connection/configuration controls.
+- `component-toolbox` receives generated toolbox groups and component buttons.
+- `architecture-classification-value` shows the primary classification.
+- `security-score-value` and `.security-score-chart` show the secondary score.
+- `result-insights` receives architecture-level analysis sections.
+- `state-dialog`, `state-json`, export/import controls and error elements implement JSON persistence.
 
-It does not store component outputs or scores.
+The only application script loaded by HTML is `dist/main.js`.
 
-## components.ts
+### `css/style.css`
 
-Contains all security component objects.
+Contains the complete visual system: page/sidebar/header layout, canvas zones, third-party side lane, component cards, drag states, placed-component galleries, connection editor, configuration controls, analysis sidebar, score ring, dialog and responsive breakpoints.
 
-Each component is stored as its own object.
+The generated images are under:
 
-A component may contain:
+- `assets/components-individual/` for 38 individually generated component icons;
+- `assets/architecture-zones/` for six independently generated canvas illustrations.
 
-- ID
-- Name
-- Area
-- Description
-- Importance level
-- Score
-- Selected output
-- Missing output
+## TypeScript Files
 
-The component's security behavior belongs to the component itself rather than to the area.
+### `src/types.ts`
 
-## architecture.ts
+Defines every shared contract.
 
-Contains shared TypeScript types and interfaces.
+`AreaId` is the exact union of six zone IDs.
 
-Examples include:
+`ArchitectureArea` stores zone ID, name, description and optional `sideLane` display metadata.
 
-- Area IDs
-- Component types
-- Importance levels
-- Evaluation result types
+`ArchitectureProperties` contains behavioural outcomes. These booleans are not component scores.
 
-This file defines the structure of the data used by the rest of the application.
+`BooleanConfigurationField` and `SelectConfigurationField` describe typed UI controls. `ConfigurationSchema`, `ConfigurationValue` and `ComponentConfiguration` form the complete configuration model.
 
-## evaluationService.ts
+`ComponentDefinition` requires ID, name, owning area, description, icon, allowed areas, configuration schema and possible architectural properties. It contains no prewritten selected/missing output.
 
-Contains the security evaluation logic.
+`Placement` records a component in a zone. `ComponentConnection` records a directed edge.
 
-This file determines:
+`ArchitectureState` is the serialisable combination of placements, connections and configurations.
 
-- Which components are selected
-- Which critical components are missing
-- Which important components are missing
-- Component scores
-- Area scores
-- Final Security Score
-- Third-party dependency results
-- Post-Zero-Trust eligibility
+`ArchitectureClassification` limits results to six supported labels.
 
-The evaluation service reads the necessary information from component objects.
+`ArchitectureAnalysis` is the evaluator result consumed by the renderer.
 
-It should not contain large hardcoded lists of component-specific output messages.
+### `src/areas.ts`
 
-## outputRenderer.ts
+Creates every area as its own object and combines them in `architectureAreas`. The array order drives toolbox order and main-path rendering. Third-Party Systems has `sideLane: true`, so the renderer places it beside the main path.
 
-Controls how evaluation results are displayed in the Security Analysis panel.
+### `src/components.ts`
 
-This file is responsible for displaying sections such as:
+Creates each of the 38 components as a separate typed object. `componentList` combines them for toolbox rendering and lookup. A private map supports `getComponentById`.
 
-- Selected Security Controls
-- Missing Critical Controls
-- Recommended Improvements
-- Third-Party Dependencies
-- Target Application
+`getDefaultConfiguration` reads each schema and creates a key/value object from field defaults. Defaults therefore remain next to the component that owns them.
 
-It receives evaluation results and renders them in the user interface.
+### `src/state.ts`
 
-It does not decide the security meaning of individual components.
+Owns all mutable application state. Its internal variables are not exported directly.
 
-## main.ts
+Read functions return copies to prevent external mutation:
 
-Connects the main parts of the application.
+- `getPlacements`
+- `getConnections`
+- `getComponentConfiguration`
+- `getArchitectureState`
 
-It manages:
+Mutation functions validate before changing state:
 
-- Drag and drop
-- Adding components
-- Removing components
-- Updating the Architecture Canvas
-- Triggering security evaluation
-- Refreshing the output panel
+- `addPlacement`
+- `removePlacement`
+- `addConnection`
+- `removeConnection`
+- `updateComponentConfiguration`
+- `resetArchitecture`
+- `replaceArchitecture`
 
-## HTML Files
+`removePlacement` also deletes every edge touching that component and removes its configuration. Each successful mutation calls `emit`. Subscribers registered with `subscribe` then rerender and reevaluate the app.
 
-HTML files contain the structure of the user interface.
+### `src/evaluator.ts`
 
-They define elements such as:
+Implements architecture intelligence.
 
-- Toolbox
-- Architecture Canvas
-- Security Analysis panel
-- Score display
-- Buttons
+`findAccessPath` constructs adjacency from directed connections and performs breadth-first path discovery.
 
-## CSS Files
+`mergePathProperties` merges possible properties only from components on the active path.
 
-CSS files contain the visual design of the application.
+`applyConfiguration` derives configuration-sensitive outcomes and relationships such as certificate-chain use, policy enforcement, VPN scope, RAM protection and identity-provider role.
 
-They manage:
+`buildOpenings` detects named security conflicts and misconfigurations.
 
-- Layout
-- Component appearance
-- Canvas styling
-- Security result panel
-- Responsive design
-- Drag-and-drop visual feedback
+`isPostZeroTrust` and `isZeroTrust` check complete required outcomes.
+
+`classify` applies classification priority: incomplete, critical unsafe states, hybrid conflicts, Saytec Post-Zero Trust, Zero Trust, Traditional Access and remaining incomplete/hybrid cases.
+
+`calculateScore` produces the secondary effective-property score.
+
+`recommendations` converts missing outcomes and exposure into actionable changes.
+
+`evaluateArchitecture` is the public entry point. It returns the classification, score, path, properties and every explanation needed by the sidebar.
+
+### `src/renderer.ts`
+
+Creates DOM from state and definitions.
+
+`renderArchitecture` renders the five-zone main path, Third-Party side lane, placed component icons, Connect/Configure/Remove actions, connection list and configuration panel.
+
+`renderToolbox` groups all components by owning area and makes each card draggable.
+
+`renderEvaluation` calls the evaluator and renders classification, access path, authentication model/dependency, policy status, connection type, visibility, reachability, network participation, openings, recommendations and score.
+
+`renderBuilder` rerenders canvas and toolbox. Small module variables track the currently selected connection source and configuration component.
+
+### `src/dragDrop.ts`
+
+Uses event delegation on toolbox and canvas.
+
+It supports native drag-and-drop, click-to-select placement, compatible-zone highlighting, component removal, two-step Connect/Link creation, connection deletion and configuration input changes. It delegates validation and persistence to `state.ts` rather than owning architecture data.
+
+### `src/main.ts`
+
+Is the application entry point.
+
+Initialization renders the UI, performs the first analysis, subscribes to state changes and activates drag-and-drop. Every state mutation calls `renderBuilder` and `renderEvaluation` through the subscription.
+
+It also wires Reset, Analyze, Export, Import, clipboard copy and dialog feedback.
+
+## Runtime Data Flow
+
+1. `main.ts` initializes renderer and event handlers.
+2. `renderer.ts` reads areas, components and state to build the UI.
+3. A user action reaches `dragDrop.ts` or a header/dialog handler.
+4. The action calls a validated mutation in `state.ts`.
+5. `state.ts` emits a change notification.
+6. `main.ts` rerenders the builder and requests evaluation.
+7. `evaluator.ts` discovers the active graph path and derives effective outcomes.
+8. `renderer.ts` writes the new classification, explanations and score to the sidebar.
+
+## Build Output
+
+`npm run build` executes TypeScript with `strict`, `noEmitOnError`, ES2022 modules and source maps. Generated files in `dist/` mirror TypeScript source names. Source files, not `dist`, are the editing authority.

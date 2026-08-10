@@ -1,9 +1,16 @@
 import { getComponentById } from "./components.js";
 import {
+  getConnectionSourceId,
+  setConfiguredComponentId,
+  setConnectionSourceId,
+} from "./renderer.js";
+import {
+  addConnection,
   addPlacement,
-  getPlacements,
   hasPlacement,
+  removeConnection,
   removePlacement,
+  updateComponentConfiguration,
 } from "./state.js";
 import type { AreaId, ComponentId } from "./types.js";
 
@@ -16,44 +23,36 @@ function showError(message: string): void {
 }
 
 function canPlace(componentId: ComponentId, areaId: AreaId): boolean {
-  const component = getComponentById(componentId);
-  if (
-    !component ||
-    !component.allowedAreaIds.includes(areaId) ||
-    hasPlacement(componentId, areaId)
-  )
-    return false;
-  if (
-    areaId === "protected-application" &&
-    getPlacements().some((item) => item.areaId === areaId)
-  )
-    return false;
-  return true;
+  const definition = getComponentById(componentId);
+  return Boolean(
+    definition?.allowedAreaIds.includes(areaId) &&
+    !hasPlacement(componentId, areaId),
+  );
 }
 
 function place(componentId: ComponentId, areaId: AreaId): void {
-  const component = getComponentById(componentId);
-  if (!component?.allowedAreaIds.includes(areaId)) {
+  const definition = getComponentById(componentId);
+  if (!definition?.allowedAreaIds.includes(areaId)) {
     showError(
-      `${component?.name ?? componentId} cannot be placed in this area.`,
+      `${definition?.name ?? componentId} cannot be placed in this architectural zone.`,
     );
     return;
   }
-  if (hasPlacement(componentId, areaId)) {
-    showError(`${component.name} is already placed in this area.`);
+  if (!addPlacement(componentId, areaId)) {
+    showError(`${definition.name} is already placed in this zone.`);
     return;
   }
-  addPlacement(componentId, areaId);
   selectedComponentId = null;
   showError("");
 }
 
 function updateHighlights(componentId: ComponentId | null): void {
   document.querySelectorAll<HTMLElement>(".area-drop-zone").forEach((zone) => {
-    const areaId = zone.dataset.areaId as AreaId;
     zone.classList.toggle(
       "compatible",
-      Boolean(componentId && canPlace(componentId, areaId)),
+      Boolean(
+        componentId && canPlace(componentId, zone.dataset.areaId as AreaId),
+      ),
     );
   });
 }
@@ -73,12 +72,10 @@ export function initializeDragAndDrop(): void {
       event.dataTransfer?.setData("text/plain", draggedComponentId);
     updateHighlights(draggedComponentId);
   });
-
   toolbox.addEventListener("dragend", () => {
     draggedComponentId = null;
     updateHighlights(null);
   });
-
   toolbox.addEventListener("click", (event) => {
     const card = (event.target as HTMLElement).closest<HTMLElement>(
       ".component-card",
@@ -91,16 +88,17 @@ export function initializeDragAndDrop(): void {
     card.classList.add("selected");
     updateHighlights(selectedComponentId);
   });
-
   canvas.addEventListener("dragover", (event) => {
     const zone = (event.target as HTMLElement).closest<HTMLElement>(
       ".area-drop-zone",
     );
-    if (!zone || !draggedComponentId) return;
-    const areaId = zone.dataset.areaId as AreaId;
-    if (canPlace(draggedComponentId, areaId)) event.preventDefault();
+    if (
+      zone &&
+      draggedComponentId &&
+      canPlace(draggedComponentId, zone.dataset.areaId as AreaId)
+    )
+      event.preventDefault();
   });
-
   canvas.addEventListener("drop", (event) => {
     event.preventDefault();
     const zone = (event.target as HTMLElement).closest<HTMLElement>(
@@ -112,7 +110,6 @@ export function initializeDragAndDrop(): void {
     draggedComponentId = null;
     updateHighlights(null);
   });
-
   canvas.addEventListener("click", (event) => {
     const target = event.target as HTMLElement;
     const remove = target.closest<HTMLButtonElement>("[data-remove-component]");
@@ -121,11 +118,65 @@ export function initializeDragAndDrop(): void {
         remove.dataset.removeComponent ?? "",
         remove.dataset.areaId as AreaId,
       );
+      setConnectionSourceId(null);
+      showError("");
+      return;
+    }
+    const configure = target.closest<HTMLButtonElement>(
+      "[data-configure-component]",
+    );
+    if (configure?.dataset.configureComponent) {
+      setConfiguredComponentId(configure.dataset.configureComponent);
+      showError("");
+      return;
+    }
+    const connect = target.closest<HTMLButtonElement>(
+      "[data-connect-component]",
+    );
+    if (connect?.dataset.connectComponent) {
+      const selected = getConnectionSourceId();
+      const current = connect.dataset.connectComponent;
+      if (!selected) {
+        setConnectionSourceId(current);
+        showError("Source selected. Choose Link on the destination component.");
+      } else if (selected === current) {
+        setConnectionSourceId(null);
+        showError("Connection selection cancelled.");
+      } else if (addConnection(selected, current)) {
+        setConnectionSourceId(null);
+        showError("");
+      } else showError("This connection already exists or is invalid.");
+      return;
+    }
+    const unlink = target.closest<HTMLButtonElement>(
+      "[data-remove-connection-source]",
+    );
+    if (unlink) {
+      removeConnection(
+        unlink.dataset.removeConnectionSource ?? "",
+        unlink.dataset.removeConnectionTarget ?? "",
+      );
       showError("");
       return;
     }
     const zone = target.closest<HTMLElement>(".area-drop-zone");
     if (zone && selectedComponentId)
       place(selectedComponentId, zone.dataset.areaId as AreaId);
+  });
+  canvas.addEventListener("change", (event) => {
+    const control = (event.target as HTMLElement).closest<
+      HTMLInputElement | HTMLSelectElement
+    >("[data-configuration-component]");
+    if (!control) return;
+    const value =
+      control instanceof HTMLInputElement && control.type === "checkbox"
+        ? control.checked
+        : control.value;
+    updateComponentConfiguration(
+      control.dataset.configurationComponent ?? "",
+      control.dataset.configurationKey ?? "",
+      value,
+    );
+    showError("");
   });
 }
