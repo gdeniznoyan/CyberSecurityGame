@@ -1,5 +1,6 @@
 import { getComponentById } from "./components.js";
-import { addPlacement, getPlacements, hasPlacement, removePlacement, } from "./state.js";
+import { getConnectionSourceId, setConfiguredComponentId, setConnectionSourceId, } from "./renderer.js";
+import { addConnection, addPlacement, hasPlacement, removeConnection, removePlacement, updateComponentConfiguration, } from "./state.js";
 let draggedComponentId = null;
 let selectedComponentId = null;
 function showError(message) {
@@ -8,34 +9,26 @@ function showError(message) {
         error.textContent = message;
 }
 function canPlace(componentId, areaId) {
-    const component = getComponentById(componentId);
-    if (!component ||
-        !component.allowedAreaIds.includes(areaId) ||
-        hasPlacement(componentId, areaId))
-        return false;
-    if (areaId === "protected-application" &&
-        getPlacements().some((item) => item.areaId === areaId))
-        return false;
-    return true;
+    const definition = getComponentById(componentId);
+    return Boolean(definition?.allowedAreaIds.includes(areaId) &&
+        !hasPlacement(componentId, areaId));
 }
 function place(componentId, areaId) {
-    const component = getComponentById(componentId);
-    if (!component?.allowedAreaIds.includes(areaId)) {
-        showError(`${component?.name ?? componentId} cannot be placed in this area.`);
+    const definition = getComponentById(componentId);
+    if (!definition?.allowedAreaIds.includes(areaId)) {
+        showError(`${definition?.name ?? componentId} cannot be placed in this architectural zone.`);
         return;
     }
-    if (hasPlacement(componentId, areaId)) {
-        showError(`${component.name} is already placed in this area.`);
+    if (!addPlacement(componentId, areaId)) {
+        showError(`${definition.name} is already placed in this zone.`);
         return;
     }
-    addPlacement(componentId, areaId);
     selectedComponentId = null;
     showError("");
 }
 function updateHighlights(componentId) {
     document.querySelectorAll(".area-drop-zone").forEach((zone) => {
-        const areaId = zone.dataset.areaId;
-        zone.classList.toggle("compatible", Boolean(componentId && canPlace(componentId, areaId)));
+        zone.classList.toggle("compatible", Boolean(componentId && canPlace(componentId, zone.dataset.areaId)));
     });
 }
 export function initializeDragAndDrop() {
@@ -69,10 +62,9 @@ export function initializeDragAndDrop() {
     });
     canvas.addEventListener("dragover", (event) => {
         const zone = event.target.closest(".area-drop-zone");
-        if (!zone || !draggedComponentId)
-            return;
-        const areaId = zone.dataset.areaId;
-        if (canPlace(draggedComponentId, areaId))
+        if (zone &&
+            draggedComponentId &&
+            canPlace(draggedComponentId, zone.dataset.areaId))
             event.preventDefault();
     });
     canvas.addEventListener("drop", (event) => {
@@ -89,12 +81,55 @@ export function initializeDragAndDrop() {
         const remove = target.closest("[data-remove-component]");
         if (remove) {
             removePlacement(remove.dataset.removeComponent ?? "", remove.dataset.areaId);
+            setConnectionSourceId(null);
+            showError("");
+            return;
+        }
+        const configure = target.closest("[data-configure-component]");
+        if (configure?.dataset.configureComponent) {
+            setConfiguredComponentId(configure.dataset.configureComponent);
+            showError("");
+            return;
+        }
+        const connect = target.closest("[data-connect-component]");
+        if (connect?.dataset.connectComponent) {
+            const selected = getConnectionSourceId();
+            const current = connect.dataset.connectComponent;
+            if (!selected) {
+                setConnectionSourceId(current);
+                showError("Source selected. Choose Link on the destination component.");
+            }
+            else if (selected === current) {
+                setConnectionSourceId(null);
+                showError("Connection selection cancelled.");
+            }
+            else if (addConnection(selected, current)) {
+                setConnectionSourceId(null);
+                showError("");
+            }
+            else
+                showError("This connection already exists or is invalid.");
+            return;
+        }
+        const unlink = target.closest("[data-remove-connection-source]");
+        if (unlink) {
+            removeConnection(unlink.dataset.removeConnectionSource ?? "", unlink.dataset.removeConnectionTarget ?? "");
             showError("");
             return;
         }
         const zone = target.closest(".area-drop-zone");
         if (zone && selectedComponentId)
             place(selectedComponentId, zone.dataset.areaId);
+    });
+    canvas.addEventListener("change", (event) => {
+        const control = event.target.closest("[data-configuration-component]");
+        if (!control)
+            return;
+        const value = control instanceof HTMLInputElement && control.type === "checkbox"
+            ? control.checked
+            : control.value;
+        updateComponentConfiguration(control.dataset.configurationComponent ?? "", control.dataset.configurationKey ?? "", value);
+        showError("");
     });
 }
 //# sourceMappingURL=dragDrop.js.map

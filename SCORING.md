@@ -1,101 +1,72 @@
 # Security Scoring System
 
-Each security component has a score representing its contribution to the overall architecture.
+## Role of the Score
 
-The score is calculated separately for each security area and then combined using area weights.
+The numerical score is secondary to architecture classification. It summarises effective security outcomes on the discovered access path. It is not calculated from the number of placed components.
 
-## Importance Levels
+A score of 100 does not automatically create a Saytec Post-Zero Trust result. Classification still requires every mandatory architectural outcome.
 
-Components are classified as:
+## Positive Property Values
 
-- Critical
-- Important
-- Optional
-- Special
+The evaluator starts at zero and adds points for effective properties:
 
-Critical components represent major Post-Zero-Trust security controls.
+- User authentication adds 10.
+- Authentication before communication adds 8.
+- Hardware-bound identity adds 7.
+- Organisation-controlled identity adds 7.
+- Policy evaluation adds 9.
+- Policy enforcement adds 11.
+- Least privilege adds 9.
+- Application restriction adds 8.
+- Session termination adds 6.
+- Connection encryption adds 8.
+- Encrypted RAM adds 8.
+- Restricted parallel applications adds 4.
+- Complete certificate validation adds 5.
 
-Important components significantly improve security but are not always mandatory.
+The maximum positive total is 100.
 
-Optional components provide additional protection.
+## Exposure Deductions
 
-Special components use custom evaluation rules, such as Third-Party Services and Protected Applications.
+The evaluator subtracts points for effective exposure:
 
-## Area Weights
+- Network-level access subtracts 12.
+- A virtual network interface subtracts 8.
+- Exposed network information subtracts 7.
+- Primary external identity dependency subtracts 5.
+- Persistent connection artifacts subtract 5.
 
-Access Device: 15%
+## Security-Opening Deduction
 
-Trust and Identity Services: 20%
+Each detected security opening subtracts 6 additional points. This deduction is applied after property additions and exposure deductions.
 
-Secure Session: 20%
+## Final Formula
 
-Third-Party Services: 10%
+The implemented calculation is:
 
-Invisible Network Protection: 20%
+```text
+raw score =
+  sum of effective positive property values
+  - effective exposure deductions
+  - (identified opening count × 6)
 
-Policy and Access Control: 15%
+final score = round(raw score), limited to 0 through 100
+```
 
-Protected Application does not directly increase the Security Score because it represents the target instead of a security control.
+## Why Properties Must Be Effective
 
-## Area Score
+A component's static definition does not immediately add score. It must be on the actual access path, and relationship/configuration rules must make the property effective.
 
-Each area's score is calculated using:
+Examples:
 
-Selected component points
-/
-Maximum possible points in the area
-×
-100
+- Encrypted RAM scores only when the active RAM Application Tunnel uses it.
+- Private CA scores only when a certificate and complete validation use its trust chain.
+- Policy Enforcement scores only when policy is also evaluated.
+- External Identity Provider is deducted only when it is the connected Primary Authenticator.
+- An unused component elsewhere on the canvas contributes nothing.
 
-## Final Security Score
+## Classification Is Independent
 
-Final Security Score is calculated by multiplying each area score by its weight.
+After openings and effective properties are derived, classification rules run independently of score thresholds.
 
-Final Score =
-
-Access Device Score × 0.15
-+
-Trust and Identity Score × 0.20
-+
-Secure Session Score × 0.20
-+
-Third-Party Score × 0.10
-+
-Invisible Network Protection Score × 0.20
-+
-Policy and Access Control Score × 0.15
-
-The final result is limited to the range 0–100.
-
-## Security Levels
-
-0–24:
-Very Low Security
-
-25–49:
-Low Security
-
-50–69:
-Medium Security
-
-70–84:
-High Security
-
-85–94:
-Very High Security
-
-95–100:
-Post-Zero Trust
-
-A high numerical score alone is not enough to qualify as Post-Zero Trust.
-
-Critical architecture requirements must also be satisfied, especially:
-
-- No Network Participation
-- No Virtual Network Interface
-- RAM Tunneling
-- Policy Engine
-- Least-Privilege Access
-- Strong certificate-based trust
-
-Third-party dependencies may reduce the Post-Zero-Trust result.
+For example, broad network access may still be classified as Traditional Access even when strong controls produce a respectable score. Conversely, an application-isolated path cannot be Saytec Post-Zero Trust if hardware identity, organisation-controlled trust, pre-connection policy, RAM protection or network-isolation conditions are missing.

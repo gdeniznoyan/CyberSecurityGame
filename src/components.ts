@@ -1,399 +1,633 @@
-import type { ComponentDefinition } from "./types.js";
+﻿import type { ComponentDefinition } from "./types.js";
 
-export const passwordComponent: ComponentDefinition = {
-  id: "password",
-  name: "Password",
-  area: "access-device",
-  importance: "optional",
-  selectedOutput:
-    "Basic password authentication is enabled to verify the user's identity.",
-  missingOutput: "",
-  score: 3,
-  icon: "./assets/components/password.png",
-  allowedAreaIds: ["access-device"],
-};
-export const biometricAuthenticationComponent: ComponentDefinition = {
-  id: "biometric-authentication",
-  name: "Biometric Authentication",
-  area: "access-device",
-  importance: "important",
-  selectedOutput:
-    "Biometric verification adds an additional identity factor that is difficult to share or steal.",
-  missingOutput:
-    "Biometric verification is missing, reducing the strength of user identity verification.",
-  score: 7,
-  icon: "./assets/components/biometric-authentication.png",
-  allowedAreaIds: ["access-device"],
-};
-export const hardwareSecurityTokenComponent: ComponentDefinition = {
-  id: "hardware-security-token",
-  name: "Hardware Security Token",
-  area: "access-device",
-  importance: "critical",
-  selectedOutput:
-    "Sensitive authentication and cryptographic operations are protected by a dedicated hardware security token.",
-  missingOutput:
-    "No hardware security token is used, leaving sensitive authentication operations more dependent on the client device.",
-  score: 10,
-  icon: "./assets/components/mfa.png",
-  allowedAreaIds: ["access-device"],
-};
-export const zeroFootprintClientComponent: ComponentDefinition = {
+const component = (definition: ComponentDefinition): ComponentDefinition =>
+  definition;
+
+export const userComponent = component({
+  id: "user",
+  name: "User",
+  area: "user-device",
+  description: "The person who initiates the access request.",
+  icon: "./assets/components-individual/user.png",
+  allowedAreaIds: ["user-device"],
+  configuration: {},
+  architecturalProperties: {},
+});
+
+export const clientDeviceComponent = component({
+  id: "client-device",
+  name: "Client Device",
+  area: "user-device",
+  description: "A home PC, BYOD device or otherwise untrusted endpoint.",
+  icon: "./assets/components-individual/client-device.png",
+  allowedAreaIds: ["user-device"],
+  configuration: {},
+  architecturalProperties: { persistsConnectionArtifacts: true },
+});
+
+export const saytecHardwareTokenComponent = component({
+  id: "saytec-hardware-security-token",
+  name: "Saytec Hardware Security Token",
+  area: "user-device",
+  description:
+    "Hardware-bound identity and protected cryptographic operations.",
+  icon: "./assets/components-individual/saytec-hardware-security-token.png",
+  allowedAreaIds: ["user-device"],
+  configuration: {},
+  architecturalProperties: {
+    authenticatesUser: true,
+    usesHardwareBoundIdentity: true,
+  },
+});
+
+export const biometricVerificationComponent = component({
+  id: "biometric-verification",
+  name: "Biometric Verification",
+  area: "user-device",
+  description: "Biometric verification of the user.",
+  icon: "./assets/components-individual/biometric-verification.png",
+  allowedAreaIds: ["user-device"],
+  configuration: {},
+  architecturalProperties: { authenticatesUser: true },
+});
+
+export const clientPinComponent = component({
+  id: "client-pin",
+  name: "Client PIN",
+  area: "user-device",
+  description: "A PIN that unlocks the token or client identity.",
+  icon: "./assets/components-individual/client-pin.png",
+  allowedAreaIds: ["user-device"],
+  configuration: {},
+  architecturalProperties: { authenticatesUser: true },
+});
+
+export const zeroFootprintClientComponent = component({
   id: "zero-footprint-client",
   name: "Zero-Footprint Client",
-  area: "access-device",
-  importance: "critical",
-  selectedOutput:
-    "The session is designed to leave no useful access or network traces on the client after it ends.",
-  missingOutput:
-    "The client may retain useful session or network artifacts after access ends, increasing exposure if the device is compromised.",
-  score: 10,
-  icon: "./assets/components/endpoint-protection.png",
-  allowedAreaIds: ["access-device"],
-};
+  area: "user-device",
+  description:
+    "A client designed not to retain useful session or network artifacts.",
+  icon: "./assets/components-individual/zero-footprint-client.png",
+  allowedAreaIds: ["user-device"],
+  configuration: {
+    persistentConfigurationEnabled: {
+      type: "boolean",
+      label: "Persistent Configuration Enabled",
+      defaultValue: false,
+    },
+  },
+  architecturalProperties: { persistsConnectionArtifacts: false },
+});
 
-export const privateCertificateAuthorityComponent: ComponentDefinition = {
-  id: "private-certificate-authority",
-  name: "Private Certificate Authority",
-  area: "trust-identity-services",
-  importance: "critical",
-  selectedOutput:
-    "Trust is managed internally through a private certificate authority instead of relying on an external identity dependency.",
-  missingOutput:
-    "No private certificate authority is present, weakening the organization's control over certificate-based trust.",
-  score: 10,
-  icon: "./assets/components/certificate-authority.png",
-  allowedAreaIds: ["trust-identity-services"],
-};
-export const x509CertificateComponent: ComponentDefinition = {
+export const privateCaComponent = component({
+  id: "private-ca",
+  name: "Private CA",
+  area: "identity-route",
+  description: "Organization-controlled certificate trust.",
+  icon: "./assets/components-individual/private-ca.png",
+  allowedAreaIds: ["identity-route"],
+  configuration: {},
+  architecturalProperties: { usesOrganizationControlledIdentity: true },
+});
+
+export const userCertificateComponent = component({
+  id: "user-certificate",
+  name: "User Certificate",
+  area: "identity-route",
+  description: "Certificate identity assigned to a user.",
+  icon: "./assets/components-individual/user-certificate.png",
+  allowedAreaIds: ["identity-route"],
+  configuration: {},
+  architecturalProperties: { authenticatesUser: true },
+});
+
+export const x509CertificateComponent = component({
   id: "x509-certificate",
   name: "X.509 Certificate",
-  area: "trust-identity-services",
-  importance: "critical",
-  selectedOutput:
-    "X.509 certificates provide cryptographically verifiable identities for trusted users, devices or services.",
-  missingOutput:
-    "Certificate-based identity verification is missing, weakening cryptographic trust between system components.",
-  score: 9,
-  icon: "./assets/components/pki-certificate.png",
-  allowedAreaIds: ["trust-identity-services"],
-};
-export const certificateRevocationCheckComponent: ComponentDefinition = {
+  area: "identity-route",
+  description: "Cryptographically verifiable user, device or service identity.",
+  icon: "./assets/components-individual/x509-certificate.png",
+  allowedAreaIds: ["identity-route"],
+  configuration: {},
+  architecturalProperties: { authenticatesUser: true },
+});
+
+export const certificateValidationComponent = component({
+  id: "certificate-validation",
+  name: "Certificate Validation",
+  area: "identity-route",
+  description: "Validation of certificate status and trust.",
+  icon: "./assets/components-individual/certificate-validation.png",
+  allowedAreaIds: ["identity-route"],
+  configuration: {
+    certificateChecked: {
+      type: "boolean",
+      label: "Certificate Checked",
+      defaultValue: true,
+    },
+    expirationChecked: {
+      type: "boolean",
+      label: "Expiration Checked",
+      defaultValue: true,
+    },
+    revocationChecked: {
+      type: "boolean",
+      label: "Revocation Checked",
+      defaultValue: false,
+    },
+    completeValidation: {
+      type: "boolean",
+      label: "Complete Validation",
+      defaultValue: false,
+    },
+  },
+  architecturalProperties: { validatesCertificate: true },
+});
+
+export const certificateRevocationComponent = component({
   id: "certificate-revocation-check",
   name: "Certificate Revocation Check",
-  area: "trust-identity-services",
-  importance: "important",
-  selectedOutput:
-    "Certificate status is checked so revoked or compromised certificates cannot continue to be trusted.",
-  missingOutput:
-    "Revoked or compromised certificates may remain usable if their status is not checked.",
-  score: 8,
-  icon: "./assets/components/policy-engine.png",
-  allowedAreaIds: ["trust-identity-services"],
-};
-export const otpComponent: ComponentDefinition = {
+  area: "identity-route",
+  description: "Rejects revoked or compromised certificates.",
+  icon: "./assets/components-individual/certificate-revocation-check.png",
+  allowedAreaIds: ["identity-route"],
+  configuration: {},
+  architecturalProperties: { validatesCertificate: true },
+});
+
+export const otpComponent = component({
   id: "otp",
-  name: "One-Time Password",
-  area: "trust-identity-services",
-  importance: "optional",
-  selectedOutput:
-    "A one-time password adds an additional authentication factor for user verification.",
-  missingOutput: "",
-  score: 7,
-  icon: "./assets/components/mfa.png",
-  allowedAreaIds: ["trust-identity-services"],
-};
+  name: "OTP",
+  area: "identity-route",
+  description: "An additional one-time authentication factor.",
+  icon: "./assets/components-individual/otp.png",
+  allowedAreaIds: ["identity-route"],
+  configuration: {},
+  architecturalProperties: { authenticatesUser: true },
+});
 
-export const mutualTransportLayerSecurityComponent: ComponentDefinition = {
-  id: "mutual-transport-layer-security",
-  name: "Mutual Transport Layer Security",
-  area: "secure-session",
-  importance: "important",
-  selectedOutput:
-    "Mutual Transport Layer Security verifies both sides of the connection before establishing the secure session.",
-  missingOutput:
-    "The client and server are not mutually authenticated, weakening trust between both ends of the connection.",
-  score: 10,
-  icon: "./assets/components/connection-encryption.png",
-  allowedAreaIds: ["secure-session"],
-};
-export const ramTunnelingComponent: ComponentDefinition = {
-  id: "ram-tunneling",
-  name: "RAM Tunneling",
-  area: "secure-session",
-  importance: "critical",
-  selectedOutput:
-    "The secure session operates in temporary memory, reducing persistent traces on the client device.",
-  missingOutput:
-    "Session information may leave persistent traces on the client, weakening the zero-trace security model.",
-  score: 10,
-  icon: "./assets/components/ram-encryption.png",
-  allowedAreaIds: ["secure-session"],
-};
-export const aes256EncryptionComponent: ComponentDefinition = {
-  id: "aes-256-encryption",
-  name: "AES-256 Encryption",
-  area: "secure-session",
-  importance: "critical",
-  selectedOutput:
-    "Session data is protected with strong AES-256 encryption against unauthorized reading.",
-  missingOutput:
-    "Session data lacks the intended strong encryption protection and may be more exposed if intercepted.",
-  score: 9,
-  icon: "./assets/components/connection-encryption.png",
-  allowedAreaIds: ["secure-session"],
-};
-export const perfectForwardSecrecyComponent: ComponentDefinition = {
-  id: "perfect-forward-secrecy",
-  name: "Perfect Forward Secrecy",
-  area: "secure-session",
-  importance: "important",
-  selectedOutput:
-    "Independent session keys help protect previous sessions even if a future key is compromised.",
-  missingOutput:
-    "Compromise of long-term cryptographic material may have a greater impact on previously protected sessions.",
-  score: 8,
-  icon: "./assets/components/vpn-tunnel.png",
-  allowedAreaIds: ["secure-session"],
-};
+export const saytecServerComponent = component({
+  id: "saytec-server",
+  name: "Saytec Server",
+  area: "access-decision-enforcement",
+  description:
+    "Evaluates and enforces access decisions for application connections.",
+  icon: "./assets/components-individual/saytec-server.png",
+  allowedAreaIds: ["access-decision-enforcement"],
+  configuration: {
+    policyTiming: {
+      type: "select",
+      label: "Policy Timing",
+      options: ["Before Connection", "After Connection"],
+      defaultValue: "Before Connection",
+    },
+    leastPrivilegeEnabled: {
+      type: "boolean",
+      label: "Least Privilege Enabled",
+      defaultValue: true,
+    },
+    broadRolePermission: {
+      type: "boolean",
+      label: "Broad Role Permission",
+      defaultValue: false,
+    },
+    sessionRevocationEnabled: {
+      type: "boolean",
+      label: "Session Revocation Enabled",
+      defaultValue: true,
+    },
+  },
+  architecturalProperties: {
+    evaluatesAccessPolicy: true,
+    enforcesAccessPolicy: true,
+  },
+});
 
-export const externalAuthenticationServiceComponent: ComponentDefinition = {
-  id: "external-authentication-service",
-  name: "External Authentication Service",
-  area: "third-party-services",
-  importance: "special",
-  selectedOutput:
-    "Authentication depends on an external provider, introducing a third-party trust and availability dependency.",
-  missingOutput: "",
-  score: -10,
-  icon: "./assets/components/external-authentication-service.png",
-  allowedAreaIds: ["third-party-services"],
-};
-export const externalCloudStorageComponent: ComponentDefinition = {
-  id: "external-cloud-storage",
-  name: "External Cloud Storage",
-  area: "third-party-services",
-  importance: "special",
-  selectedOutput:
-    "Sensitive data is stored outside the organization, introducing dependency on an external provider's security controls.",
-  missingOutput: "",
-  score: -8,
-  icon: "./assets/components/external-cloud-storage.png",
-  allowedAreaIds: ["third-party-services"],
-};
-export const externalMonitoringServiceComponent: ComponentDefinition = {
-  id: "external-monitoring-service",
-  name: "External Monitoring Service",
-  area: "third-party-services",
-  importance: "special",
-  selectedOutput:
-    "Security logs and operational information are shared with an external monitoring provider.",
-  missingOutput: "",
-  score: -6,
-  icon: "./assets/components/external-monitoring-service.png",
-  allowedAreaIds: ["third-party-services"],
-};
-export const externalPaymentServiceComponent: ComponentDefinition = {
-  id: "external-payment-service",
-  name: "External Payment Service",
-  area: "third-party-services",
-  importance: "special",
-  selectedOutput:
-    "Payment operations depend on an external service, introducing an additional third-party trust relationship.",
-  missingOutput: "",
-  score: -6,
-  icon: "./assets/components/external-payment-service.png",
-  allowedAreaIds: ["third-party-services"],
-};
-
-export const portCloakingComponent: ComponentDefinition = {
-  id: "port-cloaking",
-  name: "Port Cloaking",
-  area: "invisible-network-protection",
-  importance: "important",
-  selectedOutput:
-    "Protected service ports are hidden from unauthorized discovery, reducing the visible attack surface.",
-  missingOutput:
-    "Network services may be easier to discover, increasing the visible attack surface.",
-  score: 9,
-  icon: "./assets/components/firewall.png",
-  allowedAreaIds: ["invisible-network-protection"],
-};
-export const hiddenIpPathComponent: ComponentDefinition = {
-  id: "hidden-ip-path",
-  name: "Hidden IP Path",
-  area: "invisible-network-protection",
-  importance: "critical",
-  selectedOutput:
-    "Backend IP addresses and routing information remain hidden from the client device.",
-  missingOutput:
-    "Backend addresses or network paths may become visible, making internal infrastructure easier to discover.",
-  score: 9,
-  icon: "./assets/components/relay-node.png",
-  allowedAreaIds: ["invisible-network-protection"],
-};
-export const noVirtualNetworkInterfaceComponent: ComponentDefinition = {
-  id: "no-virtual-network-interface",
-  name: "No Virtual Network Interface",
-  area: "invisible-network-protection",
-  importance: "critical",
-  selectedOutput:
-    "No corporate virtual network interface is created on the client device.",
-  missingOutput:
-    "A virtual network interface may expose additional corporate network information to the client device.",
-  score: 10,
-  icon: "./assets/components/vpn-tunnel.png",
-  allowedAreaIds: ["invisible-network-protection"],
-};
-export const noNetworkParticipationComponent: ComponentDefinition = {
-  id: "no-network-participation",
-  name: "No Network Participation",
-  area: "invisible-network-protection",
-  importance: "critical",
-  selectedOutput:
-    "The client accesses approved applications without becoming a member of the protected network.",
-  missingOutput:
-    "The client may gain unnecessary network participation or visibility, increasing the risk of network discovery and lateral movement.",
-  score: 10,
-  icon: "./assets/components/network-connection.png",
-  allowedAreaIds: ["invisible-network-protection"],
-};
-
-export const policyEngineComponent: ComponentDefinition = {
+export const policyEngineComponent = component({
   id: "policy-engine",
   name: "Policy Engine",
-  area: "policy-access-control",
-  importance: "critical",
-  selectedOutput:
-    "Access requests are evaluated against security policies before access is granted.",
-  missingOutput:
-    "Access requests cannot be centrally evaluated against security policies, weakening dynamic access control.",
-  score: 10,
-  icon: "./assets/components/policy-engine.png",
-  allowedAreaIds: ["policy-access-control"],
-};
-export const leastPrivilegeAccessComponent: ComponentDefinition = {
-  id: "least-privilege-access",
-  name: "Least-Privilege Access",
-  area: "policy-access-control",
-  importance: "critical",
-  selectedOutput:
-    "The user receives only the minimum permissions required to access approved resources.",
-  missingOutput:
-    "Users may receive broader permissions than necessary, increasing the impact of a compromised account.",
-  score: 10,
-  icon: "./assets/components/controlled-access.png",
-  allowedAreaIds: ["policy-access-control"],
-};
-export const applicationAllowListComponent: ComponentDefinition = {
-  id: "application-allow-list",
-  name: "Application Allow List",
-  area: "policy-access-control",
-  importance: "important",
-  selectedOutput: "Access is restricted to explicitly approved applications.",
-  missingOutput:
-    "Application access is not restricted by an allow list, increasing the possibility of access to unnecessary resources.",
-  score: 9,
-  icon: "./assets/components/application-connection.png",
-  allowedAreaIds: ["policy-access-control"],
-};
-export const privilegedAccessManagementComponent: ComponentDefinition = {
-  id: "privileged-access-management",
-  name: "Privileged Access Management",
-  area: "policy-access-control",
-  importance: "optional",
-  selectedOutput:
-    "Privileged and administrative access receives additional security control and restriction.",
-  missingOutput: "",
-  score: 8,
-  icon: "./assets/components/identity-provider.png",
-  allowedAreaIds: ["policy-access-control"],
-};
+  area: "access-decision-enforcement",
+  description: "Evaluates access requests against policy.",
+  icon: "./assets/components-individual/policy-engine.png",
+  allowedAreaIds: ["access-decision-enforcement"],
+  configuration: {
+    policyTiming: {
+      type: "select",
+      label: "Policy Timing",
+      options: ["Before Connection", "After Connection"],
+      defaultValue: "Before Connection",
+    },
+  },
+  architecturalProperties: { evaluatesAccessPolicy: true },
+});
 
-export const internalWebApplicationComponent: ComponentDefinition = {
+export const policyEnforcementComponent = component({
+  id: "policy-enforcement",
+  name: "Policy Enforcement",
+  area: "access-decision-enforcement",
+  description: "Applies allow, deny, routing and termination decisions.",
+  icon: "./assets/components-individual/policy-enforcement.png",
+  allowedAreaIds: ["access-decision-enforcement"],
+  configuration: {},
+  architecturalProperties: { enforcesAccessPolicy: true },
+});
+
+export const leastPrivilegeComponent = component({
+  id: "least-privilege-control",
+  name: "Least-Privilege Control",
+  area: "access-decision-enforcement",
+  description: "Limits permissions to the minimum required scope.",
+  icon: "./assets/components-individual/least-privilege-control.png",
+  allowedAreaIds: ["access-decision-enforcement"],
+  configuration: {},
+  architecturalProperties: { usesLeastPrivilege: true },
+});
+
+export const applicationAuthorizationComponent = component({
+  id: "application-authorization",
+  name: "Application Authorization",
+  area: "access-decision-enforcement",
+  description: "Authorizes explicitly approved applications.",
+  icon: "./assets/components-individual/application-authorization.png",
+  allowedAreaIds: ["access-decision-enforcement"],
+  configuration: {},
+  architecturalProperties: { restrictsApplications: true },
+});
+
+export const sessionRevocationComponent = component({
+  id: "session-revocation",
+  name: "Session Revocation",
+  area: "access-decision-enforcement",
+  description: "Allows an active session to be terminated.",
+  icon: "./assets/components-individual/session-revocation.png",
+  allowedAreaIds: ["access-decision-enforcement"],
+  configuration: {},
+  architecturalProperties: { supportsSessionTermination: true },
+});
+
+export const vpnGatewayComponent = component({
+  id: "vpn-gateway",
+  name: "VPN Gateway",
+  area: "connection-method",
+  description: "A configurable remote-access network gateway.",
+  icon: "./assets/components-individual/vpn-gateway.png",
+  allowedAreaIds: ["connection-method"],
+  configuration: {
+    accessScope: {
+      type: "select",
+      label: "Access Scope",
+      options: [
+        "Full Network Access",
+        "Restricted Subnet Access",
+        "Application-Specific Route",
+      ],
+      defaultValue: "Full Network Access",
+    },
+    splitTunnelingEnabled: {
+      type: "boolean",
+      label: "Split Tunneling Enabled",
+      defaultValue: false,
+    },
+  },
+  architecturalProperties: {
+    grantsNetworkAccess: true,
+    assignsProtectedNetworkAddress: true,
+  },
+});
+
+export const networkConnectionComponent = component({
+  id: "network-connection",
+  name: "Network Connection",
+  area: "connection-method",
+  description: "Network-level access from the client to protected resources.",
+  icon: "./assets/components-individual/network-connection.png",
+  allowedAreaIds: ["connection-method"],
+  configuration: {},
+  architecturalProperties: {
+    grantsNetworkAccess: true,
+    exposesNetworkInformation: true,
+  },
+});
+
+export const applicationConnectionComponent = component({
+  id: "application-connection",
+  name: "Application Connection",
+  area: "connection-method",
+  description: "A connection limited to a specific application.",
+  icon: "./assets/components-individual/application-connection.png",
+  allowedAreaIds: ["connection-method"],
+  configuration: {
+    applicationAllowListEnabled: {
+      type: "boolean",
+      label: "Application Allow List Enabled",
+      defaultValue: true,
+    },
+    parallelExternalCommunicationRestricted: {
+      type: "boolean",
+      label: "Parallel External Communication Restricted",
+      defaultValue: false,
+    },
+  },
+  architecturalProperties: { grantsApplicationAccess: true },
+});
+
+export const ramApplicationTunnelComponent = component({
+  id: "ram-application-tunnel",
+  name: "RAM Application Tunnel",
+  area: "connection-method",
+  description: "An application-specific tunnel created in temporary memory.",
+  icon: "./assets/components-individual/ram-application-tunnel.png",
+  allowedAreaIds: ["connection-method"],
+  configuration: {
+    encryptedRamTunnelingEnabled: {
+      type: "boolean",
+      label: "Encrypted RAM Tunneling Enabled",
+      defaultValue: true,
+    },
+    virtualNetworkInterfaceEnabled: {
+      type: "boolean",
+      label: "Virtual Network Interface Enabled",
+      defaultValue: false,
+    },
+    applicationAllowListEnabled: {
+      type: "boolean",
+      label: "Application Allow List Enabled",
+      defaultValue: true,
+    },
+    parallelExternalCommunicationRestricted: {
+      type: "boolean",
+      label: "Parallel External Communication Restricted",
+      defaultValue: true,
+    },
+    persistentConfigurationEnabled: {
+      type: "boolean",
+      label: "Persistent Configuration Enabled",
+      defaultValue: false,
+    },
+  },
+  architecturalProperties: { grantsApplicationAccess: true },
+});
+
+export const encryptedRamComponent = component({
+  id: "encrypted-ram",
+  name: "Encrypted RAM",
+  area: "connection-method",
+  description: "Protects connection material held in temporary memory.",
+  icon: "./assets/components-individual/encrypted-ram.png",
+  allowedAreaIds: ["connection-method"],
+  configuration: {},
+  architecturalProperties: { usesEncryptedRam: true },
+});
+export const mutualTlsComponent = component({
+  id: "mutual-tls",
+  name: "Mutual TLS",
+  area: "connection-method",
+  description: "Mutually authenticates both ends of the connection.",
+  icon: "./assets/components-individual/mutual-tls.png",
+  allowedAreaIds: ["connection-method"],
+  configuration: {},
+  architecturalProperties: {
+    authenticatesUser: true,
+    encryptsConnection: true,
+  },
+});
+export const aes256Component = component({
+  id: "aes-256-encryption",
+  name: "AES-256 Encryption",
+  area: "connection-method",
+  description: "Strong encryption for connection data.",
+  icon: "./assets/components-individual/aes-256-encryption.png",
+  allowedAreaIds: ["connection-method"],
+  configuration: {},
+  architecturalProperties: { encryptsConnection: true },
+});
+export const pfsComponent = component({
+  id: "perfect-forward-secrecy",
+  name: "Perfect Forward Secrecy",
+  area: "connection-method",
+  description: "Independent session keys limit historical exposure.",
+  icon: "./assets/components-individual/perfect-forward-secrecy.png",
+  allowedAreaIds: ["connection-method"],
+  configuration: {},
+  architecturalProperties: { encryptsConnection: true },
+});
+export const virtualNetworkInterfaceComponent = component({
+  id: "virtual-network-interface",
+  name: "Virtual Network Interface",
+  area: "connection-method",
+  description: "Creates a protected-network interface on the client.",
+  icon: "./assets/components-individual/virtual-network-interface.png",
+  allowedAreaIds: ["connection-method"],
+  configuration: {},
+  architecturalProperties: {
+    createsVirtualNetworkInterface: true,
+    assignsProtectedNetworkAddress: true,
+    exposesNetworkInformation: true,
+  },
+});
+
+export const corporateNetworkComponent = component({
+  id: "corporate-network",
+  name: "Corporate Network",
+  area: "reachable-resources",
+  description: "Broad access to the protected corporate network.",
+  icon: "./assets/components-individual/corporate-network.png",
+  allowedAreaIds: ["reachable-resources"],
+  configuration: {},
+  architecturalProperties: {
+    grantsNetworkAccess: true,
+    exposesNetworkInformation: true,
+  },
+});
+export const restrictedSubnetComponent = component({
+  id: "restricted-subnet",
+  name: "Restricted Subnet",
+  area: "reachable-resources",
+  description: "Network access limited to a defined subnet.",
+  icon: "./assets/components-individual/restricted-subnet.png",
+  allowedAreaIds: ["reachable-resources"],
+  configuration: {},
+  architecturalProperties: {
+    grantsNetworkAccess: true,
+    exposesNetworkInformation: true,
+  },
+});
+export const internalWebApplicationComponent = component({
   id: "internal-web-application",
   name: "Internal Web Application",
-  area: "protected-application",
-  importance: "special",
-  selectedOutput:
-    "Access is limited to an approved internal web application instead of the entire corporate network.",
-  missingOutput: "",
-  score: 0,
-  icon: "./assets/components/application-connection.png",
-  allowedAreaIds: ["protected-application"],
-};
-export const administrativeApplicationComponent: ComponentDefinition = {
+  area: "reachable-resources",
+  description: "An approved internal web application.",
+  icon: "./assets/components-individual/internal-web-application.png",
+  allowedAreaIds: ["reachable-resources"],
+  configuration: {},
+  architecturalProperties: { grantsApplicationAccess: true },
+});
+export const administrativeApplicationComponent = component({
   id: "administrative-application",
   name: "Administrative Application",
-  area: "protected-application",
-  importance: "special",
-  selectedOutput:
-    "Access is restricted to an approved administrative application with controlled privileged access.",
-  missingOutput: "",
-  score: 0,
-  icon: "./assets/components/identity-provider.png",
-  allowedAreaIds: ["protected-application"],
-};
-export const partnerApplicationComponent: ComponentDefinition = {
+  area: "reachable-resources",
+  description: "A privileged administrative application.",
+  icon: "./assets/components-individual/administrative-application.png",
+  allowedAreaIds: ["reachable-resources"],
+  configuration: {},
+  architecturalProperties: { grantsApplicationAccess: true },
+});
+export const partnerApplicationComponent = component({
   id: "partner-application",
   name: "Partner Application",
-  area: "protected-application",
-  importance: "special",
-  selectedOutput:
-    "The partner receives access only to the approved application without receiving general corporate network access.",
-  missingOutput: "",
-  score: 0,
-  icon: "./assets/components/external-api.png",
-  allowedAreaIds: ["protected-application"],
-};
-export const virtualMachineComponent: ComponentDefinition = {
+  area: "reachable-resources",
+  description: "An application exposed specifically to a partner.",
+  icon: "./assets/components-individual/partner-application.png",
+  allowedAreaIds: ["reachable-resources"],
+  configuration: {},
+  architecturalProperties: { grantsApplicationAccess: true },
+});
+export const virtualMachineComponent = component({
   id: "virtual-machine",
   name: "Virtual Machine",
-  area: "protected-application",
-  importance: "special",
-  selectedOutput:
-    "Access is limited to the approved virtual machine without exposing the broader protected network.",
-  missingOutput: "",
-  score: 0,
-  icon: "./assets/components/private-corporate-network.png",
-  allowedAreaIds: ["protected-application"],
-};
+  area: "reachable-resources",
+  description: "A specific protected virtual machine.",
+  icon: "./assets/components-individual/virtual-machine.png",
+  allowedAreaIds: ["reachable-resources"],
+  configuration: {},
+  architecturalProperties: { grantsApplicationAccess: true },
+});
+export const multipleApplicationsComponent = component({
+  id: "multiple-internal-applications",
+  name: "Multiple Internal Applications",
+  area: "reachable-resources",
+  description: "Several internal resources reachable by the client.",
+  icon: "./assets/components-individual/multiple-internal-applications.png",
+  allowedAreaIds: ["reachable-resources"],
+  configuration: {},
+  architecturalProperties: {
+    grantsNetworkAccess: true,
+    exposesNetworkInformation: true,
+  },
+});
+
+export const externalIdentityProviderComponent = component({
+  id: "external-identity-provider",
+  name: "External Identity Provider",
+  area: "third-party-systems",
+  description: "Microsoft IdP, Okta or another external identity provider.",
+  icon: "./assets/components-individual/external-identity-provider.png",
+  allowedAreaIds: ["third-party-systems"],
+  configuration: {
+    identityRole: {
+      type: "select",
+      label: "Identity Role",
+      options: [
+        "Primary Authenticator",
+        "Secondary Identity Signal",
+        "SSO After Authentication",
+        "Application-Only Dependency",
+      ],
+      defaultValue: "Primary Authenticator",
+    },
+  },
+  architecturalProperties: {},
+});
+export const externalSsoComponent = component({
+  id: "external-sso",
+  name: "External SSO",
+  area: "third-party-systems",
+  description: "External application sign-on after or during authentication.",
+  icon: "./assets/components-individual/external-sso.png",
+  allowedAreaIds: ["third-party-systems"],
+  configuration: {
+    identityRole: {
+      type: "select",
+      label: "Identity Role",
+      options: [
+        "Primary Authenticator",
+        "Secondary Identity Signal",
+        "SSO After Authentication",
+        "Application-Only Dependency",
+      ],
+      defaultValue: "SSO After Authentication",
+    },
+  },
+  architecturalProperties: {},
+});
+export const externalMonitoringComponent = component({
+  id: "external-monitoring-service",
+  name: "External Monitoring Service",
+  area: "third-party-systems",
+  description: "External monitoring and security-event processing.",
+  icon: "./assets/components-individual/external-monitoring-service.png",
+  allowedAreaIds: ["third-party-systems"],
+  configuration: {},
+  architecturalProperties: { monitorsSession: true },
+});
+export const externalCloudComponent = component({
+  id: "external-cloud-service",
+  name: "External Cloud Service",
+  area: "third-party-systems",
+  description: "An externally hosted application or data dependency.",
+  icon: "./assets/components-individual/external-cloud-service.png",
+  allowedAreaIds: ["third-party-systems"],
+  configuration: {},
+  architecturalProperties: {},
+});
 
 export const componentList: ComponentDefinition[] = [
-  passwordComponent,
-  biometricAuthenticationComponent,
-  hardwareSecurityTokenComponent,
+  userComponent,
+  clientDeviceComponent,
+  saytecHardwareTokenComponent,
+  biometricVerificationComponent,
+  clientPinComponent,
   zeroFootprintClientComponent,
-  privateCertificateAuthorityComponent,
+  privateCaComponent,
+  userCertificateComponent,
   x509CertificateComponent,
-  certificateRevocationCheckComponent,
+  certificateValidationComponent,
+  certificateRevocationComponent,
   otpComponent,
-  mutualTransportLayerSecurityComponent,
-  ramTunnelingComponent,
-  aes256EncryptionComponent,
-  perfectForwardSecrecyComponent,
-  externalAuthenticationServiceComponent,
-  externalCloudStorageComponent,
-  externalMonitoringServiceComponent,
-  externalPaymentServiceComponent,
-  portCloakingComponent,
-  hiddenIpPathComponent,
-  noVirtualNetworkInterfaceComponent,
-  noNetworkParticipationComponent,
+  saytecServerComponent,
   policyEngineComponent,
-  leastPrivilegeAccessComponent,
-  applicationAllowListComponent,
-  privilegedAccessManagementComponent,
+  policyEnforcementComponent,
+  leastPrivilegeComponent,
+  applicationAuthorizationComponent,
+  sessionRevocationComponent,
+  vpnGatewayComponent,
+  networkConnectionComponent,
+  applicationConnectionComponent,
+  ramApplicationTunnelComponent,
+  encryptedRamComponent,
+  mutualTlsComponent,
+  aes256Component,
+  pfsComponent,
+  virtualNetworkInterfaceComponent,
+  corporateNetworkComponent,
+  restrictedSubnetComponent,
   internalWebApplicationComponent,
   administrativeApplicationComponent,
   partnerApplicationComponent,
   virtualMachineComponent,
+  multipleApplicationsComponent,
+  externalIdentityProviderComponent,
+  externalSsoComponent,
+  externalMonitoringComponent,
+  externalCloudComponent,
 ];
 
-const componentIndex = new Map(
-  componentList.map((component) => [component.id, component]),
-);
+const componentIndex = new Map(componentList.map((item) => [item.id, item]));
 
 export function getComponentById(id: string): ComponentDefinition | undefined {
   return componentIndex.get(id);
+}
+
+export function getDefaultConfiguration(
+  id: string,
+): Record<string, string | boolean> {
+  const definition = getComponentById(id);
+  if (!definition) return {};
+  return Object.fromEntries(
+    Object.entries(definition.configuration).map(([key, field]) => [
+      key,
+      field.defaultValue,
+    ]),
+  );
 }

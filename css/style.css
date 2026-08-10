@@ -507,9 +507,38 @@ button {
   object-position: center center;
 }
 
+.architecture-section > .image-placeholder:not(.placed-icon-gallery) {
+  min-height: 112px;
+}
+
+.architecture-section > .image-placeholder:not(.placed-icon-gallery) img {
+  width: 108px;
+  height: 108px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
 .component-image img {
   width: 100%;
   height: 100%;
+  object-fit: contain;
+}
+
+.image-placeholder.placed-icon-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  overflow: hidden;
+}
+
+.image-placeholder.placed-icon-gallery img {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  margin: 0;
   object-fit: contain;
 }
 
@@ -591,6 +620,20 @@ button {
   flex: 0 0 auto;
 }
 
+.placed-component-identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 5px;
+}
+
+.placed-component-icon {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  object-fit: contain;
+}
+
 .slot-label {
   color: #111820;
   font-size: 0.65rem;
@@ -638,7 +681,7 @@ button {
 
 .toolbox-groups {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -954,5 +997,218 @@ textarea:focus-visible {
 
   .actions button {
     flex: 1;
+  }
+}
+
+/* Connection-sensitive architecture model */
+.architecture-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 30px;
+  align-items: stretch;
+}
+
+.architecture-access-path {
+  min-width: 0;
+}
+
+.architecture-side-lane {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  width: min(100%, 430px);
+  margin-inline: auto;
+  padding: 12px;
+  background: #f5f6f8;
+  border: 1px dashed #d50914;
+  border-radius: 10px;
+  box-shadow: inset 4px 0 0 rgba(213, 9, 20, 0.08);
+}
+
+.architecture-side-lane::after {
+  display: none;
+}
+
+.architecture-side-lane .architecture-section {
+  width: 100%;
+  height: auto;
+  flex: 1;
+  background: #ffffff;
+  border-color: #c8ced6;
+}
+
+.architecture-side-lane .image-placeholder {
+  min-height: 88px;
+}
+
+.architecture-side-lane
+  .architecture-section
+  > .image-placeholder:not(.placed-icon-gallery)
+  img {
+  width: 84px;
+  height: 84px;
+}
+
+.architecture-side-lane .area-drop-zone {
+  min-height: 92px;
+}
+
+.architecture-side-lane::before {
+  position: absolute;
+  top: -23px;
+  left: 50%;
+  width: 0;
+  height: 22px;
+  border-left: 2px dashed #d50914;
+  content: "";
+}
+
+.side-lane-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 10px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid #d7dce3;
+  text-align: center;
+}
+
+.side-lane-heading strong {
+  color: #c40018;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.side-lane-heading span {
+  color: #66707d;
+  font-size: 0.62rem;
+}
+
+.architecture-model-controls {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--border-color, #d7dce5);
+  border-radius: 9px;
+  background: #fff;
+}
+
+.architecture-model-controls > h3,
+.configuration-panel h3 {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+}
+
+.architecture-model-controls > p,
+.connection-empty {
+  color: #596275;
+  font-size: 0.72rem;
+}
+
+.connection-list {
+  display: grid;
+  gap: 6px;
+}
+
+.connection-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid #e2e5eb;
+  border-radius: 7px;
+  font-size: 0.7rem;
+}
+
+.connection-row button,
+.component-action-button {
+  border: 1px solid #d20a1e;
+  border-radius: 5px;
+  background: #fff;
+  color: #b50017;
+  cursor: pointer;
+  font-size: 0.62rem;
+  padding: 4px 6px;
+}
+
+.placed-component-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.placed-component.connection-source {
+  outline: 2px solid #d20a1e;
+}
+
+.configuration-panel:not(:empty) {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e5eb;
+}
+
+.configuration-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+}
+
+.configuration-fields label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px;
+  border: 1px solid #e2e5eb;
+  border-radius: 7px;
+  font-size: 0.68rem;
+}
+
+.configuration-fields select {
+  max-width: 150px;
+  border: 1px solid #cfd4de;
+  border-radius: 5px;
+  background: #fff;
+  padding: 4px;
+  font-size: 0.66rem;
+}
+
+.architecture-classification {
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid #e2e5eb;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.architecture-classification h3 {
+  margin: 0 0 7px;
+  font-size: 0.78rem;
+}
+
+.architecture-classification strong {
+  color: #c40018;
+  font-size: 0.9rem;
+}
+
+.architecture-analysis-group .insight-item {
+  line-height: 1.45;
+}
+
+@media (max-width: 1100px) {
+  .architecture-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .architecture-side-lane {
+    margin-top: 0;
+  }
+
+  .architecture-side-lane::before {
+    top: -23px;
+    height: 22px;
   }
 }
