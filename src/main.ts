@@ -1,4 +1,4 @@
-import { initializeDragAndDrop } from "./dragDrop.js";
+import { initializeDragAndDrop } from "./dragdrop.js";
 import { renderBuilder, renderEvaluation } from "./renderer.js";
 import {
   getArchitectureState,

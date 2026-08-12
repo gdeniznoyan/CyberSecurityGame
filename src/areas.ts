@@ -1,47 +1,34 @@
 import type { ArchitectureArea } from "./types.js";
 
-export const userDeviceArea: ArchitectureArea = {
-  id: "user-device",
-  name: "User and Device",
-  description: "The user, endpoint and directly controlled identity factors.",
-};
-
-export const identityRouteArea: ArchitectureArea = {
-  id: "identity-route",
-  name: "Identity Route",
-  description: "The trust chain used to establish identity.",
-};
-
-export const accessDecisionArea: ArchitectureArea = {
-  id: "access-decision-enforcement",
-  name: "Access Decision and Enforcement",
-  description: "Policy evaluation, authorization and enforcement.",
-};
-
-export const connectionMethodArea: ArchitectureArea = {
-  id: "connection-method",
-  name: "Connection Method",
-  description: "How the protected communication path is created.",
-};
-
-export const reachableResourcesArea: ArchitectureArea = {
-  id: "reachable-resources",
-  name: "Reachable Resources",
-  description: "The resources the client can actually reach.",
-};
-
-export const thirdPartySystemsArea: ArchitectureArea = {
-  id: "third-party-systems",
-  name: "Third-Party Systems",
-  description: "External systems connected to the function they influence.",
-  sideLane: true,
-};
-
 export const architectureAreas: ArchitectureArea[] = [
-  userDeviceArea,
-  identityRouteArea,
-  accessDecisionArea,
-  connectionMethodArea,
-  reachableResourcesArea,
-  thirdPartySystemsArea,
+  {
+    id: "user-device",
+    name: "User & Device",
+    description: "The user and client technology that begin the request.",
+  },
+  {
+    id: "identity-route",
+    name: "Identity",
+    description: "How identity and certificate trust are established.",
+  },
+  {
+    id: "access-enforcement",
+    name: "Access Control",
+    description: "Where access decisions are evaluated and enforced.",
+  },
+  {
+    id: "connection-method",
+    name: "Connection",
+    description: "How the approved session reaches its destination.",
+  },
+  {
+    id: "reachable-resources",
+    name: "Protected Resources",
+    description: "What the client can actually reach.",
+  },
+  {
+    id: "third-party-systems",
+    name: "Third-Party Systems",
+    description: "Optional external dependencies outside the main path.",
+  },
 ];

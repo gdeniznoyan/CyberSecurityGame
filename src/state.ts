@@ -1,83 +1,81 @@
 import { getComponentById, getDefaultConfiguration } from "./components.js";
 import type {
+  ArchitectureConnection,
   ArchitectureState,
   AreaId,
   ComponentConfiguration,
-  ComponentConnection,
   ComponentId,
   Placement,
 } from "./types.js";
 
 type Listener = () => void;
 let placements: Placement[] = [];
-let connections: ComponentConnection[] = [];
-let configurations: Record<ComponentId, ComponentConfiguration> = {};
+let connections: ArchitectureConnection[] = [];
 const listeners = new Set<Listener>();
 
 function emit(): void {
   listeners.forEach((listener) => listener());
 }
-
 export function getPlacements(): Placement[] {
-  return placements.map((item) => ({ ...item }));
+  return placements.map((item) => ({
+    ...item,
+    configuration: { ...item.configuration },
+  }));
 }
-
-export function getConnections(): ComponentConnection[] {
+export function getConnections(): ArchitectureConnection[] {
   return connections.map((item) => ({ ...item }));
 }
-
-export function getComponentConfiguration(
-  id: ComponentId,
-): ComponentConfiguration {
-  return { ...getDefaultConfiguration(id), ...(configurations[id] ?? {}) };
-}
-
-export function hasPlacement(
-  componentId: ComponentId,
-  areaId: AreaId,
-): boolean {
-  return placements.some(
-    (item) => item.componentId === componentId && item.areaId === areaId,
-  );
+export function hasPlacement(componentId: ComponentId): boolean {
+  return placements.some((item) => item.componentId === componentId);
 }
 
 export function addPlacement(
   componentId: ComponentId,
   areaId: AreaId,
 ): boolean {
-  const definition = getComponentById(componentId);
+  const component = getComponentById(componentId);
   if (
-    !definition ||
-    !definition.allowedAreaIds.includes(areaId) ||
-    hasPlacement(componentId, areaId)
+    !component ||
+    !component.allowedAreaIds.includes(areaId) ||
+    hasPlacement(componentId)
   )
     return false;
-  placements = [...placements, { componentId, areaId }];
-  configurations = {
-    ...configurations,
-    [componentId]: getDefaultConfiguration(componentId),
-  };
+  if (
+    areaId === "reachable-resources" &&
+    placements.some((item) => item.areaId === areaId)
+  )
+    return false;
+  placements = [
+    ...placements,
+    { componentId, areaId, configuration: getDefaultConfiguration(component) },
+  ];
   emit();
   return true;
 }
 
-export function removePlacement(
-  componentId: ComponentId,
-  areaId: AreaId,
-): void {
-  const next = placements.filter(
-    (item) => !(item.componentId === componentId && item.areaId === areaId),
-  );
-  if (next.length === placements.length) return;
-  placements = next;
+export function removePlacement(componentId: ComponentId): void {
+  if (!hasPlacement(componentId)) return;
+  placements = placements.filter((item) => item.componentId !== componentId);
   connections = connections.filter(
     (item) =>
       item.sourceComponentId !== componentId &&
       item.targetComponentId !== componentId,
   );
-  const { [componentId]: removed, ...rest } = configurations;
-  void removed;
-  configurations = rest;
+  emit();
+}
+
+export function updateConfiguration(
+  componentId: ComponentId,
+  configuration: ComponentConfiguration,
+): void {
+  const placement = placements.find((item) => item.componentId === componentId);
+  const component = getComponentById(componentId);
+  if (!placement || !component) return;
+  const allowed = new Set(component.configuration.map((item) => item.id));
+  placement.configuration = Object.fromEntries(
+    Object.entries(configuration).filter(([key]) => allowed.has(key)),
+  );
+  placements = [...placements];
   emit();
 }
 
@@ -85,11 +83,10 @@ export function addConnection(
   sourceComponentId: ComponentId,
   targetComponentId: ComponentId,
 ): boolean {
-  const placedIds = new Set(placements.map((item) => item.componentId));
   if (
     sourceComponentId === targetComponentId ||
-    !placedIds.has(sourceComponentId) ||
-    !placedIds.has(targetComponentId)
+    !hasPlacement(sourceComponentId) ||
+    !hasPlacement(targetComponentId)
   )
     return false;
   if (
@@ -109,105 +106,59 @@ export function removeConnection(
   sourceComponentId: ComponentId,
   targetComponentId: ComponentId,
 ): void {
-  const next = connections.filter(
+  connections = connections.filter(
     (item) =>
-      item.sourceComponentId !== sourceComponentId ||
-      item.targetComponentId !== targetComponentId,
+      !(
+        item.sourceComponentId === sourceComponentId &&
+        item.targetComponentId === targetComponentId
+      ),
   );
-  if (next.length === connections.length) return;
-  connections = next;
   emit();
-}
-
-export function updateComponentConfiguration(
-  componentId: ComponentId,
-  key: string,
-  value: string | boolean,
-): boolean {
-  const definition = getComponentById(componentId);
-  const field = definition?.configuration[key];
-  if (!field || !placements.some((item) => item.componentId === componentId))
-    return false;
-  const valid =
-    field.type === "boolean"
-      ? typeof value === "boolean"
-      : typeof value === "string" && field.options.includes(value);
-  if (!valid) return false;
-  configurations = {
-    ...configurations,
-    [componentId]: { ...getComponentConfiguration(componentId), [key]: value },
-  };
-  emit();
-  return true;
 }
 
 export function resetArchitecture(): void {
   placements = [];
   connections = [];
-  configurations = {};
   emit();
 }
-
 export function getArchitectureState(): ArchitectureState {
-  return {
-    placements: getPlacements(),
-    connections: getConnections(),
-    configurations: structuredClone(configurations),
-  };
+  return { placements: getPlacements(), connections: getConnections() };
 }
 
 export function replaceArchitecture(state: ArchitectureState): boolean {
+  if (!Array.isArray(state.placements) || !Array.isArray(state.connections))
+    return false;
+  const ids = new Set<string>();
+  const validated: Placement[] = [];
+  for (const item of state.placements) {
+    const component = getComponentById(item.componentId);
+    if (
+      !component ||
+      ids.has(item.componentId) ||
+      !component.allowedAreaIds.includes(item.areaId)
+    )
+      return false;
+    ids.add(item.componentId);
+    validated.push({
+      componentId: item.componentId,
+      areaId: item.areaId,
+      configuration: {
+        ...getDefaultConfiguration(component),
+        ...item.configuration,
+      },
+    });
+  }
   if (
-    !Array.isArray(state.placements) ||
-    !Array.isArray(state.connections) ||
-    typeof state.configurations !== "object" ||
-    state.configurations === null
+    state.connections.some(
+      (item) =>
+        !ids.has(item.sourceComponentId) ||
+        !ids.has(item.targetComponentId) ||
+        item.sourceComponentId === item.targetComponentId,
+    )
   )
     return false;
-  const uniquePlacements = new Set<string>();
-  for (const item of state.placements) {
-    const definition = getComponentById(item.componentId);
-    const key = `${item.areaId}:${item.componentId}`;
-    if (
-      !definition ||
-      !definition.allowedAreaIds.includes(item.areaId) ||
-      uniquePlacements.has(key)
-    )
-      return false;
-    uniquePlacements.add(key);
-  }
-  const placedIds = new Set(state.placements.map((item) => item.componentId));
-  const uniqueConnections = new Set<string>();
-  for (const item of state.connections) {
-    const key = `${item.sourceComponentId}>${item.targetComponentId}`;
-    if (
-      item.sourceComponentId === item.targetComponentId ||
-      !placedIds.has(item.sourceComponentId) ||
-      !placedIds.has(item.targetComponentId) ||
-      uniqueConnections.has(key)
-    )
-      return false;
-    uniqueConnections.add(key);
-  }
-  placements = state.placements.map((item) => ({ ...item }));
+  placements = validated;
   connections = state.connections.map((item) => ({ ...item }));
-  configurations = {};
-  for (const componentId of placedIds) {
-    configurations[componentId] = getDefaultConfiguration(componentId);
-    const imported = state.configurations[componentId] ?? {};
-    for (const [key, value] of Object.entries(imported)) {
-      const field = getComponentById(componentId)?.configuration[key];
-      if (!field) continue;
-      if (field.type === "boolean" && typeof value === "boolean")
-        configurations[componentId][key] = value;
-      if (
-        field.type === "select" &&
-        typeof value === "string" &&
-        field.options.includes(value)
-      )
-        configurations[componentId][key] = value;
-    }
-  }
   emit();
   return true;
 }

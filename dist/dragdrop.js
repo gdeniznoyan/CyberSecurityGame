@@ -1,34 +1,40 @@
 import { getComponentById } from "./components.js";
-import { getConnectionSourceId, setConfiguredComponentId, setConnectionSourceId, } from "./renderer.js";
-import { addConnection, addPlacement, hasPlacement, removeConnection, removePlacement, updateComponentConfiguration, } from "./state.js";
+import { showComponentSettings } from "./renderer.js";
+import { addConnection, addPlacement, getPlacements, hasPlacement, removeConnection, removePlacement, updateConfiguration, } from "./state.js";
 let draggedComponentId = null;
 let selectedComponentId = null;
+let connectionSourceId = null;
 function showError(message) {
     const error = document.getElementById("error-message");
     if (error)
         error.textContent = message;
 }
 function canPlace(componentId, areaId) {
-    const definition = getComponentById(componentId);
-    return Boolean(definition?.allowedAreaIds.includes(areaId) &&
-        !hasPlacement(componentId, areaId));
+    const component = getComponentById(componentId);
+    if (!component ||
+        !component.allowedAreaIds.includes(areaId) ||
+        hasPlacement(componentId))
+        return false;
+    return true;
 }
 function place(componentId, areaId) {
-    const definition = getComponentById(componentId);
-    if (!definition?.allowedAreaIds.includes(areaId)) {
-        showError(`${definition?.name ?? componentId} cannot be placed in this architectural zone.`);
+    const component = getComponentById(componentId);
+    if (!component?.allowedAreaIds.includes(areaId)) {
+        showError(`${component?.name ?? componentId} cannot be placed in this area.`);
         return;
     }
-    if (!addPlacement(componentId, areaId)) {
-        showError(`${definition.name} is already placed in this zone.`);
+    if (hasPlacement(componentId)) {
+        showError(`${component.name} is already placed in the architecture.`);
         return;
     }
+    addPlacement(componentId, areaId);
     selectedComponentId = null;
     showError("");
 }
 function updateHighlights(componentId) {
     document.querySelectorAll(".area-drop-zone").forEach((zone) => {
-        zone.classList.toggle("compatible", Boolean(componentId && canPlace(componentId, zone.dataset.areaId)));
+        const areaId = zone.dataset.areaId;
+        zone.classList.toggle("compatible", Boolean(componentId && canPlace(componentId, areaId)));
     });
 }
 export function initializeDragAndDrop() {
@@ -62,9 +68,10 @@ export function initializeDragAndDrop() {
     });
     canvas.addEventListener("dragover", (event) => {
         const zone = event.target.closest(".area-drop-zone");
-        if (zone &&
-            draggedComponentId &&
-            canPlace(draggedComponentId, zone.dataset.areaId))
+        if (!zone || !draggedComponentId)
+            return;
+        const areaId = zone.dataset.areaId;
+        if (canPlace(draggedComponentId, areaId))
             event.preventDefault();
     });
     canvas.addEventListener("drop", (event) => {
@@ -78,42 +85,46 @@ export function initializeDragAndDrop() {
     });
     canvas.addEventListener("click", (event) => {
         const target = event.target;
+        const closeSettings = target.closest("[data-close-settings]");
+        if (closeSettings) {
+            const panel = document.getElementById("component-settings");
+            if (panel)
+                panel.hidden = true;
+            return;
+        }
+        const edit = target.closest("[data-edit-component]");
+        if (edit) {
+            showComponentSettings(edit.dataset.editComponent ?? "");
+            return;
+        }
+        const connectionButton = target.closest("[data-connect-component]");
+        if (connectionButton) {
+            const componentId = connectionButton.dataset.connectComponent ?? "";
+            if (!connectionSourceId) {
+                connectionSourceId = componentId;
+                document
+                    .querySelector(`[data-component-node="${componentId}"]`)
+                    ?.classList.add("connection-source");
+                showError("Now select ↗ on the destination component.");
+            }
+            else {
+                if (!addConnection(connectionSourceId, componentId))
+                    showError("This connection cannot be created.");
+                else
+                    showError("");
+                connectionSourceId = null;
+            }
+            return;
+        }
+        const removeLink = target.closest("[data-remove-connection-source]");
+        if (removeLink) {
+            removeConnection(removeLink.dataset.removeConnectionSource ?? "", removeLink.dataset.removeConnectionTarget ?? "");
+            showError("");
+            return;
+        }
         const remove = target.closest("[data-remove-component]");
         if (remove) {
-            removePlacement(remove.dataset.removeComponent ?? "", remove.dataset.areaId);
-            setConnectionSourceId(null);
-            showError("");
-            return;
-        }
-        const configure = target.closest("[data-configure-component]");
-        if (configure?.dataset.configureComponent) {
-            setConfiguredComponentId(configure.dataset.configureComponent);
-            showError("");
-            return;
-        }
-        const connect = target.closest("[data-connect-component]");
-        if (connect?.dataset.connectComponent) {
-            const selected = getConnectionSourceId();
-            const current = connect.dataset.connectComponent;
-            if (!selected) {
-                setConnectionSourceId(current);
-                showError("Source selected. Choose Link on the destination component.");
-            }
-            else if (selected === current) {
-                setConnectionSourceId(null);
-                showError("Connection selection cancelled.");
-            }
-            else if (addConnection(selected, current)) {
-                setConnectionSourceId(null);
-                showError("");
-            }
-            else
-                showError("This connection already exists or is invalid.");
-            return;
-        }
-        const unlink = target.closest("[data-remove-connection-source]");
-        if (unlink) {
-            removeConnection(unlink.dataset.removeConnectionSource ?? "", unlink.dataset.removeConnectionTarget ?? "");
+            removePlacement(remove.dataset.removeComponent ?? "");
             showError("");
             return;
         }
@@ -122,14 +133,21 @@ export function initializeDragAndDrop() {
             place(selectedComponentId, zone.dataset.areaId);
     });
     canvas.addEventListener("change", (event) => {
-        const control = event.target.closest("[data-configuration-component]");
+        const control = event.target.closest("[data-configuration-key]");
         if (!control)
             return;
-        const value = control instanceof HTMLInputElement && control.type === "checkbox"
-            ? control.checked
-            : control.value;
-        updateComponentConfiguration(control.dataset.configurationComponent ?? "", control.dataset.configurationKey ?? "", value);
-        showError("");
+        const componentId = control.dataset.configurationComponent ?? "";
+        const placement = getPlacements().find((item) => item.componentId === componentId);
+        if (!placement)
+            return;
+        const configuration = {
+            ...placement.configuration,
+        };
+        configuration[control.dataset.configurationKey ?? ""] =
+            control instanceof HTMLInputElement && control.type === "checkbox"
+                ? control.checked
+                : control.value;
+        updateConfiguration(componentId, configuration);
     });
 }
-//# sourceMappingURL=dragDrop.js.map
+//# sourceMappingURL=dragdrop.js.map

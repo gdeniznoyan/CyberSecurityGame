@@ -1,98 +1,30 @@
-# Security Analysis Output System
+# Security Analysis
 
-## Overview
+Security Analysis is produced dynamically from the effective access path. Component descriptions are only UI help text and are never used to classify the architecture.
 
-The right sidebar reports architecture-level behaviour. It does not list selected components or generic missing-component warnings.
+## Evaluation Sequence
 
-`evaluateArchitecture` returns structured facts. `renderEvaluation` turns those facts into DOM sections. Output sentences are generated from effective path properties, configuration and conflicts rather than stored in component definitions.
+1. Find a connected route from `User and Device` to `Reachable Resources`.
+2. Read the component properties on that route.
+3. Apply configuration values such as policy timing, identity role and access level.
+4. Resolve dependent properties such as certificate trust.
+5. Detect unsafe or conflicting outcomes.
+6. Select the architecture classification.
+7. Calculate the secondary numerical score.
+8. Generate analysis sentences from the resulting state.
 
-## Update Lifecycle
+## Panel Content
 
-Analysis runs during initial application startup and after every successful architecture-state mutation. It also runs when the Analyze Architecture button is pressed.
+- Architecture Classification: the primary result.
+- Security Score: a supporting 0-100 value.
+- Access Path: the route currently evaluated.
+- Authentication Model: whether identity is effective and hardware-bound.
+- Authentication Dependency: whether primary authentication is external.
+- Policy Evaluation and Enforcement: whether decisions are both made and applied.
+- Connection Type: application, network or hybrid access.
+- Client Visibility and Reachability: what the client can see and reach.
+- Network Participation: whether the client joins the protected network.
+- Detected Openings: conflicts found by the evaluator.
+- Recommended Change: the first corrective action.
 
-A state mutation includes:
-
-- adding or removing a component;
-- adding or removing a connection;
-- changing a configuration value;
-- resetting the architecture;
-- importing a valid architecture state.
-
-## Sidebar Order
-
-### Architecture Classification
-
-The primary result. It shows one of the six supported classifications.
-
-### Security Score
-
-The secondary result. The percentage and circular progress ring show the property-based score. Score never overrides classification requirements.
-
-### Access Path
-
-Shows the connected component sequence using component names. If no complete route exists, it explains that no connected access path reaches a resource.
-
-### Authentication Model
-
-Explains whether authentication is effective, whether it is hardware-bound and whether it finishes before protected communication.
-
-### Authentication Dependency
-
-Explains whether the active path relies on an external identity provider as the primary root of trust.
-
-### Policy Evaluation
-
-Reports whether a connected policy component evaluates the request.
-
-### Policy Enforcement
-
-Reports whether the evaluation is actually enforced on the same active path.
-
-### Connection Type
-
-Distinguishes network-level, application-level, combined/hybrid or missing effective connection methods.
-
-### Client Network Visibility
-
-Explains whether protected addresses or routes become visible to the client.
-
-### Client Reachability
-
-Names the resource reached at the end of the active path.
-
-### Network Participation
-
-Explains whether the client joins or reaches the protected network, receives a protected address or remains application-isolated.
-
-### Identified Security Openings
-
-Lists causal findings. An empty list renders `None identified.`
-
-Supported findings are:
-
-- Strong Encryption With Excessive Access;
-- Policy Without Enforcement;
-- External Authentication Dependency;
-- Private CA Not Used;
-- Application Restriction After Network Exposure;
-- Wrong Connection Method;
-- Authorization Too Late;
-- Certificate Misconfiguration.
-
-### Recommended Architecture Changes
-
-Produces changes from missing outcomes and exposure, such as moving policy before connection, connecting enforcement, replacing broad network access, enabling least privilege, completing certificate validation or removing a virtual interface.
-
-## Causal Feedback Examples
-
-Encryption plus broad network reachability produces an explanation that encryption protects traffic but does not limit what a compromised client can reach.
-
-A Policy Engine without an enforcement component produces an explanation that a decision exists but is not applied.
-
-A Private CA outside a complete certificate-validation chain produces an explanation that the authority is present but unused by the real identity route.
-
-An external SSO configured after authentication does not create primary external dependency. The same component configured as Primary Authenticator does.
-
-## Rendering Safety
-
-All analysis text is assigned through `textContent`. The application does not insert evaluator output as HTML.
+The panel refreshes after placement, removal, connection and configuration changes.

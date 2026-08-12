@@ -1,72 +1,34 @@
-# Security Scoring System
+# Classification and Score
 
-## Role of the Score
+Classification is the primary result. The numerical score is secondary and cannot independently produce Saytec Post-Zero Trust.
 
-The numerical score is secondary to architecture classification. It summarises effective security outcomes on the discovered access path. It is not calculated from the number of placed components.
+## Classification Order
 
-A score of 100 does not automatically create a Saytec Post-Zero Trust result. Classification still requires every mandatory architectural outcome.
+1. No complete route: `Incomplete Architecture`.
+2. Severe configuration conflict: `Broken or Unsafe Architecture`.
+3. All Saytec requirements satisfied: `Saytec Post-Zero Trust`.
+4. Identity, policy, least privilege and application-only requirements satisfied: `Zero Trust`.
+5. Both network and application access: `Hybrid Architecture`.
+6. Network access without a severe conflict: `Traditional Access`.
+7. Any remaining invalid route: `Broken or Unsafe Architecture`.
 
-## Positive Property Values
+## Detected Conflicts
 
-The evaluator starts at zero and adds points for effective properties:
+- Policy evaluation without effective enforcement
+- Strong encryption combined with excessive network access
+- RAM tunneling with external primary authentication
+- Private CA present but not used by the certificate route
+- Application restrictions applied after network exposure
+- Hardware-bound identity combined with a virtual network interface
+- Policy authorization performed after connection
+- Certificate used without complete validation
 
-- User authentication adds 10.
-- Authentication before communication adds 8.
-- Hardware-bound identity adds 7.
-- Organisation-controlled identity adds 7.
-- Policy evaluation adds 9.
-- Policy enforcement adds 11.
-- Least privilege adds 9.
-- Application restriction adds 8.
-- Session termination adds 6.
-- Connection encryption adds 8.
-- Encrypted RAM adds 8.
-- Restricted parallel applications adds 4.
-- Complete certificate validation adds 5.
+## Score Calculation
 
-The maximum positive total is 100.
+The score starts at 10 for a complete route.
 
-## Exposure Deductions
+Positive points include authentication, pre-connection verification, organization-controlled trust, hardware identity, policy evaluation and enforcement, encrypted RAM, session revocation, least privilege, application restrictions, certificate validation and application-only access.
 
-The evaluator subtracts points for effective exposure:
+Risk deductions include external primary authentication, network-level access, virtual network interfaces, protected address assignment, visible network information and persistent connection artifacts.
 
-- Network-level access subtracts 12.
-- A virtual network interface subtracts 8.
-- Exposed network information subtracts 7.
-- Primary external identity dependency subtracts 5.
-- Persistent connection artifacts subtract 5.
-
-## Security-Opening Deduction
-
-Each detected security opening subtracts 6 additional points. This deduction is applied after property additions and exposure deductions.
-
-## Final Formula
-
-The implemented calculation is:
-
-```text
-raw score =
-  sum of effective positive property values
-  - effective exposure deductions
-  - (identified opening count × 6)
-
-final score = round(raw score), limited to 0 through 100
-```
-
-## Why Properties Must Be Effective
-
-A component's static definition does not immediately add score. It must be on the actual access path, and relationship/configuration rules must make the property effective.
-
-Examples:
-
-- Encrypted RAM scores only when the active RAM Application Tunnel uses it.
-- Private CA scores only when a certificate and complete validation use its trust chain.
-- Policy Enforcement scores only when policy is also evaluated.
-- External Identity Provider is deducted only when it is the connected Primary Authenticator.
-- An unused component elsewhere on the canvas contributes nothing.
-
-## Classification Is Independent
-
-After openings and effective properties are derived, classification rules run independently of score thresholds.
-
-For example, broad network access may still be classified as Traditional Access even when strong controls produce a respectable score. Conversely, an application-isolated path cannot be Saytec Post-Zero Trust if hardware identity, organisation-controlled trust, pre-connection policy, RAM protection or network-isolation conditions are missing.
+Each detected opening removes 4 additional points. The final result is rounded and limited to 0-100.

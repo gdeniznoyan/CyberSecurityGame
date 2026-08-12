@@ -3,250 +3,97 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Build and explore a secure access architecture through an interactive cybersecurity journey."
+    />
     <title>Cybersecurity Architecture Builder</title>
     <link rel="stylesheet" href="./css/style.css" />
   </head>
 
   <body>
-    <div class="page-layout">
-      <aside class="sidebar">
-        <div class="brand">
-          <img
-            class="brand-image-placeholder"
-            src="./assets/sidebar/logo.png"
-            alt=""
-          />
-          <div
-            class="brand-name"
-            data-i18n="Cybersecurity Architecture Builder"
-          >
-            Cybersecurity Architecture Builder
-          </div>
-        </div>
+    <header class="site-header">
+      <a class="brand" href="#builder" aria-label="Architecture Builder home">
+        <span class="brand-mark" aria-hidden="true">◇</span>
+        <span>
+          <strong>Cybersecurity</strong>
+          <small>Architecture Builder</small>
+        </span>
+      </a>
 
-        <nav
-          class="sidebar-nav"
-          aria-label="Primary navigation"
-          data-i18n-aria-label="Primary navigation"
-        >
-          <button class="nav-item active" type="button">
-            <img
-              class="nav-image-placeholder"
-              src="./assets/sidebar/builder.png"
-              alt=""
-            />
-            <span data-i18n="Builder">Builder</span>
-          </button>
-          <button class="nav-item" type="button">
-            <img
-              class="nav-image-placeholder"
-              src="./assets/sidebar/learn.png"
-              alt=""
-            />
-            <span data-i18n="Learn">Learn</span>
-          </button>
-          <button class="nav-item" type="button">
-            <img
-              class="nav-image-placeholder"
-              src="./assets/sidebar/about.png"
-              alt=""
-            />
-            <span data-i18n="About">About</span>
-          </button>
-        </nav>
-
-        <section class="how-to-play" aria-labelledby="how-to-play-title">
-          <h2 id="how-to-play-title">
-            <img src="./assets/sidebar/how-title.png" alt="" />
-            <span data-i18n="How to Play">How to Play</span>
-          </h2>
-          <ol>
-            <li>
-              <img src="./assets/sidebar/how-drag.png" alt="" />
-              <span data-i18n="1. Drag components from the toolbox.">
-                1. Drag components from the toolbox.
-              </span>
-            </li>
-            <li>
-              <img src="./assets/sidebar/how-drop.png" alt="" />
-              <span data-i18n="2. Drop one into each architecture slot.">
-                2. Drop one into each architecture slot.
-              </span>
-            </li>
-            <li>
-              <img src="./assets/sidebar/how-analyze.png" alt="" />
-              <span data-i18n="3. Combine compatible components.">
-                3. Combine compatible components.
-              </span>
-            </li>
-            <li>
-              <img src="./assets/sidebar/how-improve.png" alt="" />
-              <span data-i18n="4. Export your architecture when ready.">
-                4. Export your architecture when ready.
-              </span>
-            </li>
-          </ol>
-        </section>
-      </aside>
-
-      <div class="page-content">
-        <header class="site-header">
-          <div class="header-copy">
-            <h1 data-i18n="Cybersecurity Architecture Builder">
-              Cybersecurity Architecture Builder
-            </h1>
-            <p
-              data-i18n="Build secure architectures by placing the right security components in the correct locations."
-            >
-              Build secure architectures by placing the right security
-              components in the correct locations.
-            </p>
-          </div>
-
-          <div class="header-actions">
-            <button
-              class="help-button"
-              type="button"
-              aria-label="Show help"
-              title="Help"
-              data-i18n-aria-label="Show help"
-              data-i18n-title="Help"
-            >
-              ?
-            </button>
-            <button id="reset-button" class="reset-button" type="button">
-              <span data-i18n="Reset">Reset</span>
-            </button>
-            <label class="header-language" for="language-select">
-              <span id="language-title" data-i18n="Languages">Languages</span>
-              <select id="language-select">
-                <option value="en">English</option>
-                <option value="tr">Türkçe</option>
-              </select>
-            </label>
-            <button id="analyze-button" class="analyze-button" type="button">
-              <span data-i18n="Analyze Architecture">
-                Analyze Architecture
-              </span>
-            </button>
-          </div>
-        </header>
-
-        <main class="app-shell">
-          <section class="workspace" aria-labelledby="architecture-title">
-            <h2 id="architecture-title" data-i18n="Architecture Canvas">
-              Architecture Canvas
-            </h2>
-            <div id="architecture-canvas" class="architecture-canvas"></div>
-            <p
-              id="error-message"
-              class="error-message"
-              role="alert"
-              aria-live="assertive"
-            ></p>
-          </section>
-
-          <section class="toolbox" aria-labelledby="toolbox-title">
-            <h2 id="toolbox-title" data-i18n="Component Toolbox">
-              Component Toolbox
-            </h2>
-            <div id="component-toolbox" class="toolbox-groups"></div>
-          </section>
-
-          <section
-            class="actions"
-            aria-label="Architecture data actions"
-            data-i18n-aria-label="Architecture data actions"
-          >
-            <button id="export-button" type="button">
-              <span data-i18n="Export Current State">
-                Export Current State
-              </span>
-            </button>
-            <button id="import-button" type="button">
-              <span data-i18n="Import State">Import State</span>
-            </button>
-          </section>
-
-          <aside
-            class="result-panel"
-            aria-label="Architecture feedback"
-            aria-live="polite"
-          >
-            <h2>Security Analysis</h2>
-            <section class="architecture-classification">
-              <h3>Architecture Classification</h3>
-              <strong id="architecture-classification-value">
-                Incomplete Architecture
-              </strong>
-            </section>
-            <section class="security-score" aria-label="Security Score">
-              <h3 data-i18n="Security Score">Security Score</h3>
-              <div class="security-score-chart">
-                <span id="security-score-value">--</span>
-              </div>
-            </section>
-            <div id="result-insights" class="result-insights"></div>
-          </aside>
-        </main>
-
-        <footer class="site-footer">
-          <span data-i18n="Cybersecurity Architecture Builder">
-            Cybersecurity Architecture Builder
-          </span>
-          <span data-i18n="Learn">Learn</span>
-          <span data-i18n="Build">Build</span>
-          <span data-i18n="Protect">Protect</span>
-          <span class="version">v1.0.0</span>
-        </footer>
+      <div class="header-actions">
+        <button id="reset-button" class="reset-button" type="button">
+          <span aria-hidden="true">↻</span>
+          Reset
+        </button>
+        <label class="header-language" for="language-select">
+          <span class="sr-only">Language</span>
+          <select id="language-select" aria-label="Language">
+            <option value="en">EN</option>
+            <option value="tr">TR</option>
+          </select>
+        </label>
       </div>
-    </div>
+    </header>
 
-    <dialog id="state-dialog">
-      <form method="dialog" class="dialog-card">
-        <div class="dialog-heading">
-          <h2 id="dialog-title" data-i18n="Architecture State">
-            Architecture State
-          </h2>
-          <button
-            value="cancel"
-            aria-label="Close dialog"
-            data-i18n-aria-label="Close dialog"
-          >
-            ×
-          </button>
-        </div>
+    <main id="builder">
+      <div class="app-shell">
+        <section class="workspace" aria-labelledby="architecture-title">
+          <div class="section-heading">
+            <div>
+              <span class="section-kicker">Your architecture</span>
+              <h2 id="architecture-title">Build the access journey</h2>
+              <p>Move from the user to the protected resource.</p>
+            </div>
+            <span class="drag-hint"><i></i> Drag components below</span>
+          </div>
+          <div id="architecture-canvas" class="architecture-canvas"></div>
+          <p
+            id="error-message"
+            class="error-message"
+            role="alert"
+            aria-live="assertive"
+          ></p>
+        </section>
 
-        <p id="dialog-help"></p>
+        <aside
+          class="result-panel"
+          aria-label="Architecture feedback"
+          aria-live="polite"
+        >
+          <div class="result-heading">
+            <span class="section-kicker">Live evaluation</span>
+            <h2>Security Analysis</h2>
+          </div>
+          <section class="architecture-result">
+            <span>Architecture model</span>
+            <strong id="architecture-result-value">Start building</strong>
+          </section>
+          <section class="security-score" aria-label="Security Score">
+            <div class="security-score-chart" aria-hidden="true">
+              <span id="security-score-value">--</span>
+              <small>score</small>
+            </div>
+            <div class="score-copy">
+              <strong>Security posture</strong>
+              <span>Updates as you build</span>
+            </div>
+          </section>
+          <div id="result-insights" class="result-insights"></div>
+        </aside>
 
-        <textarea
-          id="state-json"
-          rows="16"
-          spellcheck="false"
-          aria-label="Architecture state JSON"
-          data-i18n-aria-label="Architecture state JSON"
-        ></textarea>
-
-        <p
-          id="dialog-error"
-          class="error-message"
-          role="alert"
-          aria-live="assertive"
-        ></p>
-
-        <div class="dialog-actions">
-          <button id="copy-json-button" type="button">
-            <span data-i18n="Copy JSON">Copy JSON</span>
-          </button>
-          <button id="apply-import-button" type="button">
-            <span data-i18n="Import JSON">Import JSON</span>
-          </button>
-          <button value="cancel">
-            <span data-i18n="Close">Close</span>
-          </button>
-        </div>
-      </form>
-    </dialog>
+        <section class="toolbox" aria-labelledby="toolbox-title">
+          <div class="section-heading toolbox-heading">
+            <div>
+              <span class="section-kicker">Security toolkit</span>
+              <h2 id="toolbox-title">Choose your components</h2>
+              <p>Drag each control into its matching stage above.</p>
+            </div>
+          </div>
+          <div id="component-toolbox" class="toolbox-groups"></div>
+        </section>
+      </div>
+    </main>
 
     <script type="module" src="./dist/main.js"></script>
   </body>

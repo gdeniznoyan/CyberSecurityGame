@@ -1,596 +1,511 @@
-const component = (definition) => definition;
-export const userComponent = component({
-    id: "user",
-    name: "User",
-    area: "user-device",
-    description: "The person who initiates the access request.",
-    icon: "./assets/components-individual/user.png",
-    allowedAreaIds: ["user-device"],
-    configuration: {},
-    architecturalProperties: {},
+const icon = (id) => `./assets/components-v2/${id}.svg`;
+const bool = (id, label, defaultValue) => ({
+    id,
+    label,
+    type: "boolean",
+    defaultValue,
 });
-export const clientDeviceComponent = component({
+const select = (id, label, defaultValue, options) => ({ id, label, type: "select", defaultValue, options });
+export const clientDeviceComponent = {
     id: "client-device",
     name: "Client Device",
     area: "user-device",
-    description: "A home PC, BYOD device or otherwise untrusted endpoint.",
-    icon: "./assets/components-individual/client-device.png",
+    description: "Represents the endpoint device used by the user to initiate access. The device may be a personal computer, BYOD device, or another endpoint that is not automatically trusted.",
+    icon: icon("client-device"),
+    isSaytecComponent: false,
     allowedAreaIds: ["user-device"],
-    configuration: {},
-    architecturalProperties: { persistsConnectionArtifacts: true },
-});
-export const saytecHardwareTokenComponent = component({
-    id: "saytec-hardware-security-token",
-    name: "Saytec Hardware Security Token",
+    configuration: [
+        select("deviceTrust", "Device posture", "Untrusted Device", [
+            "Untrusted Device",
+            "Managed / Secure Device",
+        ]),
+    ],
+    architecturalProperties: {},
+};
+export const secureDeviceComponent = {
+    id: "secure-device",
+    name: "Secure Device",
     area: "user-device",
-    description: "Hardware-bound identity and protected cryptographic operations.",
-    icon: "./assets/components-individual/saytec-hardware-security-token.png",
+    description: "Represents a managed and security-controlled endpoint that meets the organization's security requirements before accessing protected resources.",
+    icon: icon("secure-device"),
+    isSaytecComponent: false,
     allowedAreaIds: ["user-device"],
-    configuration: {},
+    configuration: [
+        select("deviceTrust", "Device posture", "Managed / Secure Device", [
+            "Untrusted Device",
+            "Managed / Secure Device",
+        ]),
+    ],
+    architecturalProperties: {},
+};
+export const saytrustHardwareSecurityTokenComponent = {
+    id: "saytrust-hardware-security-token",
+    name: "sayTRUST Hardware Security Token",
+    area: "user-device",
+    description: "Represents the sayTRUST hardware-based security token used to provide hardware-bound identity and protect sensitive authentication and cryptographic operations outside the client device.",
+    icon: icon("saytrust-hardware-security-token"),
+    isSaytecComponent: true,
+    allowedAreaIds: ["user-device"],
+    configuration: [
+        bool("hardwareId", "Hardware ID", true),
+        bool("biometric", "Biometric verification", true),
+        bool("clientPin", "Client PIN", true),
+        bool("certificatePinProtection", "Certificate / PIN protection", true),
+    ],
     architecturalProperties: {
         authenticatesUser: true,
         usesHardwareBoundIdentity: true,
     },
-});
-export const biometricVerificationComponent = component({
+};
+export const biometricVerificationComponent = {
     id: "biometric-verification",
     name: "Biometric Verification",
     area: "user-device",
-    description: "Biometric verification of the user.",
-    icon: "./assets/components-individual/biometric-verification.png",
+    description: "Uses a biometric characteristic such as a fingerprint or facial feature to verify that the person requesting access is the authorized user.",
+    icon: icon("biometric-verification"),
+    isSaytecComponent: false,
     allowedAreaIds: ["user-device"],
-    configuration: {},
+    configuration: [bool("biometric", "Biometric verification", true)],
     architecturalProperties: { authenticatesUser: true },
-});
-export const clientPinComponent = component({
+};
+export const clientPinComponent = {
     id: "client-pin",
     name: "Client PIN",
     area: "user-device",
-    description: "A PIN that unlocks the token or client identity.",
-    icon: "./assets/components-individual/client-pin.png",
+    description: "Represents a PIN known by the user and used as an additional authentication factor when accessing the secure client or hardware token.",
+    icon: icon("client-pin"),
+    isSaytecComponent: false,
     allowedAreaIds: ["user-device"],
-    configuration: {},
+    configuration: [bool("clientPin", "Client PIN enabled", true)],
     architecturalProperties: { authenticatesUser: true },
-});
-export const zeroFootprintClientComponent = component({
-    id: "zero-footprint-client",
-    name: "Zero-Footprint Client",
-    area: "user-device",
-    description: "A client designed not to retain useful session or network artifacts.",
-    icon: "./assets/components-individual/zero-footprint-client.png",
-    allowedAreaIds: ["user-device"],
-    configuration: {
-        persistentConfigurationEnabled: {
-            type: "boolean",
-            label: "Persistent Configuration Enabled",
-            defaultValue: false,
-        },
-    },
-    architecturalProperties: { persistsConnectionArtifacts: false },
-});
-export const privateCaComponent = component({
+};
+export const privateCaComponent = {
     id: "private-ca",
     name: "Private CA",
     area: "identity-route",
-    description: "Organization-controlled certificate trust.",
-    icon: "./assets/components-individual/private-ca.png",
+    description: "Represents an organization-controlled Certificate Authority used to issue and manage trusted digital certificates without relying on an external certificate authority for the critical identity chain.",
+    icon: icon("private-ca"),
+    isSaytecComponent: false,
     allowedAreaIds: ["identity-route"],
-    configuration: {},
+    configuration: [],
     architecturalProperties: { usesOrganizationControlledIdentity: true },
-});
-export const userCertificateComponent = component({
+};
+export const userCertificateComponent = {
     id: "user-certificate",
     name: "User Certificate",
     area: "identity-route",
-    description: "Certificate identity assigned to a user.",
-    icon: "./assets/components-individual/user-certificate.png",
+    description: "Represents a digital certificate associated with the user and used to establish certificate-based identity during authentication.",
+    icon: icon("user-certificate"),
+    isSaytecComponent: false,
     allowedAreaIds: ["identity-route"],
-    configuration: {},
+    configuration: [bool("otp", "Additional OTP factor", false)],
     architecturalProperties: { authenticatesUser: true },
-});
-export const x509CertificateComponent = component({
+};
+export const x509CertificateComponent = {
     id: "x509-certificate",
     name: "X.509 Certificate",
     area: "identity-route",
-    description: "Cryptographically verifiable user, device or service identity.",
-    icon: "./assets/components-individual/x509-certificate.png",
+    description: "Represents a standard X.509 digital certificate used to cryptographically verify the identity of a user, device, or service.",
+    icon: icon("x509-certificate"),
+    isSaytecComponent: false,
     allowedAreaIds: ["identity-route"],
-    configuration: {},
+    configuration: [],
     architecturalProperties: { authenticatesUser: true },
-});
-export const certificateValidationComponent = component({
+};
+export const certificateValidationComponent = {
     id: "certificate-validation",
     name: "Certificate Validation",
     area: "identity-route",
-    description: "Validation of certificate status and trust.",
-    icon: "./assets/components-individual/certificate-validation.png",
+    description: "Verifies that a certificate is valid before it is trusted, including checks such as certificate integrity, validity period, issuer, and trust chain.",
+    icon: icon("certificate-validation"),
+    isSaytecComponent: false,
     allowedAreaIds: ["identity-route"],
-    configuration: {
-        certificateChecked: {
-            type: "boolean",
-            label: "Certificate Checked",
-            defaultValue: true,
-        },
-        expirationChecked: {
-            type: "boolean",
-            label: "Expiration Checked",
-            defaultValue: true,
-        },
-        revocationChecked: {
-            type: "boolean",
-            label: "Revocation Checked",
-            defaultValue: false,
-        },
-        completeValidation: {
-            type: "boolean",
-            label: "Complete Validation",
-            defaultValue: false,
-        },
-    },
+    configuration: [
+        bool("certificateChecked", "Certificate checked", true),
+        bool("expirationChecked", "Expiration checked", true),
+        bool("revocationChecked", "Revocation checked", true),
+        bool("completeValidation", "Complete validation", true),
+    ],
     architecturalProperties: { validatesCertificate: true },
-});
-export const certificateRevocationComponent = component({
+};
+export const certificateRevocationCheckComponent = {
     id: "certificate-revocation-check",
     name: "Certificate Revocation Check",
     area: "identity-route",
-    description: "Rejects revoked or compromised certificates.",
-    icon: "./assets/components-individual/certificate-revocation-check.png",
+    description: "Checks whether a previously issued certificate has been revoked and prevents revoked or compromised certificates from being trusted.",
+    icon: icon("certificate-revocation-check"),
+    isSaytecComponent: false,
     allowedAreaIds: ["identity-route"],
-    configuration: {},
+    configuration: [bool("revocationChecked", "Revocation checked", true)],
     architecturalProperties: { validatesCertificate: true },
-});
-export const otpComponent = component({
+};
+export const otpComponent = {
     id: "otp",
     name: "OTP",
     area: "identity-route",
-    description: "An additional one-time authentication factor.",
-    icon: "./assets/components-individual/otp.png",
+    description: "Represents a One-Time Password used as an additional authentication factor that is valid only for a single login or a short period of time.",
+    icon: icon("otp"),
+    isSaytecComponent: false,
     allowedAreaIds: ["identity-route"],
-    configuration: {},
+    configuration: [],
     architecturalProperties: { authenticatesUser: true },
-});
-export const saytecServerComponent = component({
-    id: "saytec-server",
-    name: "Saytec Server",
-    area: "access-decision-enforcement",
-    description: "Evaluates and enforces access decisions for application connections.",
-    icon: "./assets/components-individual/saytec-server.png",
-    allowedAreaIds: ["access-decision-enforcement"],
-    configuration: {
-        policyTiming: {
-            type: "select",
-            label: "Policy Timing",
-            options: ["Before Connection", "After Connection"],
-            defaultValue: "Before Connection",
-        },
-        leastPrivilegeEnabled: {
-            type: "boolean",
-            label: "Least Privilege Enabled",
-            defaultValue: true,
-        },
-        broadRolePermission: {
-            type: "boolean",
-            label: "Broad Role Permission",
-            defaultValue: false,
-        },
-        sessionRevocationEnabled: {
-            type: "boolean",
-            label: "Session Revocation Enabled",
-            defaultValue: true,
-        },
-    },
+};
+export const saytrustServerComponent = {
+    id: "saytrust-server",
+    name: "sayTRUST Server",
+    area: "access-enforcement",
+    description: "Represents the central sayTRUST security server that evaluates identity, permissions, target applications, and access policies and can also enforce the resulting access decision.",
+    icon: icon("saytrust-server"),
+    isSaytecComponent: true,
+    allowedAreaIds: ["access-enforcement"],
+    configuration: [
+        select("policyTiming", "Policy timing", "Policy Before Connection", [
+            "Policy Before Connection",
+            "Policy After Connection",
+        ]),
+        bool("leastPrivilege", "Least privilege", true),
+        bool("broadRolePermission", "Broad role permission", false),
+        bool("sessionRevocation", "Session revocation", true),
+        bool("applicationAuthorization", "Application authorization", true),
+    ],
     architecturalProperties: {
         evaluatesAccessPolicy: true,
         enforcesAccessPolicy: true,
     },
-});
-export const policyEngineComponent = component({
+};
+export const policyEngineComponent = {
     id: "policy-engine",
     name: "Policy Engine",
-    area: "access-decision-enforcement",
-    description: "Evaluates access requests against policy.",
-    icon: "./assets/components-individual/policy-engine.png",
-    allowedAreaIds: ["access-decision-enforcement"],
-    configuration: {
-        policyTiming: {
-            type: "select",
-            label: "Policy Timing",
-            options: ["Before Connection", "After Connection"],
-            defaultValue: "Before Connection",
-        },
-    },
+    area: "access-enforcement",
+    description: "Evaluates contextual and security information to determine whether an access request should be allowed or denied according to defined organizational policies.",
+    icon: icon("policy-engine"),
+    isSaytecComponent: false,
+    allowedAreaIds: ["access-enforcement"],
+    configuration: [
+        select("policyTiming", "Policy timing", "Policy Before Connection", [
+            "Policy Before Connection",
+            "Policy After Connection",
+        ]),
+        bool("leastPrivilege", "Least privilege", true),
+    ],
     architecturalProperties: { evaluatesAccessPolicy: true },
-});
-export const policyEnforcementComponent = component({
-    id: "policy-enforcement",
-    name: "Policy Enforcement",
-    area: "access-decision-enforcement",
-    description: "Applies allow, deny, routing and termination decisions.",
-    icon: "./assets/components-individual/policy-enforcement.png",
-    allowedAreaIds: ["access-decision-enforcement"],
-    configuration: {},
-    architecturalProperties: { enforcesAccessPolicy: true },
-});
-export const leastPrivilegeComponent = component({
+};
+export const clientPrivilegeManagementComponent = {
+    id: "client-privilege-management",
+    name: "Client Privilege Management",
+    area: "access-enforcement",
+    description: "Controls and limits the privileges available to the client device or user so that unnecessary administrative or elevated permissions are not available during the access session.",
+    icon: icon("client-privilege-management"),
+    isSaytecComponent: false,
+    allowedAreaIds: ["access-enforcement"],
+    configuration: [bool("leastPrivilege", "Least privilege", true)],
+    architecturalProperties: { usesLeastPrivilege: true },
+};
+export const leastPrivilegeControlComponent = {
     id: "least-privilege-control",
     name: "Least-Privilege Control",
-    area: "access-decision-enforcement",
-    description: "Limits permissions to the minimum required scope.",
-    icon: "./assets/components-individual/least-privilege-control.png",
-    allowedAreaIds: ["access-decision-enforcement"],
-    configuration: {},
+    area: "access-enforcement",
+    description: "Restricts access to the minimum permissions and resources required for the user's current task, reducing the impact of a compromised account or device.",
+    icon: icon("least-privilege-control"),
+    isSaytecComponent: false,
+    allowedAreaIds: ["access-enforcement"],
+    configuration: [bool("leastPrivilege", "Least privilege", true)],
     architecturalProperties: { usesLeastPrivilege: true },
-});
-export const applicationAuthorizationComponent = component({
+};
+export const applicationAuthorizationComponent = {
     id: "application-authorization",
     name: "Application Authorization",
-    area: "access-decision-enforcement",
-    description: "Authorizes explicitly approved applications.",
-    icon: "./assets/components-individual/application-authorization.png",
-    allowedAreaIds: ["access-decision-enforcement"],
-    configuration: {},
+    area: "access-enforcement",
+    description: "Determines which specific applications the authenticated user is authorized to access and prevents access to applications that have not been explicitly approved.",
+    icon: icon("application-authorization"),
+    isSaytecComponent: false,
+    allowedAreaIds: ["access-enforcement"],
+    configuration: [
+        bool("applicationAuthorization", "Application authorization", true),
+    ],
     architecturalProperties: { restrictsApplications: true },
-});
-export const sessionRevocationComponent = component({
+};
+export const sessionRevocationComponent = {
     id: "session-revocation",
     name: "Session Revocation",
-    area: "access-decision-enforcement",
-    description: "Allows an active session to be terminated.",
-    icon: "./assets/components-individual/session-revocation.png",
-    allowedAreaIds: ["access-decision-enforcement"],
-    configuration: {},
+    area: "access-enforcement",
+    description: "Allows an active access session to be terminated when authorization changes, suspicious activity is detected, or the user is no longer permitted to continue the session.",
+    icon: icon("session-revocation"),
+    isSaytecComponent: false,
+    allowedAreaIds: ["access-enforcement"],
+    configuration: [bool("sessionRevocation", "Session revocation", true)],
     architecturalProperties: { supportsSessionTermination: true },
-});
-export const vpnGatewayComponent = component({
-    id: "vpn-gateway",
-    name: "VPN Gateway",
+};
+export const gatewayComponent = {
+    id: "gateway",
+    name: "Gateway",
     area: "connection-method",
-    description: "A configurable remote-access network gateway.",
-    icon: "./assets/components-individual/vpn-gateway.png",
+    description: "Represents the controlled entry point between the external client and protected resources. Its configuration determines whether it provides network-level or application-level access.",
+    icon: icon("gateway"),
+    isSaytecComponent: false,
     allowedAreaIds: ["connection-method"],
-    configuration: {
-        accessScope: {
-            type: "select",
-            label: "Access Scope",
-            options: [
-                "Full Network Access",
-                "Restricted Subnet Access",
-                "Application-Specific Route",
-            ],
-            defaultValue: "Full Network Access",
-        },
-        splitTunnelingEnabled: {
-            type: "boolean",
-            label: "Split Tunneling Enabled",
-            defaultValue: false,
-        },
-    },
-    architecturalProperties: {
-        grantsNetworkAccess: true,
-        assignsProtectedNetworkAddress: true,
-    },
-});
-export const networkConnectionComponent = component({
+    configuration: [
+        select("accessLevel", "Access level", "Application-Level Access", [
+            "Network-Level Access",
+            "Application-Level Access",
+        ]),
+        bool("virtualNetworkInterface", "Virtual network interface", false),
+        bool("protectedNetworkAddress", "Protected network address assigned", false),
+    ],
+    architecturalProperties: {},
+};
+export const networkConnectionComponent = {
     id: "network-connection",
     name: "Network Connection",
     area: "connection-method",
-    description: "Network-level access from the client to protected resources.",
-    icon: "./assets/components-individual/network-connection.png",
+    description: "Represents a connection that provides the client with access at the network level, potentially allowing the client to reach multiple systems or network resources.",
+    icon: icon("network-connection"),
+    isSaytecComponent: false,
     allowedAreaIds: ["connection-method"],
-    configuration: {},
-    architecturalProperties: {
-        grantsNetworkAccess: true,
-        exposesNetworkInformation: true,
-    },
-});
-export const applicationConnectionComponent = component({
+    configuration: [
+        select("accessScope", "Access scope", "Full Network Access", [
+            "Full Network Access",
+            "Restricted Subnet Access",
+            "Application-Specific Route",
+        ]),
+        bool("splitTunneling", "Split tunneling", false),
+    ],
+    architecturalProperties: { grantsNetworkAccess: true },
+};
+export const applicationConnectionComponent = {
     id: "application-connection",
     name: "Application Connection",
     area: "connection-method",
-    description: "A connection limited to a specific application.",
-    icon: "./assets/components-individual/application-connection.png",
+    description: "Represents a connection that provides access only to a specific authorized application instead of exposing the broader protected network.",
+    icon: icon("application-connection"),
+    isSaytecComponent: false,
     allowedAreaIds: ["connection-method"],
-    configuration: {
-        applicationAllowListEnabled: {
-            type: "boolean",
-            label: "Application Allow List Enabled",
-            defaultValue: true,
-        },
-        parallelExternalCommunicationRestricted: {
-            type: "boolean",
-            label: "Parallel External Communication Restricted",
-            defaultValue: false,
-        },
-    },
+    configuration: [
+        select("accessLevel", "Access level", "Application-Level Access", [
+            "Network-Level Access",
+            "Application-Level Access",
+        ]),
+    ],
     architecturalProperties: { grantsApplicationAccess: true },
-});
-export const ramApplicationTunnelComponent = component({
+};
+export const ramApplicationTunnelComponent = {
     id: "ram-application-tunnel",
     name: "RAM Application Tunnel",
     area: "connection-method",
-    description: "An application-specific tunnel created in temporary memory.",
-    icon: "./assets/components-individual/ram-application-tunnel.png",
+    description: "Represents an application-specific secure tunnel whose connection state is established and maintained in RAM rather than as a conventional persistent network connection.",
+    icon: icon("ram-application-tunnel"),
+    isSaytecComponent: true,
     allowedAreaIds: ["connection-method"],
-    configuration: {
-        encryptedRamTunnelingEnabled: {
-            type: "boolean",
-            label: "Encrypted RAM Tunneling Enabled",
-            defaultValue: true,
-        },
-        virtualNetworkInterfaceEnabled: {
-            type: "boolean",
-            label: "Virtual Network Interface Enabled",
-            defaultValue: false,
-        },
-        applicationAllowListEnabled: {
-            type: "boolean",
-            label: "Application Allow List Enabled",
-            defaultValue: true,
-        },
-        parallelExternalCommunicationRestricted: {
-            type: "boolean",
-            label: "Parallel External Communication Restricted",
-            defaultValue: true,
-        },
-        persistentConfigurationEnabled: {
-            type: "boolean",
-            label: "Persistent Configuration Enabled",
-            defaultValue: false,
-        },
+    configuration: [
+        bool("encryptedRam", "Encrypted RAM", true),
+        bool("applicationSpecific", "Application-specific connection", true),
+        bool("connectionKeyProtectsRam", "Connection key protects RAM", true),
+        bool("persistentArtifacts", "Persistent connection artifacts", false),
+    ],
+    architecturalProperties: {
+        grantsApplicationAccess: true,
+        usesEncryptedRam: true,
     },
-    architecturalProperties: { grantsApplicationAccess: true },
-});
-export const encryptedRamComponent = component({
+};
+export const encryptedRamComponent = {
     id: "encrypted-ram",
     name: "Encrypted RAM",
     area: "connection-method",
-    description: "Protects connection material held in temporary memory.",
-    icon: "./assets/components-individual/encrypted-ram.png",
+    description: "Represents the protection of sensitive session and connection information while it is stored temporarily in memory using encryption.",
+    icon: icon("encrypted-ram"),
+    isSaytecComponent: false,
     allowedAreaIds: ["connection-method"],
-    configuration: {},
+    configuration: [bool("encryptedRam", "Encrypted RAM", true)],
     architecturalProperties: { usesEncryptedRam: true },
-});
-export const mutualTlsComponent = component({
+};
+export const mutualTlsComponent = {
     id: "mutual-tls",
     name: "Mutual TLS",
     area: "connection-method",
-    description: "Mutually authenticates both ends of the connection.",
-    icon: "./assets/components-individual/mutual-tls.png",
+    description: "Represents Mutual Transport Layer Security, where both the client and server authenticate each other using certificates before establishing a trusted encrypted connection.",
+    icon: icon("mutual-tls"),
+    isSaytecComponent: false,
     allowedAreaIds: ["connection-method"],
-    configuration: {},
-    architecturalProperties: {
-        authenticatesUser: true,
-        encryptsConnection: true,
-    },
-});
-export const aes256Component = component({
+    configuration: [],
+    architecturalProperties: { authenticatesBeforeCommunication: true },
+};
+export const aes256EncryptionComponent = {
     id: "aes-256-encryption",
     name: "AES-256 Encryption",
     area: "connection-method",
-    description: "Strong encryption for connection data.",
-    icon: "./assets/components-individual/aes-256-encryption.png",
+    description: "Represents strong AES-256 encryption used to protect sensitive data and connection information against unauthorized reading.",
+    icon: icon("aes-256-encryption"),
+    isSaytecComponent: false,
     allowedAreaIds: ["connection-method"],
-    configuration: {},
-    architecturalProperties: { encryptsConnection: true },
-});
-export const pfsComponent = component({
+    configuration: [],
+    architecturalProperties: {},
+};
+export const perfectForwardSecrecyComponent = {
     id: "perfect-forward-secrecy",
     name: "Perfect Forward Secrecy",
     area: "connection-method",
-    description: "Independent session keys limit historical exposure.",
-    icon: "./assets/components-individual/perfect-forward-secrecy.png",
+    description: "Uses independent temporary session keys so that compromise of long-term cryptographic material does not automatically expose previously protected sessions.",
+    icon: icon("perfect-forward-secrecy"),
+    isSaytecComponent: false,
     allowedAreaIds: ["connection-method"],
-    configuration: {},
-    architecturalProperties: { encryptsConnection: true },
-});
-export const virtualNetworkInterfaceComponent = component({
+    configuration: [],
+    architecturalProperties: {},
+};
+export const virtualNetworkInterfaceComponent = {
     id: "virtual-network-interface",
     name: "Virtual Network Interface",
     area: "connection-method",
-    description: "Creates a protected-network interface on the client.",
-    icon: "./assets/components-individual/virtual-network-interface.png",
+    description: "Represents a virtual network adapter created on the client that can make the client participate in or interact with the protected network at the network level.",
+    icon: icon("virtual-network-interface"),
+    isSaytecComponent: false,
     allowedAreaIds: ["connection-method"],
-    configuration: {},
-    architecturalProperties: {
-        createsVirtualNetworkInterface: true,
-        assignsProtectedNetworkAddress: true,
-        exposesNetworkInformation: true,
-    },
-});
-export const corporateNetworkComponent = component({
+    configuration: [
+        bool("virtualNetworkInterface", "Virtual network interface", true),
+    ],
+    architecturalProperties: { createsVirtualNetworkInterface: true },
+};
+export const corporateNetworkComponent = {
     id: "corporate-network",
     name: "Corporate Network",
     area: "reachable-resources",
-    description: "Broad access to the protected corporate network.",
-    icon: "./assets/components-individual/corporate-network.png",
+    description: "Represents broad access to the organization's internal network, where multiple protected systems and services may become reachable by the client.",
+    icon: icon("corporate-network"),
+    isSaytecComponent: false,
     allowedAreaIds: ["reachable-resources"],
-    configuration: {},
+    configuration: [],
     architecturalProperties: {
         grantsNetworkAccess: true,
         exposesNetworkInformation: true,
     },
-});
-export const restrictedSubnetComponent = component({
+};
+export const restrictedSubnetComponent = {
     id: "restricted-subnet",
     name: "Restricted Subnet",
     area: "reachable-resources",
-    description: "Network access limited to a defined subnet.",
-    icon: "./assets/components-individual/restricted-subnet.png",
+    description: "Represents network-level access limited to a specific internal subnet rather than the entire corporate network.",
+    icon: icon("restricted-subnet"),
+    isSaytecComponent: false,
     allowedAreaIds: ["reachable-resources"],
-    configuration: {},
+    configuration: [],
     architecturalProperties: {
         grantsNetworkAccess: true,
         exposesNetworkInformation: true,
     },
-});
-export const internalWebApplicationComponent = component({
+};
+export const internalWebApplicationComponent = {
     id: "internal-web-application",
     name: "Internal Web Application",
     area: "reachable-resources",
-    description: "An approved internal web application.",
-    icon: "./assets/components-individual/internal-web-application.png",
+    description: "Represents a protected internal web application that the user can access without necessarily receiving access to the wider corporate network.",
+    icon: icon("internal-web-application"),
+    isSaytecComponent: false,
     allowedAreaIds: ["reachable-resources"],
-    configuration: {},
+    configuration: [],
     architecturalProperties: { grantsApplicationAccess: true },
-});
-export const administrativeApplicationComponent = component({
-    id: "administrative-application",
-    name: "Administrative Application",
-    area: "reachable-resources",
-    description: "A privileged administrative application.",
-    icon: "./assets/components-individual/administrative-application.png",
-    allowedAreaIds: ["reachable-resources"],
-    configuration: {},
-    architecturalProperties: { grantsApplicationAccess: true },
-});
-export const partnerApplicationComponent = component({
-    id: "partner-application",
-    name: "Partner Application",
-    area: "reachable-resources",
-    description: "An application exposed specifically to a partner.",
-    icon: "./assets/components-individual/partner-application.png",
-    allowedAreaIds: ["reachable-resources"],
-    configuration: {},
-    architecturalProperties: { grantsApplicationAccess: true },
-});
-export const virtualMachineComponent = component({
+};
+export const virtualMachineComponent = {
     id: "virtual-machine",
     name: "Virtual Machine",
     area: "reachable-resources",
-    description: "A specific protected virtual machine.",
-    icon: "./assets/components-individual/virtual-machine.png",
+    description: "Represents a specific virtual machine that can be accessed as an authorized protected resource.",
+    icon: icon("virtual-machine"),
+    isSaytecComponent: false,
     allowedAreaIds: ["reachable-resources"],
-    configuration: {},
+    configuration: [],
     architecturalProperties: { grantsApplicationAccess: true },
-});
-export const multipleApplicationsComponent = component({
-    id: "multiple-internal-applications",
-    name: "Multiple Internal Applications",
-    area: "reachable-resources",
-    description: "Several internal resources reachable by the client.",
-    icon: "./assets/components-individual/multiple-internal-applications.png",
-    allowedAreaIds: ["reachable-resources"],
-    configuration: {},
-    architecturalProperties: {
-        grantsNetworkAccess: true,
-        exposesNetworkInformation: true,
-    },
-});
-export const externalIdentityProviderComponent = component({
+};
+export const externalIdentityProviderComponent = {
     id: "external-identity-provider",
     name: "External Identity Provider",
     area: "third-party-systems",
-    description: "Microsoft IdP, Okta or another external identity provider.",
-    icon: "./assets/components-individual/external-identity-provider.png",
+    description: "Represents an external service that provides user identity information or identity assertions to the architecture. It may act as the primary identity source, a secondary identity signal, or a supporting identity service depending on its configuration.",
+    icon: icon("external-identity-provider"),
+    isSaytecComponent: false,
     allowedAreaIds: ["third-party-systems"],
-    configuration: {
-        identityRole: {
-            type: "select",
-            label: "Identity Role",
-            options: [
-                "Primary Authenticator",
-                "Secondary Identity Signal",
-                "SSO After Authentication",
-                "Application-Only Dependency",
-            ],
-            defaultValue: "Primary Authenticator",
-        },
-    },
+    configuration: [
+        select("identityRole", "Identity role", "Secondary Identity Signal", [
+            "Primary Authenticator",
+            "Secondary Identity Signal",
+            "SSO After Authentication",
+            "Application-Only Dependency",
+        ]),
+    ],
     architecturalProperties: {},
-});
-export const externalSsoComponent = component({
-    id: "external-sso",
-    name: "External SSO",
+};
+export const externalAuthenticationServiceComponent = {
+    id: "external-authentication-service",
+    name: "External Authentication Service",
     area: "third-party-systems",
-    description: "External application sign-on after or during authentication.",
-    icon: "./assets/components-individual/external-sso.png",
+    description: "Represents an external service that directly performs or participates in the authentication decision used to determine whether the user may access protected resources.",
+    icon: icon("external-authentication-service"),
+    isSaytecComponent: false,
     allowedAreaIds: ["third-party-systems"],
-    configuration: {
-        identityRole: {
-            type: "select",
-            label: "Identity Role",
-            options: [
-                "Primary Authenticator",
-                "Secondary Identity Signal",
-                "SSO After Authentication",
-                "Application-Only Dependency",
-            ],
-            defaultValue: "SSO After Authentication",
-        },
-    },
-    architecturalProperties: {},
-});
-export const externalMonitoringComponent = component({
-    id: "external-monitoring-service",
-    name: "External Monitoring Service",
-    area: "third-party-systems",
-    description: "External monitoring and security-event processing.",
-    icon: "./assets/components-individual/external-monitoring-service.png",
-    allowedAreaIds: ["third-party-systems"],
-    configuration: {},
-    architecturalProperties: { monitorsSession: true },
-});
-export const externalCloudComponent = component({
+    configuration: [],
+    architecturalProperties: { dependsOnExternalIdentityProvider: true },
+};
+export const externalCloudServiceComponent = {
     id: "external-cloud-service",
     name: "External Cloud Service",
     area: "third-party-systems",
-    description: "An externally hosted application or data dependency.",
-    icon: "./assets/components-individual/external-cloud-service.png",
+    description: "Represents a cloud-hosted service operated by an external provider that the architecture depends on for application functionality, infrastructure, storage, or processing.",
+    icon: icon("external-cloud-service"),
+    isSaytecComponent: false,
     allowedAreaIds: ["third-party-systems"],
-    configuration: {},
+    configuration: [],
     architecturalProperties: {},
-});
+};
+export const externalMonitoringServiceComponent = {
+    id: "external-monitoring-service",
+    name: "External Monitoring Service",
+    area: "third-party-systems",
+    description: "Represents an externally operated monitoring or security service that receives logs, telemetry, security events, or operational information from the architecture.",
+    icon: icon("external-monitoring-service"),
+    isSaytecComponent: false,
+    allowedAreaIds: ["third-party-systems"],
+    configuration: [],
+    architecturalProperties: {},
+};
 export const componentList = [
-    userComponent,
     clientDeviceComponent,
-    saytecHardwareTokenComponent,
+    secureDeviceComponent,
+    saytrustHardwareSecurityTokenComponent,
     biometricVerificationComponent,
     clientPinComponent,
-    zeroFootprintClientComponent,
     privateCaComponent,
     userCertificateComponent,
     x509CertificateComponent,
     certificateValidationComponent,
-    certificateRevocationComponent,
+    certificateRevocationCheckComponent,
     otpComponent,
-    saytecServerComponent,
+    saytrustServerComponent,
     policyEngineComponent,
-    policyEnforcementComponent,
-    leastPrivilegeComponent,
+    clientPrivilegeManagementComponent,
+    leastPrivilegeControlComponent,
     applicationAuthorizationComponent,
     sessionRevocationComponent,
-    vpnGatewayComponent,
+    gatewayComponent,
     networkConnectionComponent,
     applicationConnectionComponent,
     ramApplicationTunnelComponent,
     encryptedRamComponent,
     mutualTlsComponent,
-    aes256Component,
-    pfsComponent,
+    aes256EncryptionComponent,
+    perfectForwardSecrecyComponent,
     virtualNetworkInterfaceComponent,
     corporateNetworkComponent,
     restrictedSubnetComponent,
     internalWebApplicationComponent,
-    administrativeApplicationComponent,
-    partnerApplicationComponent,
     virtualMachineComponent,
-    multipleApplicationsComponent,
     externalIdentityProviderComponent,
-    externalSsoComponent,
-    externalMonitoringComponent,
-    externalCloudComponent,
+    externalAuthenticationServiceComponent,
+    externalCloudServiceComponent,
+    externalMonitoringServiceComponent,
 ];
-const componentIndex = new Map(componentList.map((item) => [item.id, item]));
+const componentIndex = new Map(componentList.map((component) => [component.id, component]));
 export function getComponentById(id) {
     return componentIndex.get(id);
 }
-export function getDefaultConfiguration(id) {
-    const definition = getComponentById(id);
-    if (!definition)
-        return {};
-    return Object.fromEntries(Object.entries(definition.configuration).map(([key, field]) => [
-        key,
-        field.defaultValue,
-    ]));
+export function getDefaultConfiguration(component) {
+    return Object.fromEntries(component.configuration.map((item) => [item.id, item.defaultValue]));
 }
 //# sourceMappingURL=components.js.map

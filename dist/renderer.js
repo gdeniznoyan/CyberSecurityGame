@@ -1,265 +1,322 @@
-import { architectureAreas } from "./areas.js";
 import { componentList, getComponentById } from "./components.js";
 import { evaluateArchitecture } from "./evaluator.js";
-import { getComponentConfiguration, getConnections, getPlacements, } from "./state.js";
-const areaVisuals = {
-    "user-device": "./assets/architecture-zones/user-device.png",
-    "identity-route": "./assets/architecture-zones/identity-route.png",
-    "access-decision-enforcement": "./assets/architecture-zones/access-decision-enforcement.png",
-    "connection-method": "./assets/architecture-zones/connection-method.png",
-    "reachable-resources": "./assets/architecture-zones/reachable-resources.png",
-    "third-party-systems": "./assets/architecture-zones/third-party-systems.png",
-};
-let configuredComponentId = null;
-let connectionSourceId = null;
-export function getConnectionSourceId() {
-    return connectionSourceId;
-}
-export function setConnectionSourceId(id) {
-    connectionSourceId = id;
-    renderArchitecture();
-}
-export function setConfiguredComponentId(id) {
-    configuredComponentId = id;
-    renderArchitecture();
-}
-function componentVisual(definition) {
+import { getConnections, getPlacements } from "./state.js";
+const stages = [
+    {
+        areaId: "user-device",
+        title: "User & Device",
+        subtitle: "Start the request",
+        image: "./assets/journey-v2/user-device.png",
+    },
+    {
+        areaId: "identity-route",
+        title: "Identity",
+        subtitle: "Prove who is connecting",
+        image: "./assets/journey-v2/identity.png",
+    },
+    {
+        areaId: "access-enforcement",
+        title: "Access Control",
+        subtitle: "Decide and enforce",
+        image: "./assets/journey-v2/access-control.png",
+    },
+    {
+        areaId: "connection-method",
+        title: "Connection",
+        subtitle: "Create the approved path",
+        image: "./assets/journey-v2/secure-connection.png",
+    },
+    {
+        areaId: "reachable-resources",
+        title: "Protected Resources",
+        subtitle: "Limit what can be reached",
+        image: "./assets/journey-v2/protected-resource.png",
+    },
+];
+const toolboxGroups = [
+    { title: "Device", areaId: "user-device" },
+    { title: "Identity", areaId: "identity-route" },
+    { title: "Access", areaId: "access-enforcement" },
+    { title: "Connection", areaId: "connection-method" },
+    { title: "Resources", areaId: "reachable-resources" },
+    { title: "External", areaId: "third-party-systems" },
+];
+function componentVisual(component) {
     const fragment = document.createDocumentFragment();
-    const box = document.createElement("span");
-    box.className = "component-image";
+    const imageBox = document.createElement("span");
+    imageBox.className = "component-image";
     const image = document.createElement("img");
-    image.src = definition.icon;
-    image.alt = "";
-    image.addEventListener("error", () => box.remove());
-    box.append(image);
-    const label = document.createElement("span");
-    label.className = "component-label";
-    label.textContent = definition.name;
-    fragment.append(box, label);
-    return fragment;
-}
-function renderArea(areaId) {
-    const area = architectureAreas.find((item) => item.id === areaId);
-    const section = document.createElement("article");
-    section.className = "architecture-section";
-    section.dataset.areaId = areaId;
-    const heading = document.createElement("h3");
-    heading.textContent = area?.name ?? areaId;
-    const imageBox = document.createElement("div");
-    imageBox.className = "image-placeholder";
-    const image = document.createElement("img");
-    image.src = areaVisuals[areaId];
+    image.src = component.icon;
     image.alt = "";
     imageBox.append(image);
+    const copy = document.createElement("span");
+    copy.className = "component-copy";
+    const label = document.createElement("span");
+    label.className = "component-label";
+    label.textContent = component.name;
+    copy.append(label);
+    if (component.isSaytecComponent) {
+        const badge = document.createElement("small");
+        badge.className = "saytec-badge";
+        badge.textContent = "sayTRUST";
+        copy.append(badge);
+    }
+    fragment.append(imageBox, copy);
+    return fragment;
+}
+function renderPlacedComponent(placement) {
+    const component = getComponentById(placement.componentId);
+    const row = document.createElement("div");
+    row.className = "placed-component";
+    row.dataset.componentNode = placement.componentId;
+    if (!component)
+        return row;
+    const image = document.createElement("img");
+    image.src = component.icon;
+    image.alt = "";
+    const name = document.createElement("span");
+    name.textContent = component.name;
+    const actions = document.createElement("span");
+    actions.className = "placed-actions";
+    const link = document.createElement("button");
+    link.type = "button";
+    link.className = "node-action connect-button";
+    link.dataset.connectComponent = component.id;
+    link.title = "Connect this component";
+    link.textContent = "↗";
+    const settings = document.createElement("button");
+    settings.type = "button";
+    settings.className = "node-action";
+    settings.dataset.editComponent = component.id;
+    settings.title = "Configure";
+    settings.textContent = "⚙";
+    settings.hidden = component.configuration.length === 0;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "node-action remove-button";
+    remove.dataset.removeComponent = component.id;
+    remove.title = "Remove";
+    remove.textContent = "×";
+    actions.append(link, settings, remove);
+    row.append(image, name, actions);
+    return row;
+}
+function renderDropZone(areaId) {
     const zone = document.createElement("div");
     zone.className = "drop-slot area-drop-zone";
     zone.dataset.areaId = areaId;
-    const placed = getPlacements().filter((item) => item.areaId === areaId);
-    if (placed.length) {
-        imageBox.classList.add("placed-icon-gallery");
-        imageBox.replaceChildren(...placed.flatMap(({ componentId }) => {
-            const definition = getComponentById(componentId);
-            if (!definition)
-                return [];
-            const placedIcon = document.createElement("img");
-            placedIcon.src = definition.icon;
-            placedIcon.alt = definition.name;
-            placedIcon.title = definition.name;
-            return [placedIcon];
-        }));
-    }
-    if (!placed.length) {
+    const placements = getPlacements().filter((item) => item.areaId === areaId);
+    if (!placements.length) {
         const placeholder = document.createElement("span");
         placeholder.className = "slot-placeholder";
-        placeholder.textContent = "Drop compatible components here";
+        placeholder.textContent = "Drop here";
         zone.append(placeholder);
+        return zone;
     }
-    else {
-        zone.classList.add("occupied");
-        const list = document.createElement("div");
-        list.className = "placed-components";
-        placed.forEach(({ componentId }) => {
-            const definition = getComponentById(componentId);
-            if (!definition)
-                return;
-            const row = document.createElement("div");
-            row.className = "placed-component";
-            if (connectionSourceId === componentId)
-                row.classList.add("connection-source");
-            const identity = document.createElement("span");
-            identity.className = "placed-component-identity";
-            const icon = document.createElement("img");
-            icon.className = "placed-component-icon";
-            icon.src = definition.icon;
-            icon.alt = "";
-            const name = document.createElement("span");
-            name.textContent = definition.name;
-            identity.append(icon, name);
-            const actions = document.createElement("span");
-            actions.className = "placed-component-actions";
-            const connect = document.createElement("button");
-            connect.type = "button";
-            connect.className = "component-action-button";
-            connect.dataset.connectComponent = componentId;
-            connect.textContent = connectionSourceId ? "Link" : "Connect";
-            actions.append(connect);
-            if (Object.keys(definition.configuration).length) {
-                const configure = document.createElement("button");
-                configure.type = "button";
-                configure.className = "component-action-button";
-                configure.dataset.configureComponent = componentId;
-                configure.textContent = "Configure";
-                actions.append(configure);
-            }
-            const remove = document.createElement("button");
-            remove.type = "button";
-            remove.className = "remove-button";
-            remove.dataset.removeComponent = componentId;
-            remove.dataset.areaId = areaId;
-            remove.textContent = "×";
-            actions.append(remove);
-            row.append(identity, actions);
-            list.append(row);
-        });
-        zone.append(list);
-    }
-    section.append(heading, imageBox, zone);
-    return section;
+    zone.classList.add("occupied");
+    const list = document.createElement("div");
+    list.className = "placed-components";
+    placements.forEach((item) => list.append(renderPlacedComponent(item)));
+    zone.append(list);
+    return zone;
 }
-function renderConnections() {
-    const panel = document.createElement("section");
-    panel.className = "architecture-model-controls";
-    const heading = document.createElement("h3");
-    heading.textContent = "Component Connections";
-    const help = document.createElement("p");
-    help.textContent = connectionSourceId
-        ? "Choose Link on the destination component."
-        : "Choose Connect on a source component, then Link on its destination.";
+function renderStage(stage, index) {
+    const card = document.createElement("article");
+    card.className = "journey-stage";
+    card.dataset.stage = stage.areaId;
+    if (getPlacements().some((item) => item.areaId === stage.areaId))
+        card.classList.add("stage-active");
+    if (stage.areaId === "reachable-resources")
+        card.classList.add("protected-stage");
+    const head = document.createElement("div");
+    head.className = "stage-head";
+    const step = document.createElement("span");
+    step.className = "stage-step";
+    step.textContent = String(index + 1);
+    const copy = document.createElement("div");
+    const title = document.createElement("h3");
+    title.textContent = stage.title;
+    const subtitle = document.createElement("p");
+    subtitle.textContent = stage.subtitle;
+    copy.append(title, subtitle);
+    head.append(step, copy);
+    const visual = document.createElement("div");
+    visual.className = "stage-visual";
+    const image = document.createElement("img");
+    image.src = stage.image;
+    image.alt = "";
+    visual.append(image);
+    card.append(head, visual, renderDropZone(stage.areaId));
+    return card;
+}
+function renderConnector(index) {
+    const connector = document.createElement("div");
+    connector.className = "journey-connector";
+    const line = document.createElement("span");
+    const arrow = document.createElement("span");
+    arrow.className = "connector-arrow";
+    arrow.textContent = "›";
+    connector.append(line, arrow);
+    if (index === 1) {
+        connector.classList.add("internet-crossing");
+        const label = document.createElement("span");
+        label.className = "internet-label";
+        label.textContent = "PUBLIC INTERNET";
+        const image = document.createElement("img");
+        image.className = "internet-globe";
+        image.src = "./assets/journey-v2/internet-crossing.png";
+        image.alt = "Public Internet";
+        connector.append(image, label);
+    }
+    return connector;
+}
+function renderConnectionMap() {
+    const box = document.createElement("section");
+    box.className = "connection-map";
+    const heading = document.createElement("div");
+    heading.className = "connection-map-heading";
+    heading.innerHTML =
+        "<strong>Active connections</strong><span>Select ↗ on a source, then on its destination</span>";
+    box.append(heading);
     const list = document.createElement("div");
     list.className = "connection-list";
     const connections = getConnections();
     if (!connections.length) {
         const empty = document.createElement("span");
         empty.className = "connection-empty";
-        empty.textContent = "No connections yet.";
+        empty.textContent = "No component links yet";
         list.append(empty);
     }
     connections.forEach((connection) => {
-        const row = document.createElement("div");
-        row.className = "connection-row";
-        const label = document.createElement("span");
-        label.textContent = `${getComponentById(connection.sourceComponentId)?.name ?? connection.sourceComponentId} → ${getComponentById(connection.targetComponentId)?.name ?? connection.targetComponentId}`;
+        const item = document.createElement("div");
+        item.className = "connection-item";
+        const source = getComponentById(connection.sourceComponentId)?.name ??
+            connection.sourceComponentId;
+        const target = getComponentById(connection.targetComponentId)?.name ??
+            connection.targetComponentId;
+        const text = document.createElement("span");
+        text.textContent = `${source}  →  ${target}`;
         const remove = document.createElement("button");
         remove.type = "button";
         remove.dataset.removeConnectionSource = connection.sourceComponentId;
         remove.dataset.removeConnectionTarget = connection.targetComponentId;
-        remove.textContent = "Remove";
-        row.append(label, remove);
-        list.append(row);
+        remove.textContent = "×";
+        item.append(text, remove);
+        list.append(item);
     });
-    panel.append(heading, help, list, renderConfiguration());
+    box.append(list);
+    return box;
+}
+function renderSettingsPanel() {
+    const panel = document.createElement("aside");
+    panel.id = "component-settings";
+    panel.className = "component-settings";
+    panel.hidden = true;
     return panel;
 }
-function renderConfiguration() {
-    const panel = document.createElement("div");
-    panel.className = "configuration-panel";
-    const definition = configuredComponentId
-        ? getComponentById(configuredComponentId)
-        : undefined;
-    if (!definition ||
-        !getPlacements().some((item) => item.componentId === definition.id)) {
-        configuredComponentId = null;
-        return panel;
-    }
-    const heading = document.createElement("h3");
-    heading.textContent = `${definition.name} Configuration`;
-    const fields = document.createElement("div");
-    fields.className = "configuration-fields";
-    const values = getComponentConfiguration(definition.id);
-    Object.entries(definition.configuration).forEach(([key, field]) => {
-        const label = document.createElement("label");
-        const text = document.createElement("span");
-        text.textContent = field.label;
-        if (field.type === "boolean") {
-            const input = document.createElement("input");
-            input.type = "checkbox";
-            input.checked = values[key] === true;
-            input.dataset.configurationComponent = definition.id;
-            input.dataset.configurationKey = key;
-            label.append(input, text);
-        }
-        else {
-            const select = document.createElement("select");
-            select.dataset.configurationComponent = definition.id;
-            select.dataset.configurationKey = key;
-            field.options.forEach((option) => {
-                const item = document.createElement("option");
-                item.value = option;
-                item.textContent = option;
-                item.selected = values[key] === option;
-                select.append(item);
-            });
-            label.append(text, select);
-        }
-        fields.append(label);
-    });
-    panel.append(heading, fields);
+function renderThirdParty() {
+    const panel = document.createElement("aside");
+    panel.className = "external-services-panel";
+    const copy = document.createElement("div");
+    copy.innerHTML =
+        "<span>OPTIONAL SIDE LANE</span><h3>Third-Party Systems</h3><p>Connect an external service only when it affects the active path.</p>";
+    panel.append(copy, renderDropZone("third-party-systems"));
     return panel;
 }
 export function renderArchitecture() {
     const canvas = document.getElementById("architecture-canvas");
     if (!canvas)
         return;
-    const layout = document.createElement("div");
-    layout.className = "architecture-layout";
-    const path = document.createElement("div");
-    path.className = "main-path architecture-access-path";
-    architectureAreas
-        .filter((area) => !area.sideLane)
-        .forEach((area, index) => {
-        if (index) {
-            const arrow = document.createElement("div");
-            arrow.className = "flow-arrow";
-            arrow.textContent = "→";
-            path.append(arrow);
-        }
-        path.append(renderArea(area.id));
+    const journey = document.createElement("div");
+    journey.className = "customer-journey";
+    stages.forEach((stage, index) => {
+        if (index)
+            journey.append(renderConnector(index - 1));
+        journey.append(renderStage(stage, index));
     });
-    const sideLane = document.createElement("div");
-    sideLane.className = "third-party-lane architecture-side-lane";
-    const sideLaneHeading = document.createElement("div");
-    sideLaneHeading.className = "side-lane-heading";
-    const sideLaneTitle = document.createElement("strong");
-    sideLaneTitle.textContent = "External Side Lane";
-    const sideLaneDescription = document.createElement("span");
-    sideLaneDescription.textContent = "Outside the main access path";
-    sideLaneHeading.append(sideLaneTitle, sideLaneDescription);
-    sideLane.append(sideLaneHeading, renderArea("third-party-systems"));
-    layout.append(path, sideLane);
-    canvas.replaceChildren(layout, renderConnections());
+    const secondary = document.createElement("div");
+    secondary.className = "canvas-secondary";
+    secondary.append(renderThirdParty());
+    canvas.replaceChildren(journey, secondary, renderConnectionMap(), renderSettingsPanel());
+}
+export function showComponentSettings(componentId) {
+    const panel = document.getElementById("component-settings");
+    const placement = getPlacements().find((item) => item.componentId === componentId);
+    const component = getComponentById(componentId);
+    if (!panel || !placement || !component || !component.configuration.length)
+        return;
+    panel.hidden = false;
+    panel.dataset.settingsComponent = componentId;
+    const header = document.createElement("div");
+    header.className = "settings-header";
+    const title = document.createElement("div");
+    title.innerHTML = `<small>Configuration</small><strong>${component.name}</strong>`;
+    const close = document.createElement("button");
+    close.type = "button";
+    close.dataset.closeSettings = "true";
+    close.textContent = "×";
+    header.append(title, close);
+    const description = document.createElement("p");
+    description.className = "settings-description";
+    description.textContent = component.description;
+    const form = document.createElement("div");
+    form.className = "settings-form";
+    component.configuration.forEach((definition) => {
+        const label = document.createElement("label");
+        label.className = "setting-row";
+        const text = document.createElement("span");
+        text.textContent = definition.label;
+        let control;
+        if (definition.type === "boolean") {
+            const input = document.createElement("input");
+            input.type = "checkbox";
+            input.checked = placement.configuration[definition.id] === true;
+            control = input;
+        }
+        else {
+            const select = document.createElement("select");
+            definition.options.forEach((option) => {
+                const item = document.createElement("option");
+                item.value = option;
+                item.textContent = option;
+                select.append(item);
+            });
+            select.value = String(placement.configuration[definition.id]);
+            control = select;
+        }
+        control.dataset.configurationKey = definition.id;
+        control.dataset.configurationComponent = componentId;
+        label.append(text, control);
+        form.append(label);
+    });
+    panel.replaceChildren(header, description, form);
 }
 export function renderToolbox() {
     const toolbox = document.getElementById("component-toolbox");
     if (!toolbox)
         return;
     const fragment = document.createDocumentFragment();
-    architectureAreas.forEach((area) => {
+    toolboxGroups.forEach((definition) => {
         const group = document.createElement("section");
         group.className = "toolbox-group";
-        const heading = document.createElement("h3");
-        heading.textContent = area.name;
+        const heading = document.createElement("div");
+        heading.className = "toolbox-group-heading";
+        const title = document.createElement("span");
+        title.textContent = definition.title;
+        const components = componentList.filter((item) => item.allowedAreaIds.includes(definition.areaId));
+        const count = document.createElement("span");
+        count.textContent = String(components.length);
+        heading.append(title, count);
         const list = document.createElement("div");
         list.className = "component-list";
-        componentList
-            .filter((item) => item.area === area.id)
-            .forEach((definition) => {
+        components.forEach((component) => {
             const card = document.createElement("button");
             card.type = "button";
             card.className = "component-card";
             card.draggable = true;
-            card.dataset.componentId = definition.id;
-            card.title = definition.description;
-            card.append(componentVisual(definition));
+            card.dataset.componentId = component.id;
+            card.title = component.description;
+            card.append(componentVisual(component));
             list.append(card);
         });
         group.append(heading, list);
@@ -267,66 +324,33 @@ export function renderToolbox() {
     });
     toolbox.replaceChildren(fragment);
 }
-const analysisFields = [
-    ["authenticationModel", "Authentication Model"],
-    ["authenticationDependency", "Authentication Dependency"],
-    ["policyEvaluation", "Policy Evaluation"],
-    ["policyEnforcement", "Policy Enforcement"],
-    ["connectionType", "Connection Type"],
-    ["clientNetworkVisibility", "Client Network Visibility"],
-    ["clientReachability", "Client Reachability"],
-    ["networkParticipation", "Network Participation"],
-];
-function textSection(title, content) {
-    const section = document.createElement("section");
-    section.className = "analysis-group architecture-analysis-group";
+function insight(title, output, status = "neutral") {
+    const card = document.createElement("section");
+    card.className = "insight-card";
+    card.dataset.status = status;
     const heading = document.createElement("h3");
     heading.textContent = title;
-    const list = document.createElement("ul");
-    list.className = "analysis-items";
-    const values = Array.isArray(content) ? content : [content];
-    (values.length ? values : ["None identified."]).forEach((value) => {
-        const item = document.createElement("li");
-        item.className = "insight-item";
-        item.textContent = value;
-        list.append(item);
-    });
-    section.append(heading, list);
-    return section;
+    const text = document.createElement("p");
+    text.textContent = output;
+    card.append(heading, text);
+    return card;
 }
 export function renderEvaluation() {
     const list = document.getElementById("result-insights");
     const score = document.getElementById("security-score-value");
-    const classification = document.getElementById("architecture-classification-value");
     const chart = document.querySelector(".security-score-chart");
-    if (!list || !score || !classification || !chart)
+    const classification = document.getElementById("architecture-result-value");
+    if (!list || !score || !chart || !classification)
         return;
-    const analysis = evaluateArchitecture();
-    classification.textContent = analysis.classification;
-    const path = analysis.accessPath
-        .map((id) => getComponentById(id)?.name ?? id)
-        .join(" → ");
-    const sections = [
-        textSection("Access Path", path || "No complete connected access path was found."),
-        ...analysisFields.map(([key, title]) => textSection(title, String(analysis[key]))),
-        textSection("Identified Security Openings", analysis.openings),
-        textSection("Recommended Architecture Changes", analysis.recommendations),
-    ];
-    list.replaceChildren(...sections);
-    score.textContent = `${analysis.score}%`;
-    chart.style.setProperty("--score-progress", String(analysis.score));
-}
-export function clearEvaluation() {
-    const list = document.getElementById("result-insights");
-    const score = document.getElementById("security-score-value");
-    const classification = document.getElementById("architecture-classification-value");
-    const chart = document.querySelector(".security-score-chart");
-    list?.replaceChildren();
-    if (score)
-        score.textContent = "--";
-    if (classification)
-        classification.textContent = "Incomplete Architecture";
-    chart?.style.setProperty("--score-progress", "0");
+    const result = evaluateArchitecture();
+    classification.textContent = result.classification;
+    score.textContent = String(result.score);
+    chart.style.setProperty("--score-progress", String(result.score));
+    list.replaceChildren(insight("Access Path", result.accessPath.length
+        ? result.accessPath.join(" → ")
+        : "No complete path from user to resource.", result.accessPath.length ? "good" : "warning"), insight("Authentication Model", result.authenticationModel), insight("Authentication Dependency", result.authenticationDependency), insight("Policy Evaluation", result.policyEvaluation, result.properties.evaluatesAccessPolicy ? "good" : "warning"), insight("Policy Enforcement", result.policyEnforcement, result.properties.enforcesAccessPolicy ? "good" : "warning"), insight("Connection Type", result.connectionType), insight("Client Network Visibility", result.clientNetworkVisibility, result.properties.exposesNetworkInformation ? "warning" : "good"), insight("Client Reachability", result.clientReachability), insight("Network Participation", result.networkParticipation, result.properties.createsVirtualNetworkInterface ? "warning" : "good"), insight("Detected Openings", result.openings.length
+        ? result.openings.join(" · ")
+        : "No opening detected on the effective path.", result.openings.length ? "warning" : "good"), insight("Recommended Change", result.recommendation));
 }
 export function renderBuilder() {
     renderArchitecture();
