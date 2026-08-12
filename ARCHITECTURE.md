@@ -1,102 +1,35 @@
-# System Architecture
+# Architecture
 
-The architecture follows a layered security model.
+The application stores a graph, not just a list of selected components.
 
-The user begins from an Access Device and passes through identity verification, secure session establishment, network protection and policy-based access control before reaching an approved application.
+## Stored State
 
-The main architecture flow is:
+- A placement stores the component ID, its canvas area and current configuration.
+- A connection stores a source component ID and a target component ID.
+- Removing a component also removes every connection that references it.
+- Reset clears all placements and connections.
 
-Access Device
-↓
-Trust and Identity Services
-↓
-Secure Session
-↓
-Invisible Network Protection
-↓
-Policy and Access Control
-↓
-Protected Application
+## Evaluation Path
 
-Third-Party Services are represented as a separate optional area.
+The evaluator starts from placed components in `User and Device`. It follows outgoing connections and finds a route that ends in `Reachable Resources`. If several routes exist, the longest complete route is evaluated.
 
-## Access Device
+Components outside the selected route do not automatically provide security. For example, a Private CA does not establish organization-controlled trust unless a certificate and validation are also active on the same route.
 
-Represents the device used to start the connection.
+## Effective Properties
 
-Components:
+Component properties and configuration are converted into architecture behavior such as:
 
-- Password
-- Biometric Authentication
-- Hardware Security Token
-- Zero-Footprint Client
+- authenticates the user;
+- evaluates and enforces policy;
+- grants network-level or application-level access;
+- creates a virtual network interface;
+- exposes protected network information;
+- uses encrypted RAM;
+- applies least privilege;
+- validates certificates.
 
-## Trust and Identity Services
+Conflicting properties are preserved. Application access does not hide the risk when the same route also grants broad network access.
 
-Provides identity verification and certificate-based trust.
+## Area Rules
 
-Components:
-
-- Private CA
-- X.509 Certificate
-- Certificate Revocation Check
-- OTP
-
-## Secure Session
-
-Protects the communication session between the client and the protected environment.
-
-Components:
-
-- Mutual TLS
-- RAM Tunneling
-- AES-256 Encryption
-- Perfect Forward Secrecy
-
-## Third-Party Services
-
-Represents services provided by external organizations.
-
-Components:
-
-- External Authentication Service
-- External Cloud Storage
-- External Monitoring Service
-- External Payment Service
-
-In the project's Post-Zero-Trust model, the strongest configuration avoids unnecessary third-party dependencies.
-
-## Invisible Network Protection
-
-Reduces the amount of internal network information exposed to the client.
-
-Components:
-
-- Port Cloaking
-- Hidden IP Path
-- No Virtual Network Interface
-- No Network Participation
-
-## Policy and Access Control
-
-Determines what an authenticated user is allowed to access.
-
-Components:
-
-- Policy Engine
-- Least-Privilege Access
-- Application Allow List
-- PAM-Like Control
-
-## Protected Application
-
-Represents the final resource the user wants to access.
-
-Components:
-
-- Internal Web Application
-- Administrative Application
-- Partner Application
-- Virtual Machine
-
-The client should receive access to the approved application rather than broad access to the protected corporate network.
+Each component declares its compatible areas. A component can be placed once. `Reachable Resources` accepts one target, while the other areas may contain multiple compatible components.

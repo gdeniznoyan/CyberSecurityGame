@@ -1,14 +1,19 @@
 import { getComponentById } from "./components.js";
+import { showComponentSettings } from "./renderer.js";
 import {
+  addConnection,
   addPlacement,
   getPlacements,
   hasPlacement,
+  removeConnection,
   removePlacement,
+  updateConfiguration,
 } from "./state.js";
-import type { AreaId, ComponentId } from "./types.js";
+import type { AreaId, ComponentConfiguration, ComponentId } from "./types.js";
 
 let draggedComponentId: ComponentId | null = null;
 let selectedComponentId: ComponentId | null = null;
+let connectionSourceId: ComponentId | null = null;
 
 function showError(message: string): void {
   const error = document.getElementById("error-message");
@@ -20,12 +25,7 @@ function canPlace(componentId: ComponentId, areaId: AreaId): boolean {
   if (
     !component ||
     !component.allowedAreaIds.includes(areaId) ||
-    hasPlacement(componentId, areaId)
-  )
-    return false;
-  if (
-    areaId === "protected-application" &&
-    getPlacements().some((item) => item.areaId === areaId)
+    hasPlacement(componentId)
   )
     return false;
   return true;
@@ -39,8 +39,8 @@ function place(componentId: ComponentId, areaId: AreaId): void {
     );
     return;
   }
-  if (hasPlacement(componentId, areaId)) {
-    showError(`${component.name} is already placed in this area.`);
+  if (hasPlacement(componentId)) {
+    showError(`${component.name} is already placed in the architecture.`);
     return;
   }
   addPlacement(componentId, areaId);
@@ -115,17 +115,77 @@ export function initializeDragAndDrop(): void {
 
   canvas.addEventListener("click", (event) => {
     const target = event.target as HTMLElement;
+    const closeSettings = target.closest<HTMLButtonElement>(
+      "[data-close-settings]",
+    );
+    if (closeSettings) {
+      const panel = document.getElementById("component-settings");
+      if (panel) panel.hidden = true;
+      return;
+    }
+    const edit = target.closest<HTMLButtonElement>("[data-edit-component]");
+    if (edit) {
+      showComponentSettings(edit.dataset.editComponent ?? "");
+      return;
+    }
+    const connectionButton = target.closest<HTMLButtonElement>(
+      "[data-connect-component]",
+    );
+    if (connectionButton) {
+      const componentId = connectionButton.dataset.connectComponent ?? "";
+      if (!connectionSourceId) {
+        connectionSourceId = componentId;
+        document
+          .querySelector(`[data-component-node="${componentId}"]`)
+          ?.classList.add("connection-source");
+        showError("Now select ↗ on the destination component.");
+      } else {
+        if (!addConnection(connectionSourceId, componentId))
+          showError("This connection cannot be created.");
+        else showError("");
+        connectionSourceId = null;
+      }
+      return;
+    }
+    const removeLink = target.closest<HTMLButtonElement>(
+      "[data-remove-connection-source]",
+    );
+    if (removeLink) {
+      removeConnection(
+        removeLink.dataset.removeConnectionSource ?? "",
+        removeLink.dataset.removeConnectionTarget ?? "",
+      );
+      showError("");
+      return;
+    }
     const remove = target.closest<HTMLButtonElement>("[data-remove-component]");
     if (remove) {
-      removePlacement(
-        remove.dataset.removeComponent ?? "",
-        remove.dataset.areaId as AreaId,
-      );
+      removePlacement(remove.dataset.removeComponent ?? "");
       showError("");
       return;
     }
     const zone = target.closest<HTMLElement>(".area-drop-zone");
     if (zone && selectedComponentId)
       place(selectedComponentId, zone.dataset.areaId as AreaId);
+  });
+
+  canvas.addEventListener("change", (event) => {
+    const control = (event.target as HTMLElement).closest<
+      HTMLInputElement | HTMLSelectElement
+    >("[data-configuration-key]");
+    if (!control) return;
+    const componentId = control.dataset.configurationComponent ?? "";
+    const placement = getPlacements().find(
+      (item) => item.componentId === componentId,
+    );
+    if (!placement) return;
+    const configuration: ComponentConfiguration = {
+      ...placement.configuration,
+    };
+    configuration[control.dataset.configurationKey ?? ""] =
+      control instanceof HTMLInputElement && control.type === "checkbox"
+        ? control.checked
+        : control.value;
+    updateConfiguration(componentId, configuration);
   });
 }

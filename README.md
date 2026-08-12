@@ -1,29 +1,32 @@
 # Cybersecurity Architecture Builder
 
-Cybersecurity Architecture Builder is an educational drag-and-drop web application built with HTML, CSS and TypeScript.
+This project is a browser-based security architecture game built with HTML, CSS and TypeScript. It does not use a framework.
 
-The purpose of the game is to teach how different cybersecurity controls affect the security of a remote-access architecture.
+## User Flow
 
-Users build an architecture by dragging security components into different areas of the Architecture Canvas.
+1. The toolbox displays the component objects defined in `src/components.ts`.
+2. A component can only be dropped into one of its `allowedAreaIds`.
+3. A placed component receives its default configuration.
+4. The user connects placed components with the connect button.
+5. The evaluator follows the connected route from a device to a protected resource.
+6. Only properties active on that route affect classification and score.
+7. The canvas and Security Analysis update after every state change.
 
-The system then analyzes the selected components, calculates a Security Score and displays explanations about:
+## Main Access Flow
 
-- Security controls that are currently active
-- Important or critical controls that are missing
-- Third-party dependencies
-- The selected protected application
-- The overall security level of the architecture
+User and Device -> Identity Route -> Access Decision and Enforcement -> Connection Method -> Reachable Resources
 
-The strongest possible result represents a Post-Zero-Trust architecture.
+Third-Party Systems are shown separately. They affect the result only when connected to the evaluated route.
 
-## Main Architecture Areas
+## Possible Results
 
-1. Access Device
-2. Trust and Identity Services
-3. Secure Session
-4. Third-Party Services
-5. Invisible Network Protection
-6. Policy and Access Control
-7. Protected Application
+- Traditional Access
+- Zero Trust
+- Saytec Post-Zero Trust
+- Hybrid Architecture
+- Incomplete Architecture
+- Broken or Unsafe Architecture
 
-The main Post-Zero-Trust principle of the project is to provide access to approved applications without making the client device a direct participant in the protected corporate network.
+## Build
+
+Run `npm run build`. TypeScript compiles the files in `src` into browser-ready JavaScript in `dist`.

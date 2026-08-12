@@ -1,5 +1,5 @@
-import { initializeDragAndDrop } from "./dragDrop.js";
-import { clearEvaluation, renderBuilder, renderEvaluation, } from "./renderer.js";
+import { initializeDragAndDrop } from "./dragdrop.js";
+import { renderBuilder, renderEvaluation } from "./renderer.js";
 import { getArchitectureState, replaceArchitecture, resetArchitecture, subscribe, } from "./state.js";
 const byId = (id) => document.getElementById(id);
 function initialize() {
@@ -12,15 +12,14 @@ function initialize() {
     const importButton = byId("apply-import-button");
     const handleArchitectureChange = () => {
         renderBuilder();
-        clearEvaluation();
+        renderEvaluation();
     };
     renderBuilder();
-    clearEvaluation();
+    renderEvaluation();
     subscribe(handleArchitectureChange);
     initializeDragAndDrop();
     byId("reset-button")?.addEventListener("click", () => {
         resetArchitecture();
-        clearEvaluation();
         const error = byId("error-message");
         if (error)
             error.textContent = "";

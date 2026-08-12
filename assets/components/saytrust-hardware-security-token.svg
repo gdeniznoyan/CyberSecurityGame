@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="sayTRUST Hardware Security Token">
+  <defs>
+    <linearGradient id="bgToken" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#35214d"/>
+      <stop offset="100%" stop-color="#1a102d"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="12" fill="url(#bgToken)"/>
+  <rect x="22" y="10" width="20" height="34" rx="6" fill="#f4ebff"/>
+  <rect x="27" y="17" width="10" height="10" rx="2" fill="#8a63ff"/>
+  <path d="M25 41h14" stroke="#8a63ff" stroke-width="3" stroke-linecap="round"/>
+  <path d="M32 44v8" stroke="#79e5d2" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="32" cy="55" r="4" fill="#79e5d2"/>
+</svg>

@@ -1,9 +1,5 @@
-import { initializeDragAndDrop } from "./dragDrop.js";
-import {
-  clearEvaluation,
-  renderBuilder,
-  renderEvaluation,
-} from "./renderer.js";
+import { initializeDragAndDrop } from "./dragdrop.js";
+import { renderBuilder, renderEvaluation } from "./renderer.js";
 import {
   getArchitectureState,
   replaceArchitecture,
@@ -26,17 +22,16 @@ function initialize(): void {
 
   const handleArchitectureChange = (): void => {
     renderBuilder();
-    clearEvaluation();
+    renderEvaluation();
   };
 
   renderBuilder();
-  clearEvaluation();
+  renderEvaluation();
   subscribe(handleArchitectureChange);
   initializeDragAndDrop();
 
   byId<HTMLButtonElement>("reset-button")?.addEventListener("click", () => {
     resetArchitecture();
-    clearEvaluation();
     const error = byId<HTMLElement>("error-message");
     if (error) error.textContent = "";
   });

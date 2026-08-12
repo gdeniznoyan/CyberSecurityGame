@@ -1,7 +1,9 @@
 import { getComponentById } from "./components.js";
-import { addPlacement, getPlacements, hasPlacement, removePlacement, } from "./state.js";
+import { showComponentSettings } from "./renderer.js";
+import { addConnection, addPlacement, getPlacements, hasPlacement, removeConnection, removePlacement, updateConfiguration, } from "./state.js";
 let draggedComponentId = null;
 let selectedComponentId = null;
+let connectionSourceId = null;
 function showError(message) {
     const error = document.getElementById("error-message");
     if (error)
@@ -11,10 +13,7 @@ function canPlace(componentId, areaId) {
     const component = getComponentById(componentId);
     if (!component ||
         !component.allowedAreaIds.includes(areaId) ||
-        hasPlacement(componentId, areaId))
-        return false;
-    if (areaId === "protected-application" &&
-        getPlacements().some((item) => item.areaId === areaId))
+        hasPlacement(componentId))
         return false;
     return true;
 }
@@ -24,8 +23,8 @@ function place(componentId, areaId) {
         showError(`${component?.name ?? componentId} cannot be placed in this area.`);
         return;
     }
-    if (hasPlacement(componentId, areaId)) {
-        showError(`${component.name} is already placed in this area.`);
+    if (hasPlacement(componentId)) {
+        showError(`${component.name} is already placed in the architecture.`);
         return;
     }
     addPlacement(componentId, areaId);
@@ -86,9 +85,46 @@ export function initializeDragAndDrop() {
     });
     canvas.addEventListener("click", (event) => {
         const target = event.target;
+        const closeSettings = target.closest("[data-close-settings]");
+        if (closeSettings) {
+            const panel = document.getElementById("component-settings");
+            if (panel)
+                panel.hidden = true;
+            return;
+        }
+        const edit = target.closest("[data-edit-component]");
+        if (edit) {
+            showComponentSettings(edit.dataset.editComponent ?? "");
+            return;
+        }
+        const connectionButton = target.closest("[data-connect-component]");
+        if (connectionButton) {
+            const componentId = connectionButton.dataset.connectComponent ?? "";
+            if (!connectionSourceId) {
+                connectionSourceId = componentId;
+                document
+                    .querySelector(`[data-component-node="${componentId}"]`)
+                    ?.classList.add("connection-source");
+                showError("Now select ↗ on the destination component.");
+            }
+            else {
+                if (!addConnection(connectionSourceId, componentId))
+                    showError("This connection cannot be created.");
+                else
+                    showError("");
+                connectionSourceId = null;
+            }
+            return;
+        }
+        const removeLink = target.closest("[data-remove-connection-source]");
+        if (removeLink) {
+            removeConnection(removeLink.dataset.removeConnectionSource ?? "", removeLink.dataset.removeConnectionTarget ?? "");
+            showError("");
+            return;
+        }
         const remove = target.closest("[data-remove-component]");
         if (remove) {
-            removePlacement(remove.dataset.removeComponent ?? "", remove.dataset.areaId);
+            removePlacement(remove.dataset.removeComponent ?? "");
             showError("");
             return;
         }
@@ -96,5 +132,22 @@ export function initializeDragAndDrop() {
         if (zone && selectedComponentId)
             place(selectedComponentId, zone.dataset.areaId);
     });
+    canvas.addEventListener("change", (event) => {
+        const control = event.target.closest("[data-configuration-key]");
+        if (!control)
+            return;
+        const componentId = control.dataset.configurationComponent ?? "";
+        const placement = getPlacements().find((item) => item.componentId === componentId);
+        if (!placement)
+            return;
+        const configuration = {
+            ...placement.configuration,
+        };
+        configuration[control.dataset.configurationKey ?? ""] =
+            control instanceof HTMLInputElement && control.type === "checkbox"
+                ? control.checked
+                : control.value;
+        updateConfiguration(componentId, configuration);
+    });
 }
-//# sourceMappingURL=dragDrop.js.map
+//# sourceMappingURL=dragdrop.js.map

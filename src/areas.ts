@@ -1,46 +1,34 @@
 import type { ArchitectureArea } from "./types.js";
 
-export const accessDeviceArea: ArchitectureArea = {
-  id: "access-device",
-  name: "Access Device",
-};
-
-export const trustIdentityServicesArea: ArchitectureArea = {
-  id: "trust-identity-services",
-  name: "Trust and Identity Services",
-};
-
-export const secureSessionArea: ArchitectureArea = {
-  id: "secure-session",
-  name: "Secure Session",
-};
-
-export const thirdPartyServicesArea: ArchitectureArea = {
-  id: "third-party-services",
-  name: "Third-Party Services",
-};
-
-export const invisibleNetworkProtectionArea: ArchitectureArea = {
-  id: "invisible-network-protection",
-  name: "Invisible Network Protection",
-};
-
-export const policyAccessControlArea: ArchitectureArea = {
-  id: "policy-access-control",
-  name: "Policy and Access Control",
-};
-
-export const protectedApplicationArea: ArchitectureArea = {
-  id: "protected-application",
-  name: "Protected Application",
-};
-
 export const architectureAreas: ArchitectureArea[] = [
-  accessDeviceArea,
-  trustIdentityServicesArea,
-  secureSessionArea,
-  thirdPartyServicesArea,
-  invisibleNetworkProtectionArea,
-  policyAccessControlArea,
-  protectedApplicationArea,
+  {
+    id: "user-device",
+    name: "User & Device",
+    description: "The user and client technology that begin the request.",
+  },
+  {
+    id: "identity-route",
+    name: "Identity",
+    description: "How identity and certificate trust are established.",
+  },
+  {
+    id: "access-enforcement",
+    name: "Access Control",
+    description: "Where access decisions are evaluated and enforced.",
+  },
+  {
+    id: "connection-method",
+    name: "Connection",
+    description: "How the approved session reaches its destination.",
+  },
+  {
+    id: "reachable-resources",
+    name: "Protected Resources",
+    description: "What the client can actually reach.",
+  },
+  {
+    id: "third-party-systems",
+    name: "Third-Party Systems",
+    description: "Optional external dependencies outside the main path.",
+  },
 ];

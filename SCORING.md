@@ -1,101 +1,34 @@
-# Security Scoring System
+# Classification and Score
 
-Each security component has a score representing its contribution to the overall architecture.
+Classification is the primary result. The numerical score is secondary and cannot independently produce Saytec Post-Zero Trust.
 
-The score is calculated separately for each security area and then combined using area weights.
+## Classification Order
 
-## Importance Levels
+1. No complete route: `Incomplete Architecture`.
+2. Severe configuration conflict: `Broken or Unsafe Architecture`.
+3. All Saytec requirements satisfied: `Saytec Post-Zero Trust`.
+4. Identity, policy, least privilege and application-only requirements satisfied: `Zero Trust`.
+5. Both network and application access: `Hybrid Architecture`.
+6. Network access without a severe conflict: `Traditional Access`.
+7. Any remaining invalid route: `Broken or Unsafe Architecture`.
 
-Components are classified as:
+## Detected Conflicts
 
-- Critical
-- Important
-- Optional
-- Special
+- Policy evaluation without effective enforcement
+- Strong encryption combined with excessive network access
+- RAM tunneling with external primary authentication
+- Private CA present but not used by the certificate route
+- Application restrictions applied after network exposure
+- Hardware-bound identity combined with a virtual network interface
+- Policy authorization performed after connection
+- Certificate used without complete validation
 
-Critical components represent major Post-Zero-Trust security controls.
+## Score Calculation
 
-Important components significantly improve security but are not always mandatory.
+The score starts at 10 for a complete route.
 
-Optional components provide additional protection.
+Positive points include authentication, pre-connection verification, organization-controlled trust, hardware identity, policy evaluation and enforcement, encrypted RAM, session revocation, least privilege, application restrictions, certificate validation and application-only access.
 
-Special components use custom evaluation rules, such as Third-Party Services and Protected Applications.
+Risk deductions include external primary authentication, network-level access, virtual network interfaces, protected address assignment, visible network information and persistent connection artifacts.
 
-## Area Weights
-
-Access Device: 15%
-
-Trust and Identity Services: 20%
-
-Secure Session: 20%
-
-Third-Party Services: 10%
-
-Invisible Network Protection: 20%
-
-Policy and Access Control: 15%
-
-Protected Application does not directly increase the Security Score because it represents the target instead of a security control.
-
-## Area Score
-
-Each area's score is calculated using:
-
-Selected component points
-/
-Maximum possible points in the area
-×
-100
-
-## Final Security Score
-
-Final Security Score is calculated by multiplying each area score by its weight.
-
-Final Score =
-
-Access Device Score × 0.15
-+
-Trust and Identity Score × 0.20
-+
-Secure Session Score × 0.20
-+
-Third-Party Score × 0.10
-+
-Invisible Network Protection Score × 0.20
-+
-Policy and Access Control Score × 0.15
-
-The final result is limited to the range 0–100.
-
-## Security Levels
-
-0–24:
-Very Low Security
-
-25–49:
-Low Security
-
-50–69:
-Medium Security
-
-70–84:
-High Security
-
-85–94:
-Very High Security
-
-95–100:
-Post-Zero Trust
-
-A high numerical score alone is not enough to qualify as Post-Zero Trust.
-
-Critical architecture requirements must also be satisfied, especially:
-
-- No Network Participation
-- No Virtual Network Interface
-- RAM Tunneling
-- Policy Engine
-- Least-Privilege Access
-- Strong certificate-based trust
-
-Third-party dependencies may reduce the Post-Zero-Trust result.
+Each detected opening removes 4 additional points. The final result is rounded and limited to 0-100.

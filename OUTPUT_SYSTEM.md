@@ -1,68 +1,30 @@
-# Security Analysis Output System
+# Security Analysis
 
-The Security Analysis panel explains why the current architecture is secure or insecure.
+Security Analysis is produced dynamically from the effective access path. Component descriptions are only UI help text and are never used to classify the architecture.
 
-Outputs are generated from the component objects.
+## Evaluation Sequence
 
-Each security component can contain:
+1. Find a connected route from `User and Device` to `Reachable Resources`.
+2. Read the component properties on that route.
+3. Apply configuration values such as policy timing, identity role and access level.
+4. Resolve dependent properties such as certificate trust.
+5. Detect unsafe or conflicting outcomes.
+6. Select the architecture classification.
+7. Calculate the secondary numerical score.
+8. Generate analysis sentences from the resulting state.
 
-- selectedOutput
-- missingOutput
-- importance
+## Panel Content
 
-## Selected Components
+- Architecture Classification: the primary result.
+- Security Score: a supporting 0-100 value.
+- Access Path: the route currently evaluated.
+- Authentication Model: whether identity is effective and hardware-bound.
+- Authentication Dependency: whether primary authentication is external.
+- Policy Evaluation and Enforcement: whether decisions are both made and applied.
+- Connection Type: application, network or hybrid access.
+- Client Visibility and Reachability: what the client can see and reach.
+- Network Participation: whether the client joins the protected network.
+- Detected Openings: conflicts found by the evaluator.
+- Recommended Change: the first corrective action.
 
-When a component is selected, its selectedOutput is displayed.
-
-Example:
-
-RAM Tunneling
-
-The secure session operates in temporary memory, reducing persistent traces on the client device.
-
-## Missing Critical Components
-
-If a Critical component is not selected, its missingOutput is displayed.
-
-Example:
-
-No Network Participation
-
-The client may gain unnecessary network participation or visibility, increasing the risk of network discovery and lateral movement.
-
-## Missing Important Components
-
-If an Important component is not selected, its missingOutput can be displayed as a recommended security improvement.
-
-## Optional Components
-
-If an Optional component is selected, its selectedOutput is displayed.
-
-If it is not selected, no warning is required.
-
-## Third-Party Services
-
-Third-Party components use different evaluation logic.
-
-When a Third-Party Service is selected, its dependency warning is displayed.
-
-If no Third-Party Services are selected, one positive result is displayed explaining that unnecessary external trust dependencies have been avoided.
-
-## Protected Application
-
-Protected Application components represent targets rather than security controls.
-
-When a target is selected, the output explains what resource is being accessed.
-
-If no target is selected, the analysis displays a warning that the architecture does not have a valid destination.
-
-## Automatic Updates
-
-The Security Analysis panel is recalculated whenever:
-
-- A component is added
-- A component is removed
-- A component is moved
-- The protected target changes
-
-Outputs should always reflect the current Architecture Canvas state.
+The panel refreshes after placement, removal, connection and configuration changes.

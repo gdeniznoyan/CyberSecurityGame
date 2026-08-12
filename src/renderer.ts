@@ -1,197 +1,423 @@
 import { architectureAreas } from "./areas.js";
 import { componentList, getComponentById } from "./components.js";
-import {
-  evaluateArchitecture,
-  evaluateSecurityAnalysis,
-  getTotalScore,
-} from "./evaluator.js";
-import { getPlacements } from "./state.js";
-import type { AnalysisGroupId, AreaId, ComponentDefinition } from "./types.js";
+import { evaluateArchitecture } from "./evaluator.js";
+import { getConnections, getPlacements } from "./state.js";
+import type { AreaId, ComponentDefinition, Placement } from "./types.js";
 
-const analysisGroups: { id: AnalysisGroupId; title: string }[] = [
-  { id: "selected-security-controls", title: "Selected Security Controls" },
-  { id: "missing-critical-controls", title: "Missing Critical Controls" },
-  { id: "recommended-improvements", title: "Recommended Improvements" },
-  { id: "third-party-dependencies", title: "Third-Party Dependencies" },
-  { id: "target-application", title: "Target Application" },
+interface Stage {
+  areaId: AreaId;
+  title: string;
+  subtitle: string;
+  image: string;
+}
+const stages: Stage[] = [
+  {
+    areaId: "user-device",
+    title: "User & Device",
+    subtitle: "Start the request",
+    image: "./assets/journey-v2/user-device.png",
+  },
+  {
+    areaId: "identity-route",
+    title: "Identity",
+    subtitle: "Prove who is connecting",
+    image: "./assets/journey-v2/identity.png",
+  },
+  {
+    areaId: "access-enforcement",
+    title: "Access Control",
+    subtitle: "Decide and enforce",
+    image: "./assets/journey-v2/access-control.png",
+  },
+  {
+    areaId: "connection-method",
+    title: "Connection",
+    subtitle: "Create the approved path",
+    image: "./assets/journey-v2/secure-connection.png",
+  },
+  {
+    areaId: "reachable-resources",
+    title: "Protected Resources",
+    subtitle: "Limit what can be reached",
+    image: "./assets/journey-v2/protected-resource.png",
+  },
 ];
-
-const areaVisuals: Record<AreaId, string> = {
-  "access-device": "./assets/sections-centered/client-computer.png",
-  "trust-identity-services": "./assets/sections-centered/authentication.png",
-  "secure-session": "./assets/sections-centered/wild-internet.png",
-  "third-party-services": "./assets/sections-centered/third-party.png",
-  "invisible-network-protection": "./assets/sections-centered/gateway.png",
-  "policy-access-control": "./assets/components/policy-engine.png",
-  "protected-application": "./assets/sections-centered/target-network.png",
-};
+const toolboxGroups: { title: string; areaId: AreaId }[] = [
+  { title: "Device", areaId: "user-device" },
+  { title: "Identity", areaId: "identity-route" },
+  { title: "Access", areaId: "access-enforcement" },
+  { title: "Connection", areaId: "connection-method" },
+  { title: "Resources", areaId: "reachable-resources" },
+  { title: "External", areaId: "third-party-systems" },
+];
 
 function componentVisual(component: ComponentDefinition): DocumentFragment {
   const fragment = document.createDocumentFragment();
-  const box = document.createElement("span");
-  box.className = "component-image";
+  const imageBox = document.createElement("span");
+  imageBox.className = "component-image";
   const image = document.createElement("img");
   image.src = component.icon;
   image.alt = "";
-  image.addEventListener("error", () => box.remove());
-  box.append(image);
+  imageBox.append(image);
+  const copy = document.createElement("span");
+  copy.className = "component-copy";
   const label = document.createElement("span");
   label.className = "component-label";
   label.textContent = component.name;
-  fragment.append(box, label);
+  copy.append(label);
+  if (component.isSaytecComponent) {
+    const badge = document.createElement("small");
+    badge.className = "saytec-badge";
+    badge.textContent = "sayTRUST";
+    copy.append(badge);
+  }
+  fragment.append(imageBox, copy);
   return fragment;
+}
+
+function renderPlacedComponent(placement: Placement): HTMLElement {
+  const component = getComponentById(placement.componentId);
+  const row = document.createElement("div");
+  row.className = "placed-component";
+  row.dataset.componentNode = placement.componentId;
+  if (!component) return row;
+  const image = document.createElement("img");
+  image.src = component.icon;
+  image.alt = "";
+  const name = document.createElement("span");
+  name.textContent = component.name;
+  const actions = document.createElement("span");
+  actions.className = "placed-actions";
+  const link = document.createElement("button");
+  link.type = "button";
+  link.className = "node-action connect-button";
+  link.dataset.connectComponent = component.id;
+  link.title = "Connect this component";
+  link.textContent = "↗";
+  const settings = document.createElement("button");
+  settings.type = "button";
+  settings.className = "node-action";
+  settings.dataset.editComponent = component.id;
+  settings.title = "Configure";
+  settings.textContent = "⚙";
+  settings.hidden = component.configuration.length === 0;
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "node-action remove-button";
+  remove.dataset.removeComponent = component.id;
+  remove.title = "Remove";
+  remove.textContent = "×";
+  actions.append(link, settings, remove);
+  row.append(image, name, actions);
+  return row;
+}
+
+function renderDropZone(areaId: AreaId): HTMLElement {
+  const zone = document.createElement("div");
+  zone.className = "drop-slot area-drop-zone";
+  zone.dataset.areaId = areaId;
+  const placements = getPlacements().filter((item) => item.areaId === areaId);
+  if (!placements.length) {
+    const placeholder = document.createElement("span");
+    placeholder.className = "slot-placeholder";
+    placeholder.textContent = "Drop here";
+    zone.append(placeholder);
+    return zone;
+  }
+  zone.classList.add("occupied");
+  const list = document.createElement("div");
+  list.className = "placed-components";
+  placements.forEach((item) => list.append(renderPlacedComponent(item)));
+  zone.append(list);
+  return zone;
+}
+
+function renderStage(stage: Stage, index: number): HTMLElement {
+  const card = document.createElement("article");
+  card.className = "journey-stage";
+  card.dataset.stage = stage.areaId;
+  if (getPlacements().some((item) => item.areaId === stage.areaId))
+    card.classList.add("stage-active");
+  if (stage.areaId === "reachable-resources")
+    card.classList.add("protected-stage");
+  const head = document.createElement("div");
+  head.className = "stage-head";
+  const step = document.createElement("span");
+  step.className = "stage-step";
+  step.textContent = String(index + 1);
+  const copy = document.createElement("div");
+  const title = document.createElement("h3");
+  title.textContent = stage.title;
+  const subtitle = document.createElement("p");
+  subtitle.textContent = stage.subtitle;
+  copy.append(title, subtitle);
+  head.append(step, copy);
+  const visual = document.createElement("div");
+  visual.className = "stage-visual";
+  const image = document.createElement("img");
+  image.src = stage.image;
+  image.alt = "";
+  visual.append(image);
+  card.append(head, visual, renderDropZone(stage.areaId));
+  return card;
+}
+
+function renderConnector(index: number): HTMLElement {
+  const connector = document.createElement("div");
+  connector.className = "journey-connector";
+  const line = document.createElement("span");
+  const arrow = document.createElement("span");
+  arrow.className = "connector-arrow";
+  arrow.textContent = "›";
+  connector.append(line, arrow);
+  if (index === 1) {
+    connector.classList.add("internet-crossing");
+    const label = document.createElement("span");
+    label.className = "internet-label";
+    label.textContent = "PUBLIC INTERNET";
+    const image = document.createElement("img");
+    image.className = "internet-globe";
+    image.src = "./assets/journey-v2/internet-crossing.png";
+    image.alt = "Public Internet";
+    connector.append(image, label);
+  }
+  return connector;
+}
+
+function renderConnectionMap(): HTMLElement {
+  const box = document.createElement("section");
+  box.className = "connection-map";
+  const heading = document.createElement("div");
+  heading.className = "connection-map-heading";
+  heading.innerHTML =
+    "<strong>Active connections</strong><span>Select ↗ on a source, then on its destination</span>";
+  box.append(heading);
+  const list = document.createElement("div");
+  list.className = "connection-list";
+  const connections = getConnections();
+  if (!connections.length) {
+    const empty = document.createElement("span");
+    empty.className = "connection-empty";
+    empty.textContent = "No component links yet";
+    list.append(empty);
+  }
+  connections.forEach((connection) => {
+    const item = document.createElement("div");
+    item.className = "connection-item";
+    const source =
+      getComponentById(connection.sourceComponentId)?.name ??
+      connection.sourceComponentId;
+    const target =
+      getComponentById(connection.targetComponentId)?.name ??
+      connection.targetComponentId;
+    const text = document.createElement("span");
+    text.textContent = `${source}  →  ${target}`;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.dataset.removeConnectionSource = connection.sourceComponentId;
+    remove.dataset.removeConnectionTarget = connection.targetComponentId;
+    remove.textContent = "×";
+    item.append(text, remove);
+    list.append(item);
+  });
+  box.append(list);
+  return box;
+}
+
+function renderSettingsPanel(): HTMLElement {
+  const panel = document.createElement("aside");
+  panel.id = "component-settings";
+  panel.className = "component-settings";
+  panel.hidden = true;
+  return panel;
+}
+
+function renderThirdParty(): HTMLElement {
+  const panel = document.createElement("aside");
+  panel.className = "external-services-panel";
+  const copy = document.createElement("div");
+  copy.innerHTML =
+    "<span>OPTIONAL SIDE LANE</span><h3>Third-Party Systems</h3><p>Connect an external service only when it affects the active path.</p>";
+  panel.append(copy, renderDropZone("third-party-systems"));
+  return panel;
 }
 
 export function renderArchitecture(): void {
   const canvas = document.getElementById("architecture-canvas");
   if (!canvas) return;
-  const thirdPartyLane = document.createElement("div");
-  thirdPartyLane.className = "third-party-lane";
-  const path = document.createElement("div");
-  path.className = "main-path six-stage-path";
-  const placements = getPlacements();
-
-  architectureAreas.forEach((area) => {
-    const target = area.id === "third-party-services" ? thirdPartyLane : path;
-    if (target === path && path.children.length) {
-      const arrow = document.createElement("div");
-      arrow.className = "flow-arrow";
-      arrow.textContent = "→";
-      path.append(arrow);
-    }
-    const section = document.createElement("article");
-    section.className = "architecture-section";
-    section.dataset.areaId = area.id;
-    const heading = document.createElement("h3");
-    heading.textContent = area.name;
-    const imageBox = document.createElement("div");
-    imageBox.className = "image-placeholder";
-    const image = document.createElement("img");
-    image.src = areaVisuals[area.id];
-    image.alt = "";
-    imageBox.append(image);
-    const dropZone = document.createElement("div");
-    dropZone.className = "drop-slot area-drop-zone";
-    dropZone.dataset.areaId = area.id;
-    const placed = placements.filter((item) => item.areaId === area.id);
-    if (!placed.length) {
-      const placeholder = document.createElement("span");
-      placeholder.className = "slot-placeholder";
-      placeholder.textContent = "Drop compatible components here";
-      dropZone.append(placeholder);
-    } else {
-      dropZone.classList.add("occupied");
-      const list = document.createElement("div");
-      list.className = "placed-components";
-      placed.forEach((item) => {
-        const component = getComponentById(item.componentId);
-        if (!component) return;
-        const row = document.createElement("div");
-        row.className = "placed-component";
-        const name = document.createElement("span");
-        name.textContent = component.name;
-        const remove = document.createElement("button");
-        remove.type = "button";
-        remove.className = "remove-button";
-        remove.dataset.removeComponent = component.id;
-        remove.dataset.areaId = area.id;
-        remove.textContent = "×";
-        row.append(name, remove);
-        list.append(row);
-      });
-      dropZone.append(list);
-    }
-    section.append(heading, imageBox, dropZone);
-    target.append(section);
+  const journey = document.createElement("div");
+  journey.className = "customer-journey";
+  stages.forEach((stage, index) => {
+    if (index) journey.append(renderConnector(index - 1));
+    journey.append(renderStage(stage, index));
   });
-  canvas.replaceChildren(thirdPartyLane, path);
+  const secondary = document.createElement("div");
+  secondary.className = "canvas-secondary";
+  secondary.append(renderThirdParty());
+  canvas.replaceChildren(
+    journey,
+    secondary,
+    renderConnectionMap(),
+    renderSettingsPanel(),
+  );
+}
+
+export function showComponentSettings(componentId: string): void {
+  const panel = document.getElementById("component-settings");
+  const placement = getPlacements().find(
+    (item) => item.componentId === componentId,
+  );
+  const component = getComponentById(componentId);
+  if (!panel || !placement || !component || !component.configuration.length)
+    return;
+  panel.hidden = false;
+  panel.dataset.settingsComponent = componentId;
+  const header = document.createElement("div");
+  header.className = "settings-header";
+  const title = document.createElement("div");
+  title.innerHTML = `<small>Configuration</small><strong>${component.name}</strong>`;
+  const close = document.createElement("button");
+  close.type = "button";
+  close.dataset.closeSettings = "true";
+  close.textContent = "×";
+  header.append(title, close);
+  const description = document.createElement("p");
+  description.className = "settings-description";
+  description.textContent = component.description;
+  const form = document.createElement("div");
+  form.className = "settings-form";
+  component.configuration.forEach((definition) => {
+    const label = document.createElement("label");
+    label.className = "setting-row";
+    const text = document.createElement("span");
+    text.textContent = definition.label;
+    let control: HTMLInputElement | HTMLSelectElement;
+    if (definition.type === "boolean") {
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.checked = placement.configuration[definition.id] === true;
+      control = input;
+    } else {
+      const select = document.createElement("select");
+      definition.options.forEach((option) => {
+        const item = document.createElement("option");
+        item.value = option;
+        item.textContent = option;
+        select.append(item);
+      });
+      select.value = String(placement.configuration[definition.id]);
+      control = select;
+    }
+    control.dataset.configurationKey = definition.id;
+    control.dataset.configurationComponent = componentId;
+    label.append(text, control);
+    form.append(label);
+  });
+  panel.replaceChildren(header, description, form);
 }
 
 export function renderToolbox(): void {
   const toolbox = document.getElementById("component-toolbox");
   if (!toolbox) return;
   const fragment = document.createDocumentFragment();
-  architectureAreas.forEach((area) => {
+  toolboxGroups.forEach((definition) => {
     const group = document.createElement("section");
     group.className = "toolbox-group";
-    const heading = document.createElement("h3");
-    heading.textContent = area.name;
+    const heading = document.createElement("div");
+    heading.className = "toolbox-group-heading";
+    const title = document.createElement("span");
+    title.textContent = definition.title;
+    const components = componentList.filter((item) =>
+      item.allowedAreaIds.includes(definition.areaId),
+    );
+    const count = document.createElement("span");
+    count.textContent = String(components.length);
+    heading.append(title, count);
     const list = document.createElement("div");
     list.className = "component-list";
-    componentList
-      .filter((component) => component.area === area.id)
-      .forEach((component) => {
-        const card = document.createElement("button");
-        card.type = "button";
-        card.className = "component-card";
-        card.draggable = true;
-        card.dataset.componentId = component.id;
-        card.append(componentVisual(component));
-        list.append(card);
-      });
+    components.forEach((component) => {
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "component-card";
+      card.draggable = true;
+      card.dataset.componentId = component.id;
+      card.title = component.description;
+      card.append(componentVisual(component));
+      list.append(card);
+    });
     group.append(heading, list);
     fragment.append(group);
   });
   toolbox.replaceChildren(fragment);
 }
 
+function insight(
+  title: string,
+  output: string,
+  status = "neutral",
+): HTMLElement {
+  const card = document.createElement("section");
+  card.className = "insight-card";
+  card.dataset.status = status;
+  const heading = document.createElement("h3");
+  heading.textContent = title;
+  const text = document.createElement("p");
+  text.textContent = output;
+  card.append(heading, text);
+  return card;
+}
+
 export function renderEvaluation(): void {
   const list = document.getElementById("result-insights");
   const score = document.getElementById("security-score-value");
   const chart = document.querySelector<HTMLElement>(".security-score-chart");
-  if (!list || !score || !chart) return;
-  const evaluations = evaluateArchitecture();
-  const analysis = evaluateSecurityAnalysis();
-  const groups = analysisGroups.map((groupDefinition) => {
-    const group = document.createElement("section");
-    group.className = "analysis-group";
-    group.dataset.analysisGroup = groupDefinition.id;
-    const heading = document.createElement("h3");
-    heading.textContent = groupDefinition.title;
-    const items = document.createElement("ul");
-    items.className = "analysis-items";
-    analysis
-      .filter((item) => item.group === groupDefinition.id)
-      .forEach((result) => {
-        const item = document.createElement("li");
-        item.className = "insight-item";
-        const output = document.createElement("span");
-        output.className = "analysis-output";
-        output.textContent = result.output;
-        if (result.componentId) {
-          item.dataset.componentId = result.componentId;
-          const component = getComponentById(result.componentId);
-          if (component) {
-            const name = document.createElement("strong");
-            name.className = "analysis-component-name";
-            name.textContent = component.name;
-            item.append(name);
-          }
-        }
-        item.append(output);
-        items.append(item);
-      });
-    group.append(heading, items);
-    return group;
-  });
-  const total = getTotalScore(evaluations);
-  list.replaceChildren(...groups);
-  score.textContent = `${total}%`;
-  chart.style.setProperty(
-    "--score-progress",
-    String(Math.max(0, Math.min(100, total))),
+  const classification = document.getElementById("architecture-result-value");
+  if (!list || !score || !chart || !classification) return;
+  const result = evaluateArchitecture();
+  classification.textContent = result.classification;
+  score.textContent = String(result.score);
+  chart.style.setProperty("--score-progress", String(result.score));
+  list.replaceChildren(
+    insight(
+      "Access Path",
+      result.accessPath.length
+        ? result.accessPath.join(" → ")
+        : "No complete path from user to resource.",
+      result.accessPath.length ? "good" : "warning",
+    ),
+    insight("Authentication Model", result.authenticationModel),
+    insight("Authentication Dependency", result.authenticationDependency),
+    insight(
+      "Policy Evaluation",
+      result.policyEvaluation,
+      result.properties.evaluatesAccessPolicy ? "good" : "warning",
+    ),
+    insight(
+      "Policy Enforcement",
+      result.policyEnforcement,
+      result.properties.enforcesAccessPolicy ? "good" : "warning",
+    ),
+    insight("Connection Type", result.connectionType),
+    insight(
+      "Client Network Visibility",
+      result.clientNetworkVisibility,
+      result.properties.exposesNetworkInformation ? "warning" : "good",
+    ),
+    insight("Client Reachability", result.clientReachability),
+    insight(
+      "Network Participation",
+      result.networkParticipation,
+      result.properties.createsVirtualNetworkInterface ? "warning" : "good",
+    ),
+    insight(
+      "Detected Openings",
+      result.openings.length
+        ? result.openings.join(" · ")
+        : "No opening detected on the effective path.",
+      result.openings.length ? "warning" : "good",
+    ),
+    insight("Recommended Change", result.recommendation),
   );
-}
-
-export function clearEvaluation(): void {
-  const list = document.getElementById("result-insights");
-  const score = document.getElementById("security-score-value");
-  const chart = document.querySelector<HTMLElement>(".security-score-chart");
-  if (!list || !score || !chart) return;
-
-  list.replaceChildren();
-  score.textContent = "--";
-  chart.style.setProperty("--score-progress", "0");
 }
 
 export function renderBuilder(): void {

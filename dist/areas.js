@@ -1,38 +1,33 @@
-export const accessDeviceArea = {
-    id: "access-device",
-    name: "Access Device",
-};
-export const trustIdentityServicesArea = {
-    id: "trust-identity-services",
-    name: "Trust and Identity Services",
-};
-export const secureSessionArea = {
-    id: "secure-session",
-    name: "Secure Session",
-};
-export const thirdPartyServicesArea = {
-    id: "third-party-services",
-    name: "Third-Party Services",
-};
-export const invisibleNetworkProtectionArea = {
-    id: "invisible-network-protection",
-    name: "Invisible Network Protection",
-};
-export const policyAccessControlArea = {
-    id: "policy-access-control",
-    name: "Policy and Access Control",
-};
-export const protectedApplicationArea = {
-    id: "protected-application",
-    name: "Protected Application",
-};
 export const architectureAreas = [
-    accessDeviceArea,
-    trustIdentityServicesArea,
-    secureSessionArea,
-    thirdPartyServicesArea,
-    invisibleNetworkProtectionArea,
-    policyAccessControlArea,
-    protectedApplicationArea,
+    {
+        id: "user-device",
+        name: "User & Device",
+        description: "The user and client technology that begin the request.",
+    },
+    {
+        id: "identity-route",
+        name: "Identity",
+        description: "How identity and certificate trust are established.",
+    },
+    {
+        id: "access-enforcement",
+        name: "Access Control",
+        description: "Where access decisions are evaluated and enforced.",
+    },
+    {
+        id: "connection-method",
+        name: "Connection",
+        description: "How the approved session reaches its destination.",
+    },
+    {
+        id: "reachable-resources",
+        name: "Protected Resources",
+        description: "What the client can actually reach.",
+    },
+    {
+        id: "third-party-systems",
+        name: "Third-Party Systems",
+        description: "Optional external dependencies outside the main path.",
+    },
 ];
 //# sourceMappingURL=areas.js.map

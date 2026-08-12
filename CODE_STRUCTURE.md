@@ -1,120 +1,51 @@
 # Code Structure
 
-The project is organized so that architecture data, evaluation logic and user interface logic are separated from each other.
+## Runtime Flow
 
-## areas.ts
+`main.ts` starts the application, then `renderer.ts` draws the UI. User actions are handled by `dragdrop.ts`, which updates `state.ts`. State notifies its subscribers, causing the builder and evaluator output to render again.
 
-Contains the Architecture Canvas area definitions.
+## Files
 
-This file stores information such as:
+### `index.html`
 
-- Area ID
-- Area name
-- Area description
+Contains the permanent page structure and mount points for the canvas, toolbox, settings and Security Analysis.
 
-It does not store component outputs or scores.
+### `css/style.css`
 
-## components.ts
+Controls the visual layout, responsive behavior, drag highlights, component cards, connection list, settings panel and score ring.
 
-Contains all security component objects.
+### `src/types.ts`
 
-Each component is stored as its own object.
+Defines the shared contracts: area IDs, component definitions, configuration types, placements, connections, architecture properties and evaluation results.
 
-A component may contain:
+### `src/areas.ts`
 
-- ID
-- Name
-- Area
-- Description
-- Importance level
-- Score
-- Selected output
-- Missing output
+Defines the six canvas areas. Area objects contain only an ID, name and description.
 
-The component's security behavior belongs to the component itself rather than to the area.
+### `src/components.ts`
 
-## architecture.ts
+Defines every component as a separate object. Each object contains its identity, compatible area, description, icon, configuration schema and base architectural properties. It also builds the shared `componentList` and default configuration values.
 
-Contains shared TypeScript types and interfaces.
+### `src/state.ts`
 
-Examples include:
+Owns the current placements and connections. It validates placement, prevents duplicates, stores configuration changes and removes orphaned connections when a component is deleted.
 
-- Area IDs
-- Component types
-- Importance levels
-- Evaluation result types
+### `src/dragdrop.ts`
 
-This file defines the structure of the data used by the rest of the application.
+Handles dragging, click-to-select placement, valid-area highlighting, component removal, connection creation/removal and configuration form changes.
 
-## evaluationService.ts
+### `src/evaluator.ts`
 
-Contains the security evaluation logic.
+Finds the effective access path, derives active properties, detects conflicts, chooses a classification, calculates the score and creates causal analysis text.
 
-This file determines:
+### `src/renderer.ts`
 
-- Which components are selected
-- Which critical components are missing
-- Which important components are missing
-- Component scores
-- Area scores
-- Final Security Score
-- Third-party dependency results
-- Post-Zero-Trust eligibility
+Builds the canvas stages, component toolbox, placed component controls, Third-Party lane, connection list, settings panel and Security Analysis cards.
 
-The evaluation service reads the necessary information from component objects.
+### `src/main.ts`
 
-It should not contain large hardcoded lists of component-specific output messages.
+Initializes rendering and event handlers. It subscribes to state changes and connects the Reset button to the state reset operation.
 
-## outputRenderer.ts
+### `dist`
 
-Controls how evaluation results are displayed in the Security Analysis panel.
-
-This file is responsible for displaying sections such as:
-
-- Selected Security Controls
-- Missing Critical Controls
-- Recommended Improvements
-- Third-Party Dependencies
-- Target Application
-
-It receives evaluation results and renders them in the user interface.
-
-It does not decide the security meaning of individual components.
-
-## main.ts
-
-Connects the main parts of the application.
-
-It manages:
-
-- Drag and drop
-- Adding components
-- Removing components
-- Updating the Architecture Canvas
-- Triggering security evaluation
-- Refreshing the output panel
-
-## HTML Files
-
-HTML files contain the structure of the user interface.
-
-They define elements such as:
-
-- Toolbox
-- Architecture Canvas
-- Security Analysis panel
-- Score display
-- Buttons
-
-## CSS Files
-
-CSS files contain the visual design of the application.
-
-They manage:
-
-- Layout
-- Component appearance
-- Canvas styling
-- Security result panel
-- Responsive design
-- Drag-and-drop visual feedback
+Contains generated JavaScript. Edit files in `src`, then run `npm run build`; do not edit `dist` manually.
