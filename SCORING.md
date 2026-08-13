@@ -25,10 +25,24 @@ Classification is the primary result. The numerical score is secondary and canno
 
 ## Score Calculation
 
-The score starts at 10 for a complete route.
+The score is built from six explicit point groups. A control earns points only when it is effective on the connected access path.
 
-Positive points include authentication, pre-connection verification, organization-controlled trust, hardware identity, policy evaluation and enforcement, encrypted RAM, session revocation, least privilege, application restrictions, certificate validation and application-only access.
+- Complete access path: 10 points.
+- Authentication strength: 20 points.
+- Policy and access control: 20 points.
+- Secure connection and session handling: 20 points.
+- Client and network isolation: 20 points.
+- Organization-controlled trust: 10 points.
 
-Risk deductions include external primary authentication, network-level access, virtual network interfaces, protected address assignment, visible network information and persistent connection artifacts.
+The maximum score is 100. Missing controls simply do not earn their points. Detected architectural conflicts then apply the following deductions:
 
-Each detected opening removes 4 additional points. The final result is rounded and limited to 0-100.
+- Policy without enforcement: -10.
+- Authorization after connection: -10.
+- Certificate misconfiguration: -8.
+- External authentication dependency in a RAM-based route: -8.
+- Hardware identity combined with the wrong connection method: -8.
+- Application restriction after network exposure: -6.
+- Strong encryption with excessive network access: -5.
+- Private CA present but unused: -5.
+
+The final result is rounded and constrained to 0-100. Classification remains the primary result: a high numerical score cannot independently produce Zero Trust or sayTRUST Post-Zero Trust.

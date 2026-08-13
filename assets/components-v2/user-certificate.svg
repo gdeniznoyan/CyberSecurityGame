@@ -1,1 +1,7 @@
-﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><defs><filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#17202b" flood-opacity=".12"/></filter></defs><rect x="3" y="3" width="90" height="90" rx="18" fill="#fff" stroke="#d9dde3" stroke-width="2"/><g fill="none" stroke="#171c25" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="url(#s)"><rect x="18" y="20" width="60" height="48" rx="5"/><circle class="accent" cx="35" cy="40" r="8"/><path d="M25 58c2-10 18-10 20 0M51 34h18M51 44h14"/><path class="accent-fill" d="M59 64v17l7-5 7 5V64"/></g><style>.accent{stroke:#d50914}.accent-fill{fill:#d50914;stroke:#d50914}.white{stroke:#fff}</style></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none">
+  <defs><filter id="shadow" x="-25%" y="-25%" width="150%" height="165%"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#111720" flood-opacity=".2"/></filter></defs>
+  <path d="M48 4 85 25v46L48 92 11 71V25L48 4Z" fill="#fff" stroke="#D2D7DE" stroke-width="2"/>
+  <path d="M48 10 79 28v40L48 86 17 68V28L48 10Z" fill="#F5F6F8"/>
+  <g filter="url(#shadow)" stroke="#111720" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><rect x="17" y="19" width="62" height="52" rx="6"/><circle cx="36" cy="39" r="8"/><path d="M25 58c2-10 20-10 22 0M53 32h16M53 42h16"/><circle class="red fill-red" cx="64" cy="67" r="12"/><path class="white" d="m58 67 4 4 8-9"/></g>
+  <style>.red{stroke:#DF0712}.fill-red{fill:#DF0712}.fill-dark{fill:#111720}.white{stroke:#fff}</style>
+</svg>

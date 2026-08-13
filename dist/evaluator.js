@@ -14,6 +14,9 @@ const propertyIds = [
     "assignsProtectedNetworkAddress",
     "exposesNetworkInformation",
     "usesEncryptedRam",
+    "usesMutualTls",
+    "encryptsTransport",
+    "usesPerfectForwardSecrecy",
     "persistsConnectionArtifacts",
     "supportsSessionTermination",
     "restrictsParallelApplications",
@@ -151,7 +154,7 @@ function classify(properties, path, openings) {
         properties.grantsApplicationAccess &&
         !properties.persistsConnectionArtifacts;
     if (postZeroTrust)
-        return "Saytec Post-Zero Trust";
+        return "sayTRUST Post-Zero Trust";
     const zeroTrust = properties.authenticatesUser &&
         properties.authenticatesBeforeCommunication &&
         properties.evaluatesAccessPolicy &&
@@ -175,39 +178,49 @@ function classify(properties, path, openings) {
     return "Broken or Unsafe Architecture";
 }
 function calculateScore(properties, openings) {
-    const positive = {
-        authenticatesUser: 7,
-        authenticatesBeforeCommunication: 7,
-        usesOrganizationControlledIdentity: 8,
-        usesHardwareBoundIdentity: 8,
-        evaluatesAccessPolicy: 7,
-        enforcesAccessPolicy: 9,
-        usesEncryptedRam: 10,
-        supportsSessionTermination: 6,
-        restrictsParallelApplications: 4,
-        usesLeastPrivilege: 8,
-        restrictsApplications: 8,
-        validatesCertificate: 7,
-        grantsApplicationAccess: 6,
+    const hasConnection = properties.grantsApplicationAccess || properties.grantsNetworkAccess;
+    const points = [
+        // A complete source-to-resource path: 10 points.
+        [hasConnection, 10],
+        // Authentication strength: 20 points.
+        [properties.authenticatesUser, 10],
+        [properties.authenticatesBeforeCommunication, 5],
+        [properties.usesHardwareBoundIdentity, 5],
+        // Policy and access control: 20 points.
+        [properties.evaluatesAccessPolicy, 4],
+        [properties.enforcesAccessPolicy, 5],
+        [properties.usesLeastPrivilege, 4],
+        [properties.restrictsApplications, 4],
+        [properties.supportsSessionTermination, 3],
+        // Secure connection and session handling: 20 points.
+        [properties.usesMutualTls, 4],
+        [properties.encryptsTransport, 5],
+        [properties.usesPerfectForwardSecrecy, 3],
+        [properties.usesEncryptedRam, 5],
+        [hasConnection && !properties.persistsConnectionArtifacts, 3],
+        // Client and network isolation: 20 points.
+        [properties.grantsApplicationAccess && !properties.grantsNetworkAccess, 6],
+        [hasConnection && !properties.grantsNetworkAccess, 5],
+        [hasConnection && !properties.createsVirtualNetworkInterface, 3],
+        [hasConnection && !properties.assignsProtectedNetworkAddress, 2],
+        [hasConnection && !properties.exposesNetworkInformation, 4],
+        // Organization-controlled trust: 10 points.
+        [properties.usesOrganizationControlledIdentity, 4],
+        [properties.validatesCertificate, 3],
+        [properties.authenticatesUser && !properties.dependsOnExternalIdentityProvider, 3],
+    ];
+    const openingPenalties = {
+        "Policy Without Enforcement": 10,
+        "Authorization Too Late": 10,
+        "Certificate Misconfiguration": 8,
+        "External Authentication Dependency": 8,
+        "Wrong Connection Method": 8,
+        "Application Restriction After Network Exposure": 6,
+        "Strong Encryption With Excessive Access": 5,
+        "Private CA Not Used": 5,
     };
-    const negative = {
-        dependsOnExternalIdentityProvider: 7,
-        grantsNetworkAccess: 12,
-        createsVirtualNetworkInterface: 8,
-        assignsProtectedNetworkAddress: 7,
-        exposesNetworkInformation: 8,
-        persistsConnectionArtifacts: 5,
-    };
-    let score = 10;
-    Object.entries(positive).forEach(([id, points]) => {
-        if (properties[id])
-            score += points ?? 0;
-    });
-    Object.entries(negative).forEach(([id, points]) => {
-        if (properties[id])
-            score -= points ?? 0;
-    });
-    score -= openings.length * 4;
+    let score = points.reduce((total, [condition, awardedPoints]) => total + (condition ? awardedPoints : 0), 0);
+    score -= openings.reduce((total, opening) => total + (openingPenalties[opening] ?? 4), 0);
     return Math.max(0, Math.min(100, Math.round(score)));
 }
 export function evaluateArchitecture() {
@@ -219,7 +232,8 @@ export function evaluateArchitecture() {
     const config = (id) => placements.find((item) => item.componentId === id)?.configuration ?? {};
     if (properties.evaluatesAccessPolicy && !properties.enforcesAccessPolicy)
         openings.push("Policy Without Enforcement");
-    if (properties.usesEncryptedRam && properties.grantsNetworkAccess)
+    if ((properties.encryptsTransport || properties.usesEncryptedRam) &&
+        properties.grantsNetworkAccess)
         openings.push("Strong Encryption With Excessive Access");
     if (properties.usesEncryptedRam &&
         properties.dependsOnExternalIdentityProvider)
@@ -239,7 +253,9 @@ export function evaluateArchitecture() {
         !properties.validatesCertificate)
         openings.push("Certificate Misconfiguration");
     const classification = classify(properties, accessPath, openings);
-    const score = accessPath.length ? calculateScore(properties, openings) : 0;
+    const score = accessPath.length
+        ? calculateScore(properties, openings)
+        : 0;
     const names = [
         "User",
         ...accessPath.map((id) => getComponentById(id)?.name ?? id),
@@ -254,7 +270,9 @@ export function evaluateArchitecture() {
             ? `Resolve ${openings[0]} and verify the complete access path again.`
             : classification === "Incomplete Architecture"
                 ? "Connect components from the user and device stage to a protected resource."
-                : "The current path has no detected architectural conflict.",
+                : classification === "Traditional Access"
+                    ? "The VPN path protects the session, but still grants network-level access. Use application-level access and policy enforcement when stronger isolation is required."
+                    : "The current path has no detected architectural conflict.",
         authenticationModel: properties.usesHardwareBoundIdentity
             ? "Hardware-bound identity is used on the active path."
             : properties.authenticatesUser

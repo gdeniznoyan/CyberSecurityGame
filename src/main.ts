@@ -1,7 +1,9 @@
 import { initializeDragAndDrop } from "./dragdrop.js";
+import { getArchitecturePreset } from "./presets.js";
 import { renderBuilder, renderEvaluation } from "./renderer.js";
 import {
   getArchitectureState,
+  getPlacements,
   replaceArchitecture,
   resetArchitecture,
   subscribe,
@@ -12,6 +14,10 @@ const byId = <T extends HTMLElement>(id: string): T | null =>
   document.getElementById(id) as T | null;
 
 function initialize(): void {
+  const analysisDialog = byId<HTMLDialogElement>("analysis-dialog");
+  const analyzeButton = byId<HTMLButtonElement>(
+    "analyze-architecture-button",
+  );
   const dialog = byId<HTMLDialogElement>("state-dialog");
   const textarea = byId<HTMLTextAreaElement>("state-json");
   const dialogTitle = byId<HTMLElement>("dialog-title");
@@ -22,24 +28,64 @@ function initialize(): void {
 
   const handleArchitectureChange = (): void => {
     renderBuilder();
-    renderEvaluation();
+    analysisDialog?.close();
+    const canAnalyze = getPlacements().length > 0;
+    if (analyzeButton) {
+      analyzeButton.disabled = !canAnalyze;
+      const hint = analyzeButton.querySelector("small");
+      if (hint)
+        hint.textContent = canAnalyze
+          ? "Your architecture is ready"
+          : "Build your architecture first";
+    }
   };
 
-  renderBuilder();
-  renderEvaluation();
+  handleArchitectureChange();
   subscribe(handleArchitectureChange);
   initializeDragAndDrop();
 
+  document.querySelectorAll<HTMLButtonElement>("[data-preset-id]").forEach(
+    (button) => {
+      button.addEventListener("click", () => {
+        const preset = getArchitecturePreset(button.dataset.presetId ?? "");
+        if (!preset) return;
+        replaceArchitecture(preset.state);
+        document.querySelectorAll(".preset-button").forEach((item) =>
+          item.classList.remove("preset-active"),
+        );
+        button.classList.add("preset-active");
+        byId<HTMLElement>("architecture-canvas")?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      });
+    },
+  );
+
+  analyzeButton?.addEventListener(
+    "click",
+    () => {
+      renderEvaluation();
+      analysisDialog?.showModal();
+    },
+  );
+  byId<HTMLButtonElement>("close-analysis-button")?.addEventListener(
+    "click",
+    () => analysisDialog?.close(),
+  );
+  analysisDialog?.addEventListener("click", (event) => {
+    if (event.target === analysisDialog) analysisDialog.close();
+  });
+
   byId<HTMLButtonElement>("reset-button")?.addEventListener("click", () => {
     resetArchitecture();
+    document
+      .querySelectorAll(".preset-button")
+      .forEach((item) => item.classList.remove("preset-active"));
+    analysisDialog?.close();
     const error = byId<HTMLElement>("error-message");
     if (error) error.textContent = "";
   });
-
-  byId<HTMLButtonElement>("analyze-button")?.addEventListener(
-    "click",
-    renderEvaluation,
-  );
 
   byId<HTMLButtonElement>("export-button")?.addEventListener("click", () => {
     if (!dialog || !textarea) return;

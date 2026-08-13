@@ -7,38 +7,32 @@ import type { AreaId, ComponentDefinition, Placement } from "./types.js";
 interface Stage {
   areaId: AreaId;
   title: string;
-  subtitle: string;
   image: string;
 }
 const stages: Stage[] = [
   {
     areaId: "user-device",
     title: "User & Device",
-    subtitle: "Start the request",
     image: "./assets/journey-v2/user-device.png",
   },
   {
     areaId: "identity-route",
     title: "Identity",
-    subtitle: "Prove who is connecting",
     image: "./assets/journey-v2/identity.png",
   },
   {
     areaId: "access-enforcement",
     title: "Access Control",
-    subtitle: "Decide and enforce",
     image: "./assets/journey-v2/access-control.png",
   },
   {
     areaId: "connection-method",
     title: "Connection",
-    subtitle: "Create the approved path",
     image: "./assets/journey-v2/secure-connection.png",
   },
   {
     areaId: "reachable-resources",
     title: "Protected Resources",
-    subtitle: "Limit what can be reached",
     image: "./assets/journey-v2/protected-resource.png",
   },
 ];
@@ -65,12 +59,6 @@ function componentVisual(component: ComponentDefinition): DocumentFragment {
   label.className = "component-label";
   label.textContent = component.name;
   copy.append(label);
-  if (component.isSaytecComponent) {
-    const badge = document.createElement("small");
-    badge.className = "saytec-badge";
-    badge.textContent = "sayTRUST";
-    copy.append(badge);
-  }
   fragment.append(imageBox, copy);
   return fragment;
 }
@@ -148,9 +136,7 @@ function renderStage(stage: Stage, index: number): HTMLElement {
   const copy = document.createElement("div");
   const title = document.createElement("h3");
   title.textContent = stage.title;
-  const subtitle = document.createElement("p");
-  subtitle.textContent = stage.subtitle;
-  copy.append(title, subtitle);
+  copy.append(title);
   head.append(step, copy);
   const visual = document.createElement("div");
   visual.className = "stage-visual";
@@ -168,7 +154,7 @@ function renderConnector(index: number): HTMLElement {
   const line = document.createElement("span");
   const arrow = document.createElement("span");
   arrow.className = "connector-arrow";
-  arrow.textContent = "›";
+  arrow.setAttribute("aria-hidden", "true");
   connector.append(line, arrow);
   if (index === 1) {
     connector.classList.add("internet-crossing");
@@ -189,8 +175,7 @@ function renderConnectionMap(): HTMLElement {
   box.className = "connection-map";
   const heading = document.createElement("div");
   heading.className = "connection-map-heading";
-  heading.innerHTML =
-    "<strong>Active connections</strong><span>Select ↗ on a source, then on its destination</span>";
+  heading.innerHTML = "<strong>Active connections</strong>";
   box.append(heading);
   const list = document.createElement("div");
   list.className = "connection-list";
@@ -235,10 +220,15 @@ function renderSettingsPanel(): HTMLElement {
 function renderThirdParty(): HTMLElement {
   const panel = document.createElement("aside");
   panel.className = "external-services-panel";
+  const visual = document.createElement("div");
+  visual.className = "external-services-visual";
+  const image = document.createElement("img");
+  image.src = "./assets/journey-v2/third-party-systems.png";
+  image.alt = "";
+  visual.append(image);
   const copy = document.createElement("div");
-  copy.innerHTML =
-    "<span>OPTIONAL SIDE LANE</span><h3>Third-Party Systems</h3><p>Connect an external service only when it affects the active path.</p>";
-  panel.append(copy, renderDropZone("third-party-systems"));
+  copy.innerHTML = "<h3>Third-Party Systems</h3>";
+  panel.append(visual, copy, renderDropZone("third-party-systems"));
   return panel;
 }
 
@@ -355,10 +345,12 @@ function insight(
   title: string,
   output: string,
   status = "neutral",
+  featured = false,
 ): HTMLElement {
   const card = document.createElement("section");
   card.className = "insight-card";
   card.dataset.status = status;
+  if (featured) card.classList.add("insight-featured");
   const heading = document.createElement("h3");
   heading.textContent = title;
   const text = document.createElement("p");
@@ -384,6 +376,7 @@ export function renderEvaluation(): void {
         ? result.accessPath.join(" → ")
         : "No complete path from user to resource.",
       result.accessPath.length ? "good" : "warning",
+      true,
     ),
     insight("Authentication Model", result.authenticationModel),
     insight("Authentication Dependency", result.authenticationDependency),
@@ -415,8 +408,9 @@ export function renderEvaluation(): void {
         ? result.openings.join(" · ")
         : "No opening detected on the effective path.",
       result.openings.length ? "warning" : "good",
+      true,
     ),
-    insight("Recommended Change", result.recommendation),
+    insight("Recommended Change", result.recommendation, "neutral", true),
   );
 }
 
