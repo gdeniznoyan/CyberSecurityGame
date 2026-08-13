@@ -14,7 +14,7 @@
   <body>
     <header class="site-header">
       <a class="brand" href="#builder" aria-label="Architecture Builder home">
-        <span class="brand-mark" aria-hidden="true">◇</span>
+        <span class="brand-mark" aria-hidden="true"><img src="./assets/ui/brand-shield.svg" alt="" /></span>
         <span>
           <strong>Cybersecurity</strong>
           <small>Architecture Builder</small>
@@ -45,41 +45,45 @@
               <h2 id="architecture-title">Build the access journey</h2>
               <p>Move from the user to the protected resource.</p>
             </div>
-            <span class="drag-hint"><i></i> Drag components below</span>
           </div>
+
+          <section class="preset-showcase" aria-labelledby="preset-title">
+            <div class="preset-intro">
+              <span class="section-kicker">Instant examples</span>
+              <h3 id="preset-title">Compare three access models</h3>
+              <p>Load a complete architecture, then inspect or customize it.</p>
+            </div>
+            <div class="preset-actions">
+              <button class="preset-button saytrust-preset" type="button" data-preset-id="saytrust">
+                <span class="preset-icon" aria-hidden="true"><img src="./assets/presets/saytrust-architecture.svg" alt="" /></span>
+                <strong>Show sayTRUST</strong>
+              </button>
+              <button class="preset-button" type="button" data-preset-id="zero-trust">
+                <span class="preset-icon" aria-hidden="true"><img src="./assets/presets/zero-trust-architecture.svg" alt="" /></span>
+                <strong>Show Zero Trust</strong>
+              </button>
+              <button class="preset-button" type="button" data-preset-id="vpn">
+                <span class="preset-icon" aria-hidden="true"><img src="./assets/presets/vpn-architecture.svg" alt="" /></span>
+                <strong>Show VPN Connection</strong>
+              </button>
+            </div>
+          </section>
+
           <div id="architecture-canvas" class="architecture-canvas"></div>
-          <p
-            id="error-message"
-            class="error-message"
-            role="alert"
-            aria-live="assertive"
-          ></p>
+          <p id="error-message" class="error-message" role="alert" aria-live="assertive"></p>
         </section>
 
-        <aside
-          class="result-panel"
-          aria-label="Architecture feedback"
-          aria-live="polite"
-        >
-          <div class="result-heading">
-            <span class="section-kicker">Live evaluation</span>
-            <h2>Security Analysis</h2>
-          </div>
-          <section class="architecture-result">
-            <span>Architecture model</span>
-            <strong id="architecture-result-value">Start building</strong>
-          </section>
-          <section class="security-score" aria-label="Security Score">
-            <div class="security-score-chart" aria-hidden="true">
-              <span id="security-score-value">--</span>
-              <small>score</small>
-            </div>
-            <div class="score-copy">
-              <strong>Security posture</strong>
-              <span>Updates as you build</span>
-            </div>
-          </section>
-          <div id="result-insights" class="result-insights"></div>
+        <aside class="result-panel" aria-label="Architecture feedback">
+          <div class="analysis-launch-visual" aria-hidden="true"><img src="./assets/ui/analysis-report.svg" alt="" /></div>
+          <h2>Ready to see the result?</h2>
+          <p>Place and connect your components, then analyze the real access path in one clear report.</p>
+          <button id="analyze-architecture-button" class="show-analysis-button" type="button" disabled>
+            <span class="analyze-button-label">
+              <small>Build your architecture first</small>
+              <strong>Analyze Architecture</strong>
+            </span>
+            <span aria-hidden="true">→</span>
+          </button>
         </aside>
 
         <section class="toolbox" aria-labelledby="toolbox-title">
@@ -94,6 +98,34 @@
         </section>
       </div>
     </main>
+
+    <dialog id="analysis-dialog" class="analysis-dialog" aria-labelledby="analysis-dialog-title">
+      <div class="analysis-dialog-header">
+        <div>
+          <span class="section-kicker">Architecture report</span>
+          <h2 id="analysis-dialog-title">Architecture Analysis</h2>
+          <p>What your design protects, what it exposes and what you should change next.</p>
+        </div>
+        <button id="close-analysis-button" class="dialog-close" type="button" aria-label="Close analysis">×</button>
+      </div>
+      <div class="analysis-hero">
+        <section class="architecture-result">
+          <span>Architecture classification</span>
+          <strong id="architecture-result-value">Start building</strong>
+        </section>
+        <section class="security-score" aria-label="Security Score">
+          <div class="security-score-chart" aria-hidden="true">
+            <span id="security-score-value">--</span>
+            <small>score</small>
+          </div>
+          <div class="score-copy">
+            <strong>Effective security posture</strong>
+            <span>Based on the connected access path and configuration.</span>
+          </div>
+        </section>
+      </div>
+      <div id="result-insights" class="result-insights"></div>
+    </dialog>
 
     <script type="module" src="./dist/main.js"></script>
   </body>

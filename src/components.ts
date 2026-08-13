@@ -263,7 +263,10 @@ export const applicationAuthorizationComponent: ComponentDefinition = {
   configuration: [
     bool("applicationAuthorization", "Application authorization", true),
   ],
-  architecturalProperties: { restrictsApplications: true },
+  architecturalProperties: {
+    restrictsApplications: true,
+    enforcesAccessPolicy: true,
+  },
 };
 
 export const sessionRevocationComponent: ComponentDefinition = {
@@ -385,7 +388,11 @@ export const mutualTlsComponent: ComponentDefinition = {
   isSaytecComponent: false,
   allowedAreaIds: ["connection-method"],
   configuration: [],
-  architecturalProperties: { authenticatesBeforeCommunication: true },
+  architecturalProperties: {
+    authenticatesBeforeCommunication: true,
+    usesMutualTls: true,
+    encryptsTransport: true,
+  },
 };
 
 export const aes256EncryptionComponent: ComponentDefinition = {
@@ -398,7 +405,7 @@ export const aes256EncryptionComponent: ComponentDefinition = {
   isSaytecComponent: false,
   allowedAreaIds: ["connection-method"],
   configuration: [],
-  architecturalProperties: {},
+  architecturalProperties: { encryptsTransport: true },
 };
 
 export const perfectForwardSecrecyComponent: ComponentDefinition = {
@@ -411,7 +418,7 @@ export const perfectForwardSecrecyComponent: ComponentDefinition = {
   isSaytecComponent: false,
   allowedAreaIds: ["connection-method"],
   configuration: [],
-  architecturalProperties: {},
+  architecturalProperties: { usesPerfectForwardSecrecy: true },
 };
 
 export const virtualNetworkInterfaceComponent: ComponentDefinition = {

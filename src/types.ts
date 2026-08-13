@@ -24,6 +24,9 @@ export type ArchitecturalPropertyId =
   | "assignsProtectedNetworkAddress"
   | "exposesNetworkInformation"
   | "usesEncryptedRam"
+  | "usesMutualTls"
+  | "encryptsTransport"
+  | "usesPerfectForwardSecrecy"
   | "persistsConnectionArtifacts"
   | "supportsSessionTermination"
   | "restrictsParallelApplications"
@@ -90,7 +93,7 @@ export interface ArchitectureState {
 export type ArchitectureClassification =
   | "Traditional Access"
   | "Zero Trust"
-  | "Saytec Post-Zero Trust"
+  | "sayTRUST Post-Zero Trust"
   | "Hybrid Architecture"
   | "Incomplete Architecture"
   | "Broken or Unsafe Architecture";

@@ -5,31 +5,26 @@ const stages = [
     {
         areaId: "user-device",
         title: "User & Device",
-        subtitle: "Start the request",
         image: "./assets/journey-v2/user-device.png",
     },
     {
         areaId: "identity-route",
         title: "Identity",
-        subtitle: "Prove who is connecting",
         image: "./assets/journey-v2/identity.png",
     },
     {
         areaId: "access-enforcement",
         title: "Access Control",
-        subtitle: "Decide and enforce",
         image: "./assets/journey-v2/access-control.png",
     },
     {
         areaId: "connection-method",
         title: "Connection",
-        subtitle: "Create the approved path",
         image: "./assets/journey-v2/secure-connection.png",
     },
     {
         areaId: "reachable-resources",
         title: "Protected Resources",
-        subtitle: "Limit what can be reached",
         image: "./assets/journey-v2/protected-resource.png",
     },
 ];
@@ -55,12 +50,6 @@ function componentVisual(component) {
     label.className = "component-label";
     label.textContent = component.name;
     copy.append(label);
-    if (component.isSaytecComponent) {
-        const badge = document.createElement("small");
-        badge.className = "saytec-badge";
-        badge.textContent = "sayTRUST";
-        copy.append(badge);
-    }
     fragment.append(imageBox, copy);
     return fragment;
 }
@@ -136,9 +125,7 @@ function renderStage(stage, index) {
     const copy = document.createElement("div");
     const title = document.createElement("h3");
     title.textContent = stage.title;
-    const subtitle = document.createElement("p");
-    subtitle.textContent = stage.subtitle;
-    copy.append(title, subtitle);
+    copy.append(title);
     head.append(step, copy);
     const visual = document.createElement("div");
     visual.className = "stage-visual";
@@ -155,7 +142,7 @@ function renderConnector(index) {
     const line = document.createElement("span");
     const arrow = document.createElement("span");
     arrow.className = "connector-arrow";
-    arrow.textContent = "›";
+    arrow.setAttribute("aria-hidden", "true");
     connector.append(line, arrow);
     if (index === 1) {
         connector.classList.add("internet-crossing");
@@ -175,8 +162,7 @@ function renderConnectionMap() {
     box.className = "connection-map";
     const heading = document.createElement("div");
     heading.className = "connection-map-heading";
-    heading.innerHTML =
-        "<strong>Active connections</strong><span>Select ↗ on a source, then on its destination</span>";
+    heading.innerHTML = "<strong>Active connections</strong>";
     box.append(heading);
     const list = document.createElement("div");
     list.className = "connection-list";
@@ -217,10 +203,15 @@ function renderSettingsPanel() {
 function renderThirdParty() {
     const panel = document.createElement("aside");
     panel.className = "external-services-panel";
+    const visual = document.createElement("div");
+    visual.className = "external-services-visual";
+    const image = document.createElement("img");
+    image.src = "./assets/journey-v2/third-party-systems.png";
+    image.alt = "";
+    visual.append(image);
     const copy = document.createElement("div");
-    copy.innerHTML =
-        "<span>OPTIONAL SIDE LANE</span><h3>Third-Party Systems</h3><p>Connect an external service only when it affects the active path.</p>";
-    panel.append(copy, renderDropZone("third-party-systems"));
+    copy.innerHTML = "<h3>Third-Party Systems</h3>";
+    panel.append(visual, copy, renderDropZone("third-party-systems"));
     return panel;
 }
 export function renderArchitecture() {
@@ -324,10 +315,12 @@ export function renderToolbox() {
     });
     toolbox.replaceChildren(fragment);
 }
-function insight(title, output, status = "neutral") {
+function insight(title, output, status = "neutral", featured = false) {
     const card = document.createElement("section");
     card.className = "insight-card";
     card.dataset.status = status;
+    if (featured)
+        card.classList.add("insight-featured");
     const heading = document.createElement("h3");
     heading.textContent = title;
     const text = document.createElement("p");
@@ -348,9 +341,9 @@ export function renderEvaluation() {
     chart.style.setProperty("--score-progress", String(result.score));
     list.replaceChildren(insight("Access Path", result.accessPath.length
         ? result.accessPath.join(" → ")
-        : "No complete path from user to resource.", result.accessPath.length ? "good" : "warning"), insight("Authentication Model", result.authenticationModel), insight("Authentication Dependency", result.authenticationDependency), insight("Policy Evaluation", result.policyEvaluation, result.properties.evaluatesAccessPolicy ? "good" : "warning"), insight("Policy Enforcement", result.policyEnforcement, result.properties.enforcesAccessPolicy ? "good" : "warning"), insight("Connection Type", result.connectionType), insight("Client Network Visibility", result.clientNetworkVisibility, result.properties.exposesNetworkInformation ? "warning" : "good"), insight("Client Reachability", result.clientReachability), insight("Network Participation", result.networkParticipation, result.properties.createsVirtualNetworkInterface ? "warning" : "good"), insight("Detected Openings", result.openings.length
+        : "No complete path from user to resource.", result.accessPath.length ? "good" : "warning", true), insight("Authentication Model", result.authenticationModel), insight("Authentication Dependency", result.authenticationDependency), insight("Policy Evaluation", result.policyEvaluation, result.properties.evaluatesAccessPolicy ? "good" : "warning"), insight("Policy Enforcement", result.policyEnforcement, result.properties.enforcesAccessPolicy ? "good" : "warning"), insight("Connection Type", result.connectionType), insight("Client Network Visibility", result.clientNetworkVisibility, result.properties.exposesNetworkInformation ? "warning" : "good"), insight("Client Reachability", result.clientReachability), insight("Network Participation", result.networkParticipation, result.properties.createsVirtualNetworkInterface ? "warning" : "good"), insight("Detected Openings", result.openings.length
         ? result.openings.join(" · ")
-        : "No opening detected on the effective path.", result.openings.length ? "warning" : "good"), insight("Recommended Change", result.recommendation));
+        : "No opening detected on the effective path.", result.openings.length ? "warning" : "good", true), insight("Recommended Change", result.recommendation, "neutral", true));
 }
 export function renderBuilder() {
     renderArchitecture();
