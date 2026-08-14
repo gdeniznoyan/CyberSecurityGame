@@ -19,11 +19,6 @@ function initialize() {
         const canAnalyze = getPlacements().length > 0;
         if (analyzeButton) {
             analyzeButton.disabled = !canAnalyze;
-            const hint = analyzeButton.querySelector("small");
-            if (hint)
-                hint.textContent = canAnalyze
-                    ? "Your architecture is ready"
-                    : "Build your architecture first";
         }
     };
     handleArchitectureChange();

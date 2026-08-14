@@ -26,6 +26,82 @@ const propertyIds = [
 ];
 const bool = (configuration, key) => configuration[key] === true;
 const value = (configuration, key) => String(configuration[key] ?? "");
+const firstPathIndex = (path, componentIds) => componentIds.reduce((first, componentId) => {
+    const index = path.indexOf(componentId);
+    return index < 0 || (first >= 0 && first <= index) ? first : index;
+}, -1);
+const appearsBefore = (path, sourceIds, targetIds) => {
+    const sourceIndex = firstPathIndex(path, sourceIds);
+    const targetIndex = firstPathIndex(path, targetIds);
+    return sourceIndex >= 0 && targetIndex >= 0 && sourceIndex < targetIndex;
+};
+const identityComponentIds = [
+    "saytrust-hardware-security-token",
+    "biometric-verification",
+    "client-pin",
+    "private-ca",
+    "user-certificate",
+    "x509-certificate",
+    "certificate-validation",
+    "certificate-revocation-check",
+    "otp",
+    "external-identity-provider",
+    "external-authentication-service",
+];
+const policyComponentIds = ["saytrust-server", "policy-engine"];
+const communicationComponentIds = [
+    "gateway",
+    "network-connection",
+    "application-connection",
+    "ram-application-tunnel",
+    "mutual-tls",
+    "aes-256-encryption",
+    "perfect-forward-secrecy",
+    "virtual-network-interface",
+];
+const inferredPathComponentOrder = [
+    "client-device",
+    "secure-device",
+    "saytrust-hardware-security-token",
+    "biometric-verification",
+    "client-pin",
+    "private-ca",
+    "user-certificate",
+    "x509-certificate",
+    "certificate-validation",
+    "certificate-revocation-check",
+    "otp",
+    "external-identity-provider",
+    "external-authentication-service",
+    "encrypted-ram",
+    "saytrust-server",
+    "policy-engine",
+    "client-privilege-management",
+    "least-privilege-control",
+    "application-authorization",
+    "session-revocation",
+    "gateway",
+    "mutual-tls",
+    "aes-256-encryption",
+    "perfect-forward-secrecy",
+    "ram-application-tunnel",
+    "application-connection",
+    "virtual-network-interface",
+    "network-connection",
+    "corporate-network",
+    "restricted-subnet",
+    "internal-web-application",
+    "virtual-machine",
+];
+function inferAccessPath(placements) {
+    const hasSource = placements.some((item) => item.areaId === "user-device");
+    const hasConnectionMethod = placements.some((item) => item.areaId === "connection-method");
+    const hasTarget = placements.some((item) => item.areaId === "reachable-resources");
+    if (!hasSource || !hasConnectionMethod || !hasTarget)
+        return [];
+    const placementIds = new Set(placements.map((item) => item.componentId));
+    return inferredPathComponentOrder.filter((componentId) => placementIds.has(componentId));
+}
 function findAccessPath(placements) {
     const connections = getConnections();
     const areaById = new Map(placements.map((item) => [item.componentId, item.areaId]));
@@ -45,7 +121,9 @@ function findAccessPath(placements) {
             .forEach((item) => visit(item.targetComponentId, nextPath));
     };
     starts.forEach((id) => visit(id, []));
-    return best;
+    if (best.length || connections.length)
+        return best;
+    return inferAccessPath(placements);
 }
 function deriveProperties(path, placements) {
     const properties = Object.fromEntries(propertyIds.map((id) => [id, false]));
@@ -79,8 +157,6 @@ function deriveProperties(path, placements) {
             bool(config, "revocationChecked")) {
             properties.validatesCertificate = true;
         }
-        if (value(config, "policyTiming") === "Policy Before Connection")
-            properties.authenticatesBeforeCommunication = true;
         if (bool(config, "leastPrivilege") && !bool(config, "broadRolePermission"))
             properties.usesLeastPrivilege = true;
         if (bool(config, "sessionRevocation"))
@@ -123,12 +199,21 @@ function deriveProperties(path, placements) {
         properties.grantsNetworkAccess) {
         properties.exposesNetworkInformation = true;
     }
+    properties.authenticatesBeforeCommunication =
+        properties.authenticatesUser &&
+            appearsBefore(path, identityComponentIds, communicationComponentIds);
     return properties;
 }
 function classify(properties, path, openings) {
     if (!path.length)
         return "Incomplete Architecture";
+    const identityBeforePolicy = appearsBefore(path, identityComponentIds, policyComponentIds);
+    const policyBeforeCommunication = appearsBefore(path, policyComponentIds, communicationComponentIds);
+    const authorizationBeforeCommunication = appearsBefore(path, ["application-authorization"], communicationComponentIds);
+    const tokenBeforeProtectedMemory = appearsBefore(path, ["saytrust-hardware-security-token"], ["encrypted-ram"]);
+    const protectedMemoryBeforeSaytrustPolicy = appearsBefore(path, ["encrypted-ram"], ["saytrust-server"]);
     const severe = openings.some((item) => [
+        "Authentication Too Late",
         "Policy Without Enforcement",
         "Authorization Too Late",
         "Certificate Misconfiguration",
@@ -136,10 +221,15 @@ function classify(properties, path, openings) {
     if (severe)
         return "Broken or Unsafe Architecture";
     const postZeroTrust = properties.authenticatesBeforeCommunication &&
+        identityBeforePolicy &&
         properties.usesHardwareBoundIdentity &&
         !properties.dependsOnExternalIdentityProvider &&
         properties.usesOrganizationControlledIdentity &&
         path.includes("saytrust-server") &&
+        tokenBeforeProtectedMemory &&
+        protectedMemoryBeforeSaytrustPolicy &&
+        policyBeforeCommunication &&
+        authorizationBeforeCommunication &&
         properties.evaluatesAccessPolicy &&
         properties.enforcesAccessPolicy &&
         properties.usesLeastPrivilege &&
@@ -157,6 +247,9 @@ function classify(properties, path, openings) {
         return "sayTRUST Post-Zero Trust";
     const zeroTrust = properties.authenticatesUser &&
         properties.authenticatesBeforeCommunication &&
+        identityBeforePolicy &&
+        policyBeforeCommunication &&
+        authorizationBeforeCommunication &&
         properties.evaluatesAccessPolicy &&
         properties.enforcesAccessPolicy &&
         properties.usesLeastPrivilege &&
@@ -210,6 +303,7 @@ function calculateScore(properties, openings) {
         [properties.authenticatesUser && !properties.dependsOnExternalIdentityProvider, 3],
     ];
     const openingPenalties = {
+        "Authentication Too Late": 10,
         "Policy Without Enforcement": 10,
         "Authorization Too Late": 10,
         "Certificate Misconfiguration": 8,
@@ -230,6 +324,13 @@ export function evaluateArchitecture() {
     const openings = [];
     const pathSet = new Set(accessPath);
     const config = (id) => placements.find((item) => item.componentId === id)?.configuration ?? {};
+    const hasIdentity = firstPathIndex(accessPath, identityComponentIds) >= 0;
+    const hasPolicy = firstPathIndex(accessPath, policyComponentIds) >= 0;
+    const hasCommunication = firstPathIndex(accessPath, communicationComponentIds) >= 0;
+    const identityBeforeCommunication = appearsBefore(accessPath, identityComponentIds, communicationComponentIds);
+    const policyBeforeCommunication = appearsBefore(accessPath, policyComponentIds, communicationComponentIds);
+    if (hasIdentity && hasCommunication && !identityBeforeCommunication)
+        openings.push("Authentication Too Late");
     if (properties.evaluatesAccessPolicy && !properties.enforcesAccessPolicy)
         openings.push("Policy Without Enforcement");
     if ((properties.encryptsTransport || properties.usesEncryptedRam) &&
@@ -246,8 +347,11 @@ export function evaluateArchitecture() {
     if (properties.usesHardwareBoundIdentity &&
         properties.createsVirtualNetworkInterface)
         openings.push("Wrong Connection Method");
-    if (["Policy After Connection"].includes(value(config("saytrust-server"), "policyTiming")) ||
-        ["Policy After Connection"].includes(value(config("policy-engine"), "policyTiming")))
+    if ((hasPolicy && hasCommunication && !policyBeforeCommunication) ||
+        value(config("saytrust-server"), "policyTiming") ===
+            "Policy After Connection" ||
+        value(config("policy-engine"), "policyTiming") ===
+            "Policy After Connection")
         openings.push("Authorization Too Late");
     if ((pathSet.has("user-certificate") || pathSet.has("x509-certificate")) &&
         !properties.validatesCertificate)
@@ -256,10 +360,9 @@ export function evaluateArchitecture() {
     const score = accessPath.length
         ? calculateScore(properties, openings)
         : 0;
-    const names = [
-        "User",
-        ...accessPath.map((id) => getComponentById(id)?.name ?? id),
-    ];
+    const names = accessPath.length
+        ? ["User", ...accessPath.map((id) => getComponentById(id)?.name ?? id)]
+        : [];
     return {
         properties,
         classification,
@@ -274,15 +377,21 @@ export function evaluateArchitecture() {
                     ? "The VPN path protects the session, but still grants network-level access. Use application-level access and policy enforcement when stronger isolation is required."
                     : "The current path has no detected architectural conflict.",
         authenticationModel: properties.usesHardwareBoundIdentity
-            ? "Hardware-bound identity is used on the active path."
+            ? properties.authenticatesBeforeCommunication
+                ? "Hardware-bound identity is verified before communication begins."
+                : "Hardware-bound identity exists, but it is not verified before communication begins."
             : properties.authenticatesUser
-                ? "Identity is verified on the active path."
+                ? properties.authenticatesBeforeCommunication
+                    ? "Identity is verified before communication begins."
+                    : "Identity is verified too late in the active path."
                 : "No effective user authentication is present on the active path.",
         authenticationDependency: properties.dependsOnExternalIdentityProvider
             ? "Primary authentication depends on an external identity provider."
             : "Primary authentication is not externally dependent.",
         policyEvaluation: properties.evaluatesAccessPolicy
-            ? "Access policy is evaluated on the active path."
+            ? policyBeforeCommunication
+                ? "Access policy is evaluated before the communication path is created."
+                : "Access policy exists, but it is evaluated after communication begins."
             : "No effective policy evaluation occurs on the active path.",
         policyEnforcement: properties.enforcesAccessPolicy
             ? "The access decision is enforced before the resource."

@@ -1,12 +1,14 @@
 # Classification and Score
 
-Classification is the primary result. The numerical score is secondary and cannot independently produce Saytec Post-Zero Trust.
+Classification is the primary result. The numerical score is secondary and cannot independently produce sayTRUST Post-Zero Trust.
+
+The same scoring model applies to presets and custom architectures. When a user builds a complete architecture by drag and drop without explicit component connections, the evaluator infers the effective route from the selected source, connection method and target. Incomplete architectures without these three parts remain unscored.
 
 ## Classification Order
 
 1. No complete route: `Incomplete Architecture`.
 2. Severe configuration conflict: `Broken or Unsafe Architecture`.
-3. All Saytec requirements satisfied: `Saytec Post-Zero Trust`.
+3. All sayTRUST requirements and ordering rules satisfied: `sayTRUST Post-Zero Trust`.
 4. Identity, policy, least privilege and application-only requirements satisfied: `Zero Trust`.
 5. Both network and application access: `Hybrid Architecture`.
 6. Network access without a severe conflict: `Traditional Access`.
@@ -21,6 +23,7 @@ Classification is the primary result. The numerical score is secondary and canno
 - Application restrictions applied after network exposure
 - Hardware-bound identity combined with a virtual network interface
 - Policy authorization performed after connection
+- Authentication performed after communication begins
 - Certificate used without complete validation
 
 ## Score Calculation
@@ -37,6 +40,7 @@ The score is built from six explicit point groups. A control earns points only w
 The maximum score is 100. Missing controls simply do not earn their points. Detected architectural conflicts then apply the following deductions:
 
 - Policy without enforcement: -10.
+- Authentication after communication begins: -10.
 - Authorization after connection: -10.
 - Certificate misconfiguration: -8.
 - External authentication dependency in a RAM-based route: -8.
