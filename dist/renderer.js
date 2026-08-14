@@ -1,6 +1,6 @@
 import { componentList, getComponentById } from "./components.js";
 import { evaluateArchitecture } from "./evaluator.js";
-import { getConnections, getPlacements } from "./state.js";
+import { getPlacements } from "./state.js";
 const stages = [
     {
         areaId: "user-device",
@@ -65,29 +65,14 @@ function renderPlacedComponent(placement) {
     image.alt = "";
     const name = document.createElement("span");
     name.textContent = component.name;
-    const actions = document.createElement("span");
-    actions.className = "placed-actions";
-    const link = document.createElement("button");
-    link.type = "button";
-    link.className = "node-action connect-button";
-    link.dataset.connectComponent = component.id;
-    link.title = "Connect this component";
-    link.textContent = "↗";
-    const settings = document.createElement("button");
-    settings.type = "button";
-    settings.className = "node-action";
-    settings.dataset.editComponent = component.id;
-    settings.title = "Configure";
-    settings.textContent = "⚙";
-    settings.hidden = component.configuration.length === 0;
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = "node-action remove-button";
     remove.dataset.removeComponent = component.id;
     remove.title = "Remove";
+    remove.setAttribute("aria-label", `Remove ${component.name}`);
     remove.textContent = "×";
-    actions.append(link, settings, remove);
-    row.append(image, name, actions);
+    row.append(image, name, remove);
     return row;
 }
 function renderDropZone(areaId) {
@@ -157,49 +142,6 @@ function renderConnector(index) {
     }
     return connector;
 }
-function renderConnectionMap() {
-    const box = document.createElement("section");
-    box.className = "connection-map";
-    const heading = document.createElement("div");
-    heading.className = "connection-map-heading";
-    heading.innerHTML = "<strong>Active connections</strong>";
-    box.append(heading);
-    const list = document.createElement("div");
-    list.className = "connection-list";
-    const connections = getConnections();
-    if (!connections.length) {
-        const empty = document.createElement("span");
-        empty.className = "connection-empty";
-        empty.textContent = "No component links yet";
-        list.append(empty);
-    }
-    connections.forEach((connection) => {
-        const item = document.createElement("div");
-        item.className = "connection-item";
-        const source = getComponentById(connection.sourceComponentId)?.name ??
-            connection.sourceComponentId;
-        const target = getComponentById(connection.targetComponentId)?.name ??
-            connection.targetComponentId;
-        const text = document.createElement("span");
-        text.textContent = `${source}  →  ${target}`;
-        const remove = document.createElement("button");
-        remove.type = "button";
-        remove.dataset.removeConnectionSource = connection.sourceComponentId;
-        remove.dataset.removeConnectionTarget = connection.targetComponentId;
-        remove.textContent = "×";
-        item.append(text, remove);
-        list.append(item);
-    });
-    box.append(list);
-    return box;
-}
-function renderSettingsPanel() {
-    const panel = document.createElement("aside");
-    panel.id = "component-settings";
-    panel.className = "component-settings";
-    panel.hidden = true;
-    return panel;
-}
 function renderThirdParty() {
     const panel = document.createElement("aside");
     panel.className = "external-services-panel";
@@ -228,7 +170,7 @@ export function renderArchitecture() {
     const secondary = document.createElement("div");
     secondary.className = "canvas-secondary";
     secondary.append(renderThirdParty());
-    canvas.replaceChildren(journey, secondary, renderConnectionMap(), renderSettingsPanel());
+    canvas.replaceChildren(journey, secondary);
 }
 export function showComponentSettings(componentId) {
     const panel = document.getElementById("component-settings");
@@ -301,10 +243,14 @@ export function renderToolbox() {
         const list = document.createElement("div");
         list.className = "component-list";
         components.forEach((component) => {
+            const isPlaced = getPlacements().some((placement) => placement.componentId === component.id);
             const card = document.createElement("button");
             card.type = "button";
             card.className = "component-card";
-            card.draggable = true;
+            card.draggable = !isPlaced;
+            card.disabled = isPlaced;
+            if (isPlaced)
+                card.classList.add("component-placed");
             card.dataset.componentId = component.id;
             card.title = component.description;
             card.append(componentVisual(component));
@@ -339,11 +285,27 @@ export function renderEvaluation() {
     classification.textContent = result.classification;
     score.textContent = String(result.score);
     chart.style.setProperty("--score-progress", String(result.score));
+    const scoreColor = result.score < 50
+        ? { ring: "#c90018", glow: "rgba(201, 0, 24, 0.25)" }
+        : result.score < 80
+            ? { ring: "#e2aa00", glow: "rgba(226, 170, 0, 0.28)" }
+            : { ring: "#14a947", glow: "rgba(20, 169, 71, 0.27)" };
+    chart.style.setProperty("--score-color", scoreColor.ring);
+    chart.style.setProperty("--score-glow", scoreColor.glow);
     list.replaceChildren(insight("Access Path", result.accessPath.length
         ? result.accessPath.join(" → ")
-        : "No complete path from user to resource.", result.accessPath.length ? "good" : "warning", true), insight("Authentication Model", result.authenticationModel), insight("Authentication Dependency", result.authenticationDependency), insight("Policy Evaluation", result.policyEvaluation, result.properties.evaluatesAccessPolicy ? "good" : "warning"), insight("Policy Enforcement", result.policyEnforcement, result.properties.enforcesAccessPolicy ? "good" : "warning"), insight("Connection Type", result.connectionType), insight("Client Network Visibility", result.clientNetworkVisibility, result.properties.exposesNetworkInformation ? "warning" : "good"), insight("Client Reachability", result.clientReachability), insight("Network Participation", result.networkParticipation, result.properties.createsVirtualNetworkInterface ? "warning" : "good"), insight("Detected Openings", result.openings.length
+        : "No complete path from user to resource.", "muted", true), insight("Authentication Model", result.authenticationModel, result.properties.authenticatesUser &&
+        result.properties.authenticatesBeforeCommunication
+        ? "good"
+        : "warning"), insight("Authentication Dependency", result.authenticationDependency, result.properties.dependsOnExternalIdentityProvider ? "warning" : "good"), insight("Policy Evaluation", result.policyEvaluation, result.properties.evaluatesAccessPolicy ? "good" : "warning"), insight("Policy Enforcement", result.policyEnforcement, result.properties.enforcesAccessPolicy ? "good" : "warning"), insight("Connection Type", result.connectionType, result.properties.grantsApplicationAccess &&
+        !result.properties.grantsNetworkAccess
+        ? "good"
+        : "warning"), insight("Client Network Visibility", result.clientNetworkVisibility, result.properties.exposesNetworkInformation ? "warning" : "good"), insight("Client Reachability", result.clientReachability, result.properties.grantsApplicationAccess &&
+        !result.properties.grantsNetworkAccess
+        ? "good"
+        : "warning"), insight("Network Participation", result.networkParticipation, result.properties.createsVirtualNetworkInterface ? "warning" : "good"), insight("Detected Openings", result.openings.length
         ? result.openings.join(" · ")
-        : "No opening detected on the effective path.", result.openings.length ? "warning" : "good", true), insight("Recommended Change", result.recommendation, "neutral", true));
+        : "No opening detected on the effective path.", "muted", true), insight("Recommended Change", result.recommendation, "muted", true));
 }
 export function renderBuilder() {
     renderArchitecture();

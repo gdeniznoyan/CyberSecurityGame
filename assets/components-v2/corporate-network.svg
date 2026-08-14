@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none">
-  <defs><filter id="shadow" x="-25%" y="-25%" width="150%" height="165%"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#111720" flood-opacity=".2"/></filter></defs>
-  <path d="M48 4 85 25v46L48 92 11 71V25L48 4Z" fill="#fff" stroke="#D2D7DE" stroke-width="2"/>
-  <path d="M48 10 79 28v40L48 86 17 68V28L48 10Z" fill="#F5F6F8"/>
-  <g filter="url(#shadow)" stroke="#111720" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 77h68M22 77V37h22v40M52 77V20h25v57"/><path d="M28 46h5M28 56h5M28 66h5M59 31h5M68 31h3M59 42h5M68 42h3M59 53h5M68 53h3"/><path class="red" d="M58 20v-9l15 6-15 6"/></g>
-  <style>.red{stroke:#DF0712}.fill-red{fill:#DF0712}.fill-dark{fill:#111720}.white{stroke:#fff}</style>
-</svg>

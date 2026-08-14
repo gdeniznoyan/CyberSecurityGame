@@ -1,4 +1,4 @@
-const icon = (id) => `./assets/components-v2/${id}.svg`;
+const icon = (id) => `./assets/component-icons-raster/${id}.png?v=1`;
 const bool = (id, label, defaultValue) => ({
     id,
     label,
