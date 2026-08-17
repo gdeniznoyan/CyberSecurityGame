@@ -322,11 +322,11 @@ select,
 
 .preset-button {
   display: grid;
-  grid-template-columns: 112px minmax(0, 1fr);
+  grid-template-columns: 136px minmax(0, 1fr);
   align-items: center;
   gap: 14px;
-  min-height: 124px;
-  padding: 12px;
+  min-height: 128px;
+  padding: 14px 12px;
   color: var(--ink);
   background: #ffffff;
   border: 1px solid #dce4eb;
@@ -349,12 +349,13 @@ select,
 .preset-icon {
   display: grid;
   place-items: center;
-  width: 112px;
-  height: 88px;
-  padding: 2px;
+  width: 136px;
+  height: 108px;
+  padding: 0;
   overflow: visible;
   background: #ffffff;
   border-radius: 11px;
+  transform: translateY(-5px);
 }
 
 .preset-icon img {
@@ -911,6 +912,56 @@ select,
   transform: translateY(-2px);
 }
 
+.component-tooltip {
+  position: fixed;
+  z-index: 1000;
+  display: grid;
+  gap: 7px;
+  width: min(270px, calc(100vw - 24px));
+  padding: 11px 13px 13px;
+  color: #20252d;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid #d7dce2;
+  border-radius: 10px;
+  box-shadow:
+    0 18px 42px rgba(24, 31, 42, 0.2),
+    0 4px 12px rgba(24, 31, 42, 0.08);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(6px);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease,
+    visibility 140ms ease;
+}
+
+.component-tooltip.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.component-tooltip-eyebrow {
+  color: var(--red-dark);
+  font-size: 0.53rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.component-tooltip strong {
+  color: #111318;
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.component-tooltip-description {
+  color: #59616d;
+  font-size: 0.65rem;
+  line-height: 1.48;
+}
+
 .component-card.dragging {
   opacity: 0.45;
 }
@@ -1403,6 +1454,79 @@ select,
   background: linear-gradient(135deg, #eef1f4, #f7f8fa);
   border-color: #d7dde3;
   box-shadow: 0 10px 24px rgba(48, 65, 84, 0.07);
+}
+
+.analysis-dialog .access-path-card {
+  min-height: 0;
+  padding: 20px;
+  background: linear-gradient(145deg, #f4f6f8, #ffffff);
+  border-color: #cfd6de;
+  box-shadow: 0 14px 30px rgba(40, 51, 65, 0.1);
+}
+
+.analysis-dialog .access-path-card::before {
+  display: none;
+}
+
+.access-path-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.analysis-dialog .access-path-heading h3 {
+  font-size: 0.86rem;
+}
+
+.access-path-heading > span {
+  color: #737c88;
+  font-size: 0.6rem;
+  font-weight: 600;
+}
+
+.access-path-flow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px 0;
+  margin-top: 14px;
+  padding: 2px 0;
+}
+
+.access-path-step {
+  display: flex;
+  align-items: center;
+}
+
+.access-path-node {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 4px;
+  color: #20262e;
+}
+
+.access-path-node strong {
+  font-size: 0.68rem;
+  line-height: 1.25;
+}
+
+.access-path-arrow {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  color: var(--red-dark);
+  font-size: 1.08rem;
+  font-weight: 800;
+}
+
+.analysis-dialog .access-path-empty {
+  width: 100%;
+  margin: 0;
+  padding: 8px;
+  color: #737c88;
+  font-size: 0.66rem;
+  text-align: center;
 }
 
 @media (max-width: 1080px) {

@@ -1,6 +1,13 @@
-import { architectureAreas } from "./areas.js";
 import { componentList, getComponentById } from "./components.js";
 import { evaluateArchitecture } from "./evaluator.js";
+import {
+  getLanguage,
+  localizedComponentDescription,
+  localizedComponentName,
+  t,
+  translateEvaluationText,
+  translateText,
+} from "./i18n.js";
 import { getPlacements } from "./state.js";
 import type { AreaId, ComponentDefinition, Placement } from "./types.js";
 
@@ -13,27 +20,27 @@ const stages: Stage[] = [
   {
     areaId: "user-device",
     title: "User & Device",
-    image: "./assets/journey-v2/user-device.png",
+    image: "./assets/journey-v2/user-device.png?v=2",
   },
   {
     areaId: "identity-route",
     title: "Identity",
-    image: "./assets/journey-v2/identity.png",
+    image: "./assets/journey-v2/identity.png?v=2",
   },
   {
     areaId: "access-enforcement",
     title: "Access Control",
-    image: "./assets/journey-v2/access-control.png",
+    image: "./assets/journey-v2/access-control.png?v=2",
   },
   {
     areaId: "connection-method",
     title: "Connection",
-    image: "./assets/journey-v2/secure-connection.png",
+    image: "./assets/journey-v2/secure-connection.png?v=2",
   },
   {
     areaId: "reachable-resources",
     title: "Protected Resources",
-    image: "./assets/journey-v2/protected-resource.png",
+    image: "./assets/journey-v2/protected-resource.png?v=2",
   },
 ];
 const toolboxGroups: { title: string; areaId: AreaId }[] = [
@@ -44,6 +51,66 @@ const toolboxGroups: { title: string; areaId: AreaId }[] = [
   { title: "Resources", areaId: "reachable-resources" },
   { title: "External", areaId: "third-party-systems" },
 ];
+
+function getComponentTooltip(): HTMLElement {
+  const existing = document.getElementById("component-tooltip");
+  if (existing) return existing;
+
+  const tooltip = document.createElement("div");
+  tooltip.id = "component-tooltip";
+  tooltip.className = "component-tooltip";
+  tooltip.role = "tooltip";
+  tooltip.setAttribute("aria-hidden", "true");
+  document.body.append(tooltip);
+  return tooltip;
+}
+
+function showComponentTooltip(
+  anchor: HTMLElement,
+  component: ComponentDefinition,
+): void {
+  const tooltip = getComponentTooltip();
+  const eyebrow = document.createElement("span");
+  eyebrow.className = "component-tooltip-eyebrow";
+  eyebrow.textContent = t("Component overview");
+  const title = document.createElement("strong");
+  title.textContent = localizedComponentName(component);
+  const description = document.createElement("span");
+  description.className = "component-tooltip-description";
+  description.textContent = localizedComponentDescription(component);
+  tooltip.replaceChildren(eyebrow, title, description);
+  tooltip.classList.add("is-visible");
+  tooltip.setAttribute("aria-hidden", "false");
+
+  const anchorBounds = anchor.getBoundingClientRect();
+  const tooltipBounds = tooltip.getBoundingClientRect();
+  const edgeGap = 12;
+  let top = anchorBounds.top - tooltipBounds.height - edgeGap;
+  let placement = "top";
+
+  if (top < edgeGap) {
+    top = anchorBounds.bottom + edgeGap;
+    placement = "bottom";
+  }
+
+  const centeredLeft =
+    anchorBounds.left + anchorBounds.width / 2 - tooltipBounds.width / 2;
+  const left = Math.min(
+    Math.max(centeredLeft, edgeGap),
+    window.innerWidth - tooltipBounds.width - edgeGap,
+  );
+
+  tooltip.dataset.placement = placement;
+  tooltip.style.left = `${left}px`;
+  tooltip.style.top = `${top}px`;
+}
+
+function hideComponentTooltip(): void {
+  const tooltip = document.getElementById("component-tooltip");
+  if (!tooltip) return;
+  tooltip.classList.remove("is-visible");
+  tooltip.setAttribute("aria-hidden", "true");
+}
 
 function componentVisual(component: ComponentDefinition): DocumentFragment {
   const fragment = document.createDocumentFragment();
@@ -57,7 +124,7 @@ function componentVisual(component: ComponentDefinition): DocumentFragment {
   copy.className = "component-copy";
   const label = document.createElement("span");
   label.className = "component-label";
-  label.textContent = component.name;
+  label.textContent = localizedComponentName(component);
   copy.append(label);
   fragment.append(imageBox, copy);
   return fragment;
@@ -73,13 +140,14 @@ function renderPlacedComponent(placement: Placement): HTMLElement {
   image.src = component.icon;
   image.alt = "";
   const name = document.createElement("span");
-  name.textContent = component.name;
+  const localizedName = localizedComponentName(component);
+  name.textContent = localizedName;
   const remove = document.createElement("button");
   remove.type = "button";
   remove.className = "node-action remove-button";
   remove.dataset.removeComponent = component.id;
-  remove.title = "Remove";
-  remove.setAttribute("aria-label", `Remove ${component.name}`);
+  remove.title = t("Remove");
+  remove.setAttribute("aria-label", `${t("Remove")} ${localizedName}`);
   remove.textContent = "×";
   row.append(image, name, remove);
   return row;
@@ -93,7 +161,7 @@ function renderDropZone(areaId: AreaId): HTMLElement {
   if (!placements.length) {
     const placeholder = document.createElement("span");
     placeholder.className = "slot-placeholder";
-    placeholder.textContent = "Drop here";
+    placeholder.textContent = t("Drop here");
     zone.append(placeholder);
     return zone;
   }
@@ -120,7 +188,7 @@ function renderStage(stage: Stage, index: number): HTMLElement {
   step.textContent = String(index + 1);
   const copy = document.createElement("div");
   const title = document.createElement("h3");
-  title.textContent = stage.title;
+  title.textContent = t(stage.title);
   copy.append(title);
   head.append(step, copy);
   const visual = document.createElement("div");
@@ -145,11 +213,11 @@ function renderConnector(index: number): HTMLElement {
     connector.classList.add("internet-crossing");
     const label = document.createElement("span");
     label.className = "internet-label";
-    label.textContent = "PUBLIC INTERNET";
+    label.textContent = t("PUBLIC INTERNET");
     const image = document.createElement("img");
     image.className = "internet-globe";
-    image.src = "./assets/journey-v2/internet-crossing.png";
-    image.alt = "Public Internet";
+    image.src = "./assets/journey-v2/internet-crossing.png?v=2";
+    image.alt = t("Public Internet");
     connector.append(image, label);
   }
   return connector;
@@ -161,11 +229,13 @@ function renderThirdParty(): HTMLElement {
   const visual = document.createElement("div");
   visual.className = "external-services-visual";
   const image = document.createElement("img");
-  image.src = "./assets/journey-v2/third-party-systems.png";
+  image.src = "./assets/journey-v2/third-party-systems.png?v=2";
   image.alt = "";
   visual.append(image);
   const copy = document.createElement("div");
-  copy.innerHTML = "<h3>Third-Party Systems</h3>";
+  const title = document.createElement("h3");
+  title.textContent = t("Third-Party Systems");
+  copy.append(title);
   panel.append(visual, copy, renderDropZone("third-party-systems"));
   return panel;
 }
@@ -198,7 +268,11 @@ export function showComponentSettings(componentId: string): void {
   const header = document.createElement("div");
   header.className = "settings-header";
   const title = document.createElement("div");
-  title.innerHTML = `<small>Configuration</small><strong>${component.name}</strong>`;
+  const eyebrow = document.createElement("small");
+  eyebrow.textContent = t("Configuration");
+  const componentTitle = document.createElement("strong");
+  componentTitle.textContent = localizedComponentName(component);
+  title.append(eyebrow, componentTitle);
   const close = document.createElement("button");
   close.type = "button";
   close.dataset.closeSettings = "true";
@@ -206,14 +280,14 @@ export function showComponentSettings(componentId: string): void {
   header.append(title, close);
   const description = document.createElement("p");
   description.className = "settings-description";
-  description.textContent = component.description;
+  description.textContent = localizedComponentDescription(component);
   const form = document.createElement("div");
   form.className = "settings-form";
   component.configuration.forEach((definition) => {
     const label = document.createElement("label");
     label.className = "setting-row";
     const text = document.createElement("span");
-    text.textContent = definition.label;
+    text.textContent = translateText(definition.label);
     let control: HTMLInputElement | HTMLSelectElement;
     if (definition.type === "boolean") {
       const input = document.createElement("input");
@@ -225,7 +299,7 @@ export function showComponentSettings(componentId: string): void {
       definition.options.forEach((option) => {
         const item = document.createElement("option");
         item.value = option;
-        item.textContent = option;
+        item.textContent = translateText(option);
         select.append(item);
       });
       select.value = String(placement.configuration[definition.id]);
@@ -242,6 +316,7 @@ export function showComponentSettings(componentId: string): void {
 export function renderToolbox(): void {
   const toolbox = document.getElementById("component-toolbox");
   if (!toolbox) return;
+  hideComponentTooltip();
   const fragment = document.createDocumentFragment();
   toolboxGroups.forEach((definition) => {
     const group = document.createElement("section");
@@ -249,7 +324,7 @@ export function renderToolbox(): void {
     const heading = document.createElement("div");
     heading.className = "toolbox-group-heading";
     const title = document.createElement("span");
-    title.textContent = definition.title;
+    title.textContent = t(definition.title);
     const components = componentList.filter((item) =>
       item.allowedAreaIds.includes(definition.areaId),
     );
@@ -269,7 +344,14 @@ export function renderToolbox(): void {
       card.disabled = isPlaced;
       if (isPlaced) card.classList.add("component-placed");
       card.dataset.componentId = component.id;
-      card.title = component.description;
+      card.setAttribute("aria-describedby", "component-tooltip");
+      card.addEventListener("mouseenter", () =>
+        showComponentTooltip(card, component),
+      );
+      card.addEventListener("mouseleave", hideComponentTooltip);
+      card.addEventListener("focus", () => showComponentTooltip(card, component));
+      card.addEventListener("blur", hideComponentTooltip);
+      card.addEventListener("dragstart", hideComponentTooltip);
       card.append(componentVisual(component));
       list.append(card);
     });
@@ -290,10 +372,65 @@ function insight(
   card.dataset.status = status;
   if (featured) card.classList.add("insight-featured");
   const heading = document.createElement("h3");
-  heading.textContent = title;
+  heading.textContent = t(title);
   const text = document.createElement("p");
-  text.textContent = output;
+  text.textContent = translateEvaluationText(output);
   card.append(heading, text);
+  return card;
+}
+
+function architecturePathInsight(accessPath: string[]): HTMLElement {
+  const card = document.createElement("section");
+  card.className = "insight-card insight-featured access-path-card";
+  card.dataset.status = "muted";
+
+  const heading = document.createElement("div");
+  heading.className = "access-path-heading";
+  const title = document.createElement("h3");
+  title.textContent = t("Access Path");
+  const summary = document.createElement("span");
+  summary.textContent = accessPath.length
+    ? getLanguage() === "tr"
+      ? `Girişten hedefe bağlı ${accessPath.length} adım`
+      : `${accessPath.length} connected steps from entry to destination`
+    : t("A complete route has not been created yet");
+  heading.append(title, summary);
+
+  const flow = document.createElement("div");
+  flow.className = "access-path-flow";
+
+  if (!accessPath.length) {
+    const empty = document.createElement("p");
+    empty.className = "access-path-empty";
+    empty.textContent = t("No complete path from user to resource.");
+    flow.append(empty);
+  } else {
+    accessPath.forEach((step, index) => {
+      const item = document.createElement("div");
+      item.className = "access-path-step";
+      const node = document.createElement("span");
+      node.className = "access-path-node";
+      const label = document.createElement("strong");
+      const component = componentList.find((item) => item.name === step);
+      label.textContent = component
+        ? localizedComponentName(component)
+        : translateText(step);
+      node.append(label);
+      item.append(node);
+
+      if (index < accessPath.length - 1) {
+        const arrow = document.createElement("span");
+        arrow.className = "access-path-arrow";
+        arrow.setAttribute("aria-hidden", "true");
+        arrow.textContent = "→";
+        item.append(arrow);
+      }
+
+      flow.append(item);
+    });
+  }
+
+  card.append(heading, flow);
   return card;
 }
 
@@ -304,7 +441,7 @@ export function renderEvaluation(): void {
   const classification = document.getElementById("architecture-result-value");
   if (!list || !score || !chart || !classification) return;
   const result = evaluateArchitecture();
-  classification.textContent = result.classification;
+  classification.textContent = translateEvaluationText(result.classification);
   score.textContent = String(result.score);
   chart.style.setProperty("--score-progress", String(result.score));
   const scoreColor =
@@ -316,14 +453,7 @@ export function renderEvaluation(): void {
   chart.style.setProperty("--score-color", scoreColor.ring);
   chart.style.setProperty("--score-glow", scoreColor.glow);
   list.replaceChildren(
-    insight(
-      "Access Path",
-      result.accessPath.length
-        ? result.accessPath.join(" → ")
-        : "No complete path from user to resource.",
-      "muted",
-      true,
-    ),
+    architecturePathInsight(result.accessPath),
     insight(
       "Authentication Model",
       result.authenticationModel,
@@ -376,7 +506,7 @@ export function renderEvaluation(): void {
     insight(
       "Detected Openings",
       result.openings.length
-        ? result.openings.join(" · ")
+        ? result.openings.map(translateEvaluationText).join(" · ")
         : "No opening detected on the effective path.",
       "muted",
       true,

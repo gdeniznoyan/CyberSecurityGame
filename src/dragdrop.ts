@@ -1,4 +1,5 @@
 import { getComponentById } from "./components.js";
+import { getLanguage, localizedComponentName } from "./i18n.js";
 import { showComponentSettings } from "./renderer.js";
 import {
   addConnection,
@@ -34,13 +35,23 @@ function canPlace(componentId: ComponentId, areaId: AreaId): boolean {
 function place(componentId: ComponentId, areaId: AreaId): void {
   const component = getComponentById(componentId);
   if (!component?.allowedAreaIds.includes(areaId)) {
+    const componentName = component
+      ? localizedComponentName(component)
+      : componentId;
     showError(
-      `${component?.name ?? componentId} cannot be placed in this area.`,
+      getLanguage() === "tr"
+        ? `${componentName} bu alana yerleştirilemez.`
+        : `${componentName} cannot be placed in this area.`,
     );
     return;
   }
   if (hasPlacement(componentId)) {
-    showError(`${component.name} is already placed in the architecture.`);
+    const componentName = localizedComponentName(component);
+    showError(
+      getLanguage() === "tr"
+        ? `${componentName} mimariye zaten yerleştirilmiş.`
+        : `${componentName} is already placed in the architecture.`,
+    );
     return;
   }
   addPlacement(componentId, areaId);

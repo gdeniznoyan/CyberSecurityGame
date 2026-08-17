@@ -1,5 +1,11 @@
 import { initializeDragAndDrop } from "./dragdrop.js";
 import { getArchitecturePreset } from "./presets.js";
+import {
+  getSavedLanguage,
+  setLanguage,
+  translatePage,
+  type Language,
+} from "./i18n.js";
 import { renderBuilder, renderEvaluation } from "./renderer.js";
 import {
   getArchitectureState,
@@ -25,6 +31,12 @@ function initialize(): void {
   const dialogError = byId<HTMLElement>("dialog-error");
   const copyButton = byId<HTMLButtonElement>("copy-json-button");
   const importButton = byId<HTMLButtonElement>("apply-import-button");
+  const languageSelect = byId<HTMLSelectElement>("language-select");
+
+  const initialLanguage = getSavedLanguage();
+  setLanguage(initialLanguage);
+  if (languageSelect) languageSelect.value = initialLanguage;
+  translatePage();
 
   const handleArchitectureChange = (): void => {
     renderBuilder();
@@ -38,6 +50,13 @@ function initialize(): void {
   handleArchitectureChange();
   subscribe(handleArchitectureChange);
   initializeDragAndDrop();
+
+  languageSelect?.addEventListener("change", () => {
+    setLanguage(languageSelect.value as Language);
+    translatePage();
+    renderBuilder();
+    if (analysisDialog?.open) renderEvaluation();
+  });
 
   document.querySelectorAll<HTMLButtonElement>("[data-preset-id]").forEach(
     (button) => {
