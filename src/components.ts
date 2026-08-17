@@ -1,7 +1,7 @@
 ﻿import type { ComponentDefinition } from "./types.js";
 
 const icon = (id: string): string =>
-  `./assets/component-icons-raster/${id}.png?v=1`;
+  `./assets/component-icons-raster/${id}.png?v=10`;
 
 const bool = (id: string, label: string, defaultValue: boolean) => ({
   id,

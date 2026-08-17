@@ -13,22 +13,22 @@
 
   <body>
     <header class="site-header">
-      <a class="brand" href="#builder" aria-label="Architecture Builder home">
-        <span class="brand-mark" aria-hidden="true"><img src="./assets/ui/brand-shield.svg" alt="" /></span>
+      <a class="brand" href="#builder" aria-label="Architecture Builder home" data-i18n-aria-label="Architecture Builder home">
+        <span class="brand-mark" aria-hidden="true"><img src="./assets/ui/brand-shield.svg?v=6" alt="" /></span>
         <span>
-          <strong>Cybersecurity</strong>
-          <small>Architecture Builder</small>
+          <strong data-i18n="Cybersecurity">Cybersecurity</strong>
+          <small data-i18n="Architecture Builder">Architecture Builder</small>
         </span>
       </a>
 
       <div class="header-actions">
         <button id="reset-button" class="reset-button" type="button">
           <span aria-hidden="true">↻</span>
-          Reset
+          <span data-i18n="Reset">Reset</span>
         </button>
         <label class="header-language" for="language-select">
-          <span class="sr-only">Language</span>
-          <select id="language-select" aria-label="Language">
+          <span class="sr-only" data-i18n="Language">Language</span>
+          <select id="language-select" aria-label="Language" data-i18n-aria-label="Language">
             <option value="en">EN</option>
             <option value="tr">TR</option>
           </select>
@@ -41,34 +41,34 @@
         <section class="workspace" aria-labelledby="architecture-title">
           <div class="section-heading">
             <div>
-              <span class="section-kicker">Your architecture</span>
-              <h2 id="architecture-title">Build the access journey</h2>
-              <p>Move from the user to the protected resource.</p>
+              <span class="section-kicker" data-i18n="Your architecture">Your architecture</span>
+              <h2 id="architecture-title" data-i18n="Build the access journey">Build the access journey</h2>
+              <p data-i18n="Move from the user to the protected resource.">Move from the user to the protected resource.</p>
             </div>
           </div>
 
           <div class="analysis-action-row">
             <button id="analyze-architecture-button" class="show-analysis-button" type="button" disabled>
-              Analyze
+              <span data-i18n="Analyze">Analyze</span>
             </button>
           </div>
 
           <section class="preset-showcase" aria-labelledby="preset-title">
             <div class="preset-intro">
-              <h3 id="preset-title">Instant examples</h3>
+              <h3 id="preset-title" data-i18n="Instant examples">Instant examples</h3>
             </div>
             <div class="preset-actions">
               <button class="preset-button saytrust-preset" type="button" data-preset-id="saytrust">
-                <span class="preset-icon" aria-hidden="true"><img src="./assets/presets-raster/saytrust-architecture.png?v=2" alt="" /></span>
-                <strong>Show sayTRUST</strong>
+                <span class="preset-icon" aria-hidden="true"><img src="./assets/presets-raster/saytrust-architecture.png?v=7" alt="" /></span>
+                <strong data-i18n="Show sayTRUST">Show sayTRUST</strong>
               </button>
               <button class="preset-button" type="button" data-preset-id="zero-trust">
-                <span class="preset-icon" aria-hidden="true"><img src="./assets/presets-raster/zero-trust-architecture.png?v=2" alt="" /></span>
-                <strong>Show Zero Trust</strong>
+                <span class="preset-icon" aria-hidden="true"><img src="./assets/presets-raster/zero-trust-architecture.png?v=7" alt="" /></span>
+                <strong data-i18n="Show Zero Trust">Show Zero Trust</strong>
               </button>
               <button class="preset-button" type="button" data-preset-id="vpn">
-                <span class="preset-icon" aria-hidden="true"><img src="./assets/presets-raster/vpn-architecture.png?v=2" alt="" /></span>
-                <strong>Show VPN Connection</strong>
+                <span class="preset-icon" aria-hidden="true"><img src="./assets/presets-raster/vpn-architecture.png?v=7" alt="" /></span>
+                <strong data-i18n="Show VPN Connection">Show VPN Connection</strong>
               </button>
             </div>
           </section>
@@ -80,9 +80,9 @@
         <section class="toolbox" aria-labelledby="toolbox-title">
           <div class="section-heading toolbox-heading">
             <div>
-              <span class="section-kicker">Security toolkit</span>
-              <h2 id="toolbox-title">Choose your components</h2>
-              <p>Drag each control into its matching stage above.</p>
+              <span class="section-kicker" data-i18n="Security toolkit">Security toolkit</span>
+              <h2 id="toolbox-title" data-i18n="Choose your components">Choose your components</h2>
+              <p data-i18n="Drag each control into its matching stage above.">Drag each control into its matching stage above.</p>
             </div>
           </div>
           <div id="component-toolbox" class="toolbox-groups"></div>
@@ -93,31 +93,31 @@
     <dialog id="analysis-dialog" class="analysis-dialog" aria-labelledby="analysis-dialog-title">
       <div class="analysis-dialog-header">
         <div>
-          <span class="section-kicker">Architecture report</span>
-          <h2 id="analysis-dialog-title">Architecture Analysis</h2>
-          <p>What your design protects, what it exposes and what you should change next.</p>
+          <span class="section-kicker" data-i18n="Architecture report">Architecture report</span>
+          <h2 id="analysis-dialog-title" data-i18n="Architecture Analysis">Architecture Analysis</h2>
+          <p data-i18n="What your design protects, what it exposes and what you should change next.">What your design protects, what it exposes and what you should change next.</p>
         </div>
-        <button id="close-analysis-button" class="dialog-close" type="button" aria-label="Close analysis">×</button>
+        <button id="close-analysis-button" class="dialog-close" type="button" aria-label="Close analysis" data-i18n-aria-label="Close analysis">×</button>
       </div>
       <div class="analysis-hero">
         <section class="architecture-result">
-          <span>Architecture classification</span>
-          <strong id="architecture-result-value">Start building</strong>
+          <span data-i18n="Architecture classification">Architecture classification</span>
+          <strong id="architecture-result-value" data-i18n="Start building">Start building</strong>
         </section>
-        <section class="security-score" aria-label="Security Score">
+        <section class="security-score" aria-label="Security Score" data-i18n-aria-label="Security Score">
           <div class="security-score-chart" aria-hidden="true">
             <span id="security-score-value">--</span>
-            <small>score</small>
+            <small data-i18n="score">score</small>
           </div>
           <div class="score-copy">
-            <strong>Effective security posture</strong>
-            <span>Based on the connected access path and configuration.</span>
+            <strong data-i18n="Effective security posture">Effective security posture</strong>
+            <span data-i18n="Based on the connected access path and configuration.">Based on the connected access path and configuration.</span>
           </div>
         </section>
       </div>
       <div id="result-insights" class="result-insights"></div>
     </dialog>
 
-    <script type="module" src="./dist/main.js?v=20260814-icons"></script>
+    <script type="module" src="./dist/main.js?v=20260817-i18n"></script>
   </body>
 </html>
